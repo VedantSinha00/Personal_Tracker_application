@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Tracker</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1916'/%3E%3Ccircle cx='8' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='24' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='8' cy='21' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='21' r='3' fill='%232b2924'/%3E%3Ccircle cx='24' cy='21' r='3' fill='%232b2924'/%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div id="dragInsertLine"></div>
+  <div class="app">
+
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <div class="header">
+      <div>
+        <h1>Weekly tracker</h1>
+        <p id="wkSub">current week</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="help-btn" data-action="open-help" title="How to use this tracker">?</button>
+        <button id="themeBtn" aria-label="Toggle dark mode"
+          style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:var(--text2);"
+          title="Toggle dark mode">🌙</button>
+        <div class="week-nav">
+          <button class="nav-btn" data-dir="-1">←</button>
+          <span class="week-lbl" id="wkLbl">—</span>
+          <button class="nav-btn" data-dir="1">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Toolbar ────────────────────────────────────────────────────── -->
+    <div class="toolbar">
+      <span class="tlbl">Backup:</span>
+      <button class="btn" data-action="export">Export</button>
+      <label class="btn" style="cursor:pointer;">Import
+        <input type="file" accept=".json" style="display:none" data-action="import">
+      </label>
+      <span class="export-meta" id="lastExportLbl"></span>
+      <span class="tlbl" style="margin-left:auto;"></span>
+      <button class="btn" data-action="open-targets" title="Configure weekly targets">⚙ Targets</button>
+      <button class="btn" data-action="open-habits"  title="Manage custom habits">⚙ Habits</button>
+      <button class="btn" data-action="open-cats"    title="Manage categories">⚙ Categories</button>
+    </div>
+
+    <!-- ── Tabs ───────────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab active" data-tab="ov">Overview</button>
+      <button class="tab"        data-tab="days">Daily log</button>
+      <button class="tab"        data-tab="stack">Stack</button>
+      <button class="tab"        data-tab="review">Review</button>
+      <button class="tab"        data-tab="insights">Insights</button>
+    </div>
+
+    <!-- ── Tab panels ─────────────────────────────────────────────────── -->
+    <div id="ov"       class="sec active"><div id="ovMain"></div></div>
+    <div id="days"     class="sec"><div class="day-grid" id="dayGrid"></div></div>
+
+    <div id="stack" class="sec">
+      <div class="intention-box">
+        <div class="ilbl">THIS WEEK'S INTENTION</div>
+        <input class="iinput" id="intention" placeholder="What would make this week a win?">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="sg-title" style="margin-bottom:0;">FOCUS AREAS</div>
+        <button class="carry-btn" id="carryBtn" title="Copy last week's stack items into this week">↩ Carry from last week</button>
+      </div>
+      <div id="stackDragContainer">
+        <div class="stack-section-lbl" id="highLbl" style="display:none">HIGH FOCUS</div>
+        <div id="highS"></div>
+        <div class="stack-section-lbl stack-section-drop" id="lowLbl" data-level="low" style="display:none;margin-top:1.2rem;">LOW FOCUS</div>
+        <div id="lowS"></div>
+        <div class="stack-section-lbl stack-section-drop" id="highLbl2" data-level="high" style="display:none;">↑ HIGH FOCUS</div>
+        <div id="lowEmptyHint" style="display:none;margin-top:0.5rem;padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);text-align:center;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">No low focus items</div>
+      </div>
+    </div>
+
+    <div id="review" class="sec">
+      <div class="metrics-row" style="margin-bottom:1.5rem;">
+        <div class="metric">
+          <div class="mlbl">RUNS</div>
+          <div class="mval" id="rvR">0 / 3</div>
+          <div class="bar"><div class="bfill g" id="rvRb" style="width:0%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="mlbl">WORK BLOCKS</div>
+          <div class="mval" id="rvB">0</div>
+          <div class="bar"><div class="bfill b" id="rvBb" style="width:0%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="mlbl">REAL REST</div>
+          <div class="mval" id="rvRt">0 / 5</div>
+          <div class="bar"><div class="bfill p" id="rvRtb" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="rv-grid">
+        <div class="rv-card">
+          <div class="rv-lbl">WHAT WORKED</div>
+          <textarea class="rv-ta" id="rvW" placeholder="Write here..."></textarea>
+        </div>
+        <div class="rv-card">
+          <div class="rv-lbl">WHAT DIDN'T</div>
+          <textarea class="rv-ta" id="rvD" placeholder="Write here..."></textarea>
+        </div>
+      </div>
+      <div class="rv-card">
+        <div class="rv-lbl">ONE THING TO ADJUST</div>
+        <textarea class="rv-ta" id="rvA" placeholder="Write here..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+
+    <div id="insights" class="sec">
+      <div class="ins-tf" id="tfRow"></div>
+      <div id="insContent"></div>
+    </div>
+
+  </div><!-- /.app -->
+
+  <!-- ── Habits modal ───────────────────────────────────────────────────── -->
+  <div class="overlay" id="habitsModal">
+    <div class="modal">
+      <div class="modal-title">Manage habits</div>
+      <p class="habit-builtin-note">Run and Rest are built-in and always tracked. Add your own habits below — each will appear as a checkbox on every day card.</p>
+      <div class="habit-manager-list" id="habitManagerList"></div>
+      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:6px;">ADD NEW HABIT</div>
+      <div class="habit-add-row">
+        <input type="text" id="habitNameInput" placeholder="Habit name" maxlength="24">
+        <input type="number" id="habitTargetInput" min="1" max="7" value="5" title="Days per week target">
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap;">/ week</span>
+        <button class="btn btn-p">Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:8px;margin-top:0.75rem;">COLOUR</div>
+      <div class="swatch-row" id="habitSwatchRow"></div>
+      <div class="mfooter" style="margin-top:0.75rem;">
+        <span></span>
+        <button class="btn btn-p">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Help modal ─────────────────────────────────────────────────────── -->
+  <div class="overlay" id="helpModal">
+    <div class="help-modal">
+      <div class="modal-title">How this tracker works</div>
+      <div class="help-grid">
+        <div class="hc">
+          <div class="hc-title">Minimum viable day <span class="hc-badge" style="background:var(--amber-bg);color:var(--amber);">MVD</span></div>
+          <div class="hc-body">The smallest version of a productive day that still keeps momentum alive. Not failure — choosing to protect the thread rather than break it entirely.<br><br><strong style="font-weight:500;">1.</strong> Attend classes<br><strong style="font-weight:500;">2.</strong> One 25-minute work block on anything<br><strong style="font-weight:500;">3.</strong> One real rest interval — music or lying down, no screen</div>
+          <div class="hc-rule">Mark with the MVD button on each day card.</div>
+        </div>
+        <div class="hc">
+          <div class="hc-title">Full rest day <span class="hc-badge" style="background:var(--purple-bg);color:var(--purple);">Rest</span></div>
+          <div class="hc-body">When your body or mind genuinely could not show up — not even for MVD. Not laziness. Your nervous system occasionally needs a complete stop.<br><br>One per week is fine. Multiple is a signal — usually something external is draining you.<br><br>Make rest actually restful: music without screens, lying down, being outside. Not a show.</div>
+          <div class="hc-rule">Mark with Full rest. Disables MVD for that day.</div>
+        </div>
+        <div class="hc">
+          <div class="hc-title">The stack</div>
+          <div class="hc-body">The decision you make on Sunday so you don't have to make it mid-week. Write the single next concrete action per area.<br><br>When you sit down to work, you're not deciding what to do — you're just executing what you already decided. This removes the friction that makes you open a show instead.<br><br>Drag items to reorder priority within High or Low focus.</div>
+          <div class="hc-rule">Update every Sunday in the Stack tab.</div>
+        </div>
+        <div class="hc">
+          <div class="hc-title">Real rest vs. shows</div>
+          <div class="hc-body">You watch shows actively — tracking characters, figuring things out. That's entertainment, not rest. It doesn't restore you.<br><br>Real rest quietens input rather than replacing it: music alone, lying down without a screen, being outside. At least one daily, ideally right after classes as a transition ritual.</div>
+          <div class="hc-rule">Track with the Rest checkbox. Shows belong on weekends.</div>
+        </div>
+      </div>
+      <div style="margin-top:1.25rem;text-align:right;">
+        <button class="btn btn-p">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Block modal ────────────────────────────────────────────────────── -->
+  <div class="overlay" id="modal">
+    <div class="modal">
+      <div class="modal-title" id="mTitle">Log work block</div>
+      <div class="frow">
+        <label class="flbl">AREA</label>
+        <select id="fCat"><option value="">Select...</option></select>
+      </div>
+      <div class="frow">
+        <label class="flbl">TIME OF DAY</label>
+        <div class="time-slots">
+          <button class="time-slot" data-slot="early-morning">Early morning</button>
+          <button class="time-slot" data-slot="morning">Morning</button>
+          <button class="time-slot" data-slot="afternoon">Afternoon</button>
+          <button class="time-slot" data-slot="evening">Evening</button>
+          <button class="time-slot" data-slot="night">Night</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label class="flbl">DURATION</label>
+        <input type="text" id="fDur" placeholder="e.g. 45 min or 1h 30m">
+        <div class="dur-chips">
+          <button class="dur-chip" data-dur="25m">25m</button>
+          <button class="dur-chip" data-dur="45m">45m</button>
+          <button class="dur-chip" data-dur="1h">1h</button>
+          <button class="dur-chip" data-dur="1h 30m">1h 30m</button>
+          <button class="dur-chip" data-dur="2h">2h</button>
+        </div>
+        <div class="dur-validation" id="durValidation"></div>
+      </div>
+      <div class="frow">
+        <label class="flbl">ENERGY</label>
+        <div class="erow">
+          <button class="eopt" data-energy="low">Low</button>
+          <button class="eopt" data-energy="medium">Medium</button>
+          <button class="eopt" data-energy="high">High</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label class="flbl">NOTES</label>
+        <textarea id="fNotes" placeholder="What did you actually work on?"></textarea>
+      </div>
+      <div class="mfooter">
+        <button class="del-btn" id="delBtn" style="display:none;">Delete block</button>
+        <div class="mactions">
+          <button class="btn">Cancel</button>
+          <button class="btn btn-p">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Categories modal ───────────────────────────────────────────────── -->
+  <div class="overlay" id="catModal">
+    <div class="modal">
+      <div class="modal-title">Manage categories</div>
+      <div class="cat-list" id="catList"></div>
+      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:8px;">ADD NEW</div>
+      <div class="cat-add-row">
+        <input type="text" id="catNameInput" placeholder="Category name" maxlength="32">
+        <button class="btn btn-p">Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:8px;">COLOUR</div>
+      <div class="swatch-row" id="swatchRow"></div>
+      <div class="mfooter" style="margin-top:0;">
+        <span></span>
+        <button class="btn btn-p">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Targets modal ──────────────────────────────────────────────────── -->
+  <div class="overlay" id="targetsModal">
+    <div class="modal">
+      <div class="modal-title">Weekly targets</div>
+      <p style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:1.25rem;line-height:1.6;">These targets control the progress bars in Overview and Review. Adjust them to match your actual goals.</p>
+      <div class="targets-row">
+        <div class="target-field">
+          <label>RUNS / WEEK</label>
+          <input type="number" id="tgtRuns" min="0" max="14" value="3">
+        </div>
+        <div class="target-field">
+          <label>REAL REST / WEEK</label>
+          <input type="number" id="tgtRest" min="0" max="7" value="5">
+        </div>
+      </div>
+      <div class="mfooter">
+        <span></span>
+        <div class="mactions">
+          <button class="btn">Cancel</button>
+          <button class="btn btn-p">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
