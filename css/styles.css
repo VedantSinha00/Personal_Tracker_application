@@ -1565,3 +1565,84 @@
       background: var(--accent-bg); color: var(--accent);
       border: 1px solid #4a9e72;
     }
+
+    /* ── Daily journal ────────────────────────────────────────────────────── */
+    .journal-toggle-row { margin-top: 4px; }
+
+    .journal-toggle {
+      width: 100%;
+      padding: 5px 9px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text3);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .journal-toggle:hover {
+      border-color: var(--border2);
+      color: var(--text2);
+    }
+
+    .journal-toggle.has-entry {
+      border-style: solid;
+      border-color: var(--accent-bg);
+      color: var(--accent);
+    }
+
+    .journal-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .journal-area { margin-top: 6px; }
+
+    .journal-ta {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      resize: vertical;
+      min-height: 64px;
+      max-height: 140px;
+      outline: none;
+      line-height: 1.6;
+      transition: border-color 0.15s;
+    }
+
+    .journal-ta:focus { border-color: var(--border2); }
+
+    /* Insights journal entries */
+    .journal-ins-entry {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .journal-ins-entry:last-child { border-bottom: none; }
+
+    .journal-ins-date {
+      font-size: 11px;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.3px;
+      margin-bottom: 5px;
+    }
+
+    .journal-ins-text {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.8;
+    }

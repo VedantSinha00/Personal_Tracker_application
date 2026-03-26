@@ -97,6 +97,20 @@ export function renderDG(d) {
         <div class="blocks-stack">${blockPills}</div>
         ${day.fullRest ? '' : `<button class="add-btn"
           data-action="open-block" data-day="${i}" data-block="new">+ log block</button>`}
+        <div class="journal-toggle-row">
+          <button class="journal-toggle${day.journal && day.journal.trim() ? ' has-entry' : ''}"
+            data-action="toggle-journal" data-day="${i}">
+            &#128221;
+            ${day.journal && day.journal.trim() ? '<span class="journal-dot"></span>' : ''}
+            Journal
+          </button>
+          <div class="journal-area" id="journal-area-${i}" style="display:none;">
+            <textarea class="journal-ta"
+              data-action="save-journal" data-day="${i}"
+              placeholder="How did the day go? What worked, what didn&#39;t?" rows="3"
+            >${day.journal || ''}</textarea>
+          </div>
+        </div>
         <div class="day-badges">
           ${day.fullRest ? '' : `<button class="badge-btn${day.mvd ? ' mvd-on' : ''}"
             data-action="tog-mvd" data-day="${i}">${day.mvd ? 'MVD ✓' : 'MVD'}</button>`}
@@ -250,6 +264,25 @@ export function initDailyLogListeners() {
     }
     const mvd = e.target.closest('[data-action="tog-mvd"]');
     if (mvd) { togMVD(+mvd.dataset.day); return; }
+
+    const jToggle = e.target.closest('[data-action="toggle-journal"]');
+    if (jToggle) {
+      const area = document.getElementById(`journal-area-${jToggle.dataset.day}`);
+      if (!area) return;
+      const isOpen = area.style.display !== 'none';
+      area.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) area.querySelector('textarea').focus();
+      return;
+    }
+  });
+
+  // Journal — auto-save on input
+  document.getElementById('dayGrid').addEventListener('input', e => {
+    const ta = e.target.closest('[data-action="save-journal"]');
+    if (!ta) return;
+    const d = load();
+    d.days[+ta.dataset.day].journal = ta.value;
+    save(d);
   });
 
   // ── Block modal ────────────────────────────────────────────────────────────

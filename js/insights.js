@@ -292,6 +292,32 @@ export function renderInsights() {
       </div>
     </div>`;
 
+  // ── Daily journals ──
+  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const journalEntries = [];
+  weeks.forEach(w => {
+    const mon = getMon(w.offset);
+    (w.data.days || []).forEach((day, i) => {
+      if (day.journal && day.journal.trim()) {
+        const date = new Date(mon);
+        date.setDate(mon.getDate() + i);
+        journalEntries.push({
+          dayName: DAY_NAMES[i],
+          date:    date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          text:    day.journal.trim(),
+        });
+      }
+    });
+  });
+  const journalHTML = journalEntries.length > 0
+    ? journalEntries.map(e =>
+        `<div class="journal-ins-entry">
+          <div class="journal-ins-date">${e.dayName}, ${e.date}</div>
+          <div class="journal-ins-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+        </div>`
+      ).join('')
+    : `<div style="font-size:13px;color:var(--text3);padding:4px 0;">No journal entries in this period. Start journaling in the Daily Log tab.</div>`;
+
   container.innerHTML = `
     <div class="ins-sec">
       <div class="ins-lbl">Hours worked — weekly</div>
@@ -325,5 +351,10 @@ export function renderInsights() {
       <div class="ins-lbl">Summary</div>
       <div style="padding:20px;font-size:14px;color:var(--text2);line-height:1.9;">${summary}</div>
     </div>
+    <div class="ins-sec">
+      <div class="ins-lbl">Daily journals</div>
+      <div style="padding:12px 20px;">${journalHTML}</div>
+    </div>
     <div class="ins-sec">${legendHTML}</div>`;
 }
+

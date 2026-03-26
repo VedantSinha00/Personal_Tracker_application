@@ -35,7 +35,7 @@ export function def() {
     stack,
     days: DAYS.map(() => ({
       run: false, rest: false, mvd: false, fullRest: false,
-      blocks: [], habits: {},
+      blocks: [], habits: {}, journal: '',
     })),
     review: { worked: '', didnt: '', adjust: '' },
   };
