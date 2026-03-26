@@ -122,7 +122,12 @@ function renameCat(idx, newName) {
 export function populateCatSelect() {
   const sel = document.getElementById('fCat');
   const cur = sel.value;
-  const cats = sortedCats();
+  // Use loadCats() so the dropdown order matches the Manage Categories modal.
+  // sortedCats() applies the Stack tab's per-week reorder which is unrelated.
+  const allCats = loadCats();
+  const others  = allCats.filter(c => c.name === 'Others');
+  const rest    = allCats.filter(c => c.name !== 'Others');
+  const cats    = [...rest, ...others];
   sel.innerHTML = '<option value="">Select...</option>' +
     cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   if (cur) sel.value = cur;
