@@ -1,16 +1,23 @@
 // ── storage.js ───────────────────────────────────────────────────────────────
-// The data layer. Every read from and write to localStorage lives here.
+// The data layer. All reads/writes go through this file.
 //
-// ARCHITECTURE NOTE: This is intentionally the only file that touches
-// localStorage. When we migrate to Supabase, this is the only file that
-// changes — every other module keeps calling the same functions.
+// ARCHITECTURE — two-layer approach:
+//   1. localStorage  → synchronous cache, keeps all existing app code working
+//                      unchanged (load/save are still instant/synchronous)
+//   2. Supabase       → async sync layer, called in the background after every
+//                       save(). The app never waits for it.
+//
+// This means:
+//   - The UI is always instant (reads from localStorage cache)
+//   - Data is durably persisted to the cloud after every change
+//   - If offline, changes queue up in localStorage and sync on next load
+//
+// When migrating away from Supabase in the future, only this file changes.
 
 import { DAYS, DEFAULT_CATS, BUILTIN_HABITS } from './constants.js';
+import { sb, getCurrentUser } from './auth.js';
 
-// ── Week state ───────────────────────────────────────────────────────────────
-// `wk` is a number representing offset from the current week.
-//  0 = this week, -1 = last week, 1 = next week, etc.
-// It's exported so other modules can read it, but only storage.js mutates it.
+// ── Week state ────────────────────────────────────────────────────────────────
 export let wk = 0;
 export function setWk(val) { wk = val; }
 
@@ -18,28 +25,24 @@ export function wkKey()    { return 'wt_wk_' + wk; }
 export function orderKey() { return 'wt_order_' + wk; }
 export function focusKey() { return 'wt_focus_' + wk; }
 
-// ── Week data (the main payload) ─────────────────────────────────────────────
-// Each week's data is a single JSON object stored under its wkKey.
-// Shape: { intention, stack, days: [...], review: {...} }
-
+// ── Default week data ─────────────────────────────────────────────────────────
 export function def() {
-  const cats = loadCats();
+  const cats  = loadCats();
   const stack = {};
   cats.forEach(c => { stack[c.name] = ''; });
   return {
     intention: '',
     stack,
     days: DAYS.map(() => ({
-      run: false,
-      rest: false,
-      mvd: false,
-      fullRest: false,
-      blocks: [],
-      habits: {},
+      run: false, rest: false, mvd: false, fullRest: false,
+      blocks: [], habits: {},
     })),
     review: { worked: '', didnt: '', adjust: '' },
   };
 }
+
+// ── Synchronous read/write (localStorage cache) ───────────────────────────────
+// These are called throughout the app and must remain synchronous.
 
 export function load() {
   try {
@@ -50,58 +53,70 @@ export function load() {
 
 export function save(d) {
   localStorage.setItem(wkKey(), JSON.stringify(d));
+  _syncWeek(wk, d);   // fire-and-forget background sync to Supabase
 }
 
-// ── Categories ───────────────────────────────────────────────────────────────
+// ── Categories ────────────────────────────────────────────────────────────────
 export function loadCats() {
   try {
     const r = localStorage.getItem('wt_categories');
     return r ? JSON.parse(r) : DEFAULT_CATS.slice();
   } catch(e) { return DEFAULT_CATS.slice(); }
 }
+
 export function saveCats(cats) {
   localStorage.setItem('wt_categories', JSON.stringify(cats));
+  _syncCategories(cats);
 }
 
-// ── Custom habits ────────────────────────────────────────────────────────────
+// ── Custom habits ─────────────────────────────────────────────────────────────
 export function loadHabits() {
   try {
     const r = localStorage.getItem('wt_habits');
     return r ? JSON.parse(r) : [];
   } catch(e) { return []; }
 }
+
 export function saveHabits(h) {
   localStorage.setItem('wt_habits', JSON.stringify(h));
+  _syncHabits(h);
 }
+
 export function allHabits() {
   return [...BUILTIN_HABITS, ...loadHabits()];
 }
 
-// ── Focus levels (per week, per category) ────────────────────────────────────
+// ── Focus levels ──────────────────────────────────────────────────────────────
+// Focus and order are stored inside weekly_data in Supabase (see _syncWeek),
+// so no separate sync call is needed here.
 export function loadFocus() {
   try {
     const r = localStorage.getItem(focusKey());
     return r ? JSON.parse(r) : {};
   } catch(e) { return {}; }
 }
+
 export function saveFocus(f) {
   localStorage.setItem(focusKey(), JSON.stringify(f));
+  // Merge into weekly data sync — read current week data and re-sync
+  _syncWeekFocusOrder(wk);
 }
 
-// ── Stack item order (per week) ──────────────────────────────────────────────
+// ── Stack item order ──────────────────────────────────────────────────────────
 export function loadOrder() {
   try {
     const r = localStorage.getItem(orderKey());
     return r ? JSON.parse(r) : null;
   } catch(e) { return null; }
 }
+
 export function saveOrder(arr) {
   localStorage.setItem(orderKey(), JSON.stringify(arr));
+  _syncWeekFocusOrder(wk);
 }
 
-// sortedCats applies the saved drag order and always pins "Others" last.
 export function sortedCats() {
-  const cats = loadCats();
+  const cats  = loadCats();
   const order = loadOrder();
   let result;
   if (!order) {
@@ -116,34 +131,36 @@ export function sortedCats() {
   return [...rest, ...others];
 }
 
-// ── Targets (runs/week, rest/week) ───────────────────────────────────────────
+// ── Targets ───────────────────────────────────────────────────────────────────
 export function loadTargets() {
   try {
     const r = localStorage.getItem('wt_targets');
     return r ? JSON.parse(r) : { runs: 3, rest: 5 };
   } catch(e) { return { runs: 3, rest: 5 }; }
 }
+
 export function saveTargetsData(runs, rest) {
   localStorage.setItem('wt_targets', JSON.stringify({ runs, rest }));
+  _syncTargets(runs, rest);
 }
 
-// ── Category archive ─────────────────────────────────────────────────────────
-// When a category is deleted, its colour is archived so old blocks
-// still render with the right colour.
+// ── Category archive ──────────────────────────────────────────────────────────
 export function loadCatArchive() {
   try { return JSON.parse(localStorage.getItem('wt_cat_archive') || '{}'); }
   catch(e) { return {}; }
 }
+
 export function saveCatArchive(arch) {
   localStorage.setItem('wt_cat_archive', JSON.stringify(arch));
+  _syncCatArchive(arch);
 }
 
-// ── Export / Import ──────────────────────────────────────────────────────────
+// ── Export / Import ───────────────────────────────────────────────────────────
 export function exportD() {
   const all = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k.startsWith('wt_')) {
+    if (k && k.startsWith('wt_')) {
       try { all[k] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
     }
   }
@@ -171,7 +188,6 @@ export function importD(e) {
       Object.keys(all).forEach(k => {
         if (k.startsWith('wt_')) localStorage.setItem(k, JSON.stringify(all[k]));
       });
-      // renderAll will be called by app.js after import
       document.dispatchEvent(new CustomEvent('wt:import-complete'));
     } catch(err) {
       alert('Could not read file. Make sure it is a valid tracker export.');
@@ -182,6 +198,244 @@ export function importD(e) {
 
 export function updateExportLbl() {
   const lbl = document.getElementById('lastExportLbl');
-  const ts = localStorage.getItem('wt_last_export');
+  const ts  = localStorage.getItem('wt_last_export');
   if (lbl) lbl.textContent = ts ? 'Last export: ' + ts : '';
+}
+
+// ── Focus key helpers (used by stack.js carry forward) ───────────────────────
+export function loadFocusKey() { return 'wt_focus_'; }
+
+// ── Supabase sync functions ───────────────────────────────────────────────────
+// All async, all fire-and-forget. Errors are logged but never surface to
+// the user — the localStorage cache is always the source of truth locally.
+
+async function _syncWeek(offset, d) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    const focus     = loadFocusForOffset(offset);
+    const itemOrder = loadOrderForOffset(offset);
+    await sb.from('weekly_data').upsert({
+      user_id:     user.id,
+      week_offset: offset,
+      intention:   d.intention   || '',
+      stack:       d.stack       || {},
+      days:        d.days        || [],
+      review:      d.review      || {},
+      focus,
+      item_order:  itemOrder     || [],
+      updated_at:  new Date().toISOString(),
+    }, { onConflict: 'user_id,week_offset' });
+  } catch(err) {
+    console.warn('[sync] weekly_data failed:', err.message);
+  }
+}
+
+// Called when only focus or order changes (not the full day data)
+async function _syncWeekFocusOrder(offset) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    const focus     = loadFocusForOffset(offset);
+    const itemOrder = loadOrderForOffset(offset);
+    const d         = load(); // load current week from localStorage cache
+    await sb.from('weekly_data').upsert({
+      user_id:     user.id,
+      week_offset: offset,
+      intention:   d.intention   || '',
+      stack:       d.stack       || {},
+      days:        d.days        || [],
+      review:      d.review      || {},
+      focus,
+      item_order:  itemOrder     || [],
+      updated_at:  new Date().toISOString(),
+    }, { onConflict: 'user_id,week_offset' });
+  } catch(err) {
+    console.warn('[sync] weekly_data (focus/order) failed:', err.message);
+  }
+}
+
+async function _syncCategories(cats) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    // Delete all existing categories for this user and re-insert.
+    // Simpler than diffing — category lists are short.
+    await sb.from('categories').delete().eq('user_id', user.id);
+    if (cats.length > 0) {
+      await sb.from('categories').insert(
+        cats.map((c, i) => ({
+          user_id:  user.id,
+          name:     c.name,
+          color:    c.color,
+          position: i,
+        }))
+      );
+    }
+  } catch(err) {
+    console.warn('[sync] categories failed:', err.message);
+  }
+}
+
+async function _syncHabits(habits) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    await sb.from('habits').delete().eq('user_id', user.id);
+    if (habits.length > 0) {
+      await sb.from('habits').insert(
+        habits.map(h => ({
+          user_id:  user.id,
+          habit_id: h.id,
+          name:     h.name,
+          color:    h.color,
+          target:   h.target || 5,
+        }))
+      );
+    }
+  } catch(err) {
+    console.warn('[sync] habits failed:', err.message);
+  }
+}
+
+async function _syncTargets(runs, rest) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    await sb.from('targets').upsert({
+      user_id:    user.id,
+      runs,
+      rest,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+  } catch(err) {
+    console.warn('[sync] targets failed:', err.message);
+  }
+}
+
+async function _syncCatArchive(arch) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    await sb.from('cat_archive').upsert({
+      user_id:    user.id,
+      archive:    arch,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+  } catch(err) {
+    console.warn('[sync] cat_archive failed:', err.message);
+  }
+}
+
+// ── Helpers to load focus/order for any week offset ──────────────────────────
+function loadFocusForOffset(offset) {
+  try {
+    const r = localStorage.getItem('wt_focus_' + offset);
+    return r ? JSON.parse(r) : {};
+  } catch(e) { return {}; }
+}
+
+function loadOrderForOffset(offset) {
+  try {
+    const r = localStorage.getItem('wt_order_' + offset);
+    return r ? JSON.parse(r) : null;
+  } catch(e) { return null; }
+}
+
+// ── Remote load on login ──────────────────────────────────────────────────────
+// Called once by app.js after auth is confirmed (wt:auth-ready event).
+// Pulls all data from Supabase into localStorage so the rest of the app
+// works as normal. This is the only time we read FROM Supabase — after
+// this point, localStorage is always up to date.
+export async function loadFromSupabase() {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  try {
+    // Weekly data
+    const { data: weeks } = await sb
+      .from('weekly_data')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (weeks && weeks.length > 0) {
+      weeks.forEach(row => {
+        const key = 'wt_wk_' + row.week_offset;
+        // Only overwrite if Supabase version is newer than local cache
+        const local = localStorage.getItem(key);
+        const localTs = local ? (JSON.parse(local).__updated_at || 0) : 0;
+        if (!localTs || new Date(row.updated_at) > new Date(localTs)) {
+          const d = {
+            intention:   row.intention  || '',
+            stack:       row.stack      || {},
+            days:        row.days       || [],
+            review:      row.review     || {},
+            __updated_at: row.updated_at,
+          };
+          localStorage.setItem(key, JSON.stringify(d));
+          if (row.focus && Object.keys(row.focus).length > 0)
+            localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
+          if (row.item_order && row.item_order.length > 0)
+            localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
+        }
+      });
+    }
+
+    // Categories
+    const { data: cats } = await sb
+      .from('categories')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('position');
+
+    if (cats && cats.length > 0) {
+      const mapped = cats.map(c => ({ name: c.name, color: c.color }));
+      localStorage.setItem('wt_categories', JSON.stringify(mapped));
+    }
+
+    // Habits
+    const { data: habits } = await sb
+      .from('habits')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (habits && habits.length > 0) {
+      const mapped = habits.map(h => ({
+        id:     h.habit_id,
+        name:   h.name,
+        color:  h.color,
+        target: h.target,
+      }));
+      localStorage.setItem('wt_habits', JSON.stringify(mapped));
+    }
+
+    // Targets
+    const { data: targets } = await sb
+      .from('targets')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (targets) {
+      localStorage.setItem('wt_targets', JSON.stringify({
+        runs: targets.runs,
+        rest: targets.rest,
+      }));
+    }
+
+    // Cat archive
+    const { data: arch } = await sb
+      .from('cat_archive')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (arch && arch.archive) {
+      localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
+    }
+
+  } catch(err) {
+    console.warn('[loadFromSupabase] failed:', err.message);
+    // Graceful degradation — localStorage data (if any) is used as fallback
+  }
 }

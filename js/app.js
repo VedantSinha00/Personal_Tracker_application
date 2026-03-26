@@ -6,6 +6,8 @@
 // module is deliberately unaware of its siblings — it communicates upward
 // via custom events, and app.js decides what to re-render in response.
 
+import { loadFromSupabase } from './storage.js';
+
 import {
   load, save, wk, setWk,
   loadCats, loadTargets, saveTargetsData,
@@ -230,7 +232,17 @@ function initListeners() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 applyTheme();
-updateWkLabel();
-updateExportLbl();
-initListeners();
-renderAll();
+
+// Wait for auth before initialising. This fires either:
+//   a) immediately on page load if a session already exists (returning user)
+//   b) after the user submits the login/signup form
+document.addEventListener('wt:auth-ready', async () => {
+  // Pull latest data from Supabase into localStorage cache
+  await loadFromSupabase();
+
+  // Now initialise the app as normal
+  updateWkLabel();
+  updateExportLbl();
+  initListeners();
+  renderAll();
+}, { once: false }); // once:false so re-login after sign-out also works
