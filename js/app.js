@@ -7,6 +7,7 @@
 // via custom events, and app.js decides what to re-render in response.
 
 import { loadFromSupabase } from './storage.js';
+import { getCurrentUser } from './auth.js';
 
 import {
   load, save, wk, setWk,
@@ -45,7 +46,6 @@ function updateWkLabel() {
 // ── Tab switching ─────────────────────────────────────────────────────────────
 let _insightsInited = false;
 function swTab(id) {
-  console.log('[swTab] switching to:', id);
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -126,11 +126,9 @@ function saveIntention() {
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
 function initListeners() {
-  console.log('[initListeners] starting');
 
   // Tabs
   const tabs = document.querySelectorAll('.tab');
-  console.log('[initListeners] found', tabs.length, 'tab elements');
   tabs.forEach(btn => {
     btn.addEventListener('click', () => swTab(btn.dataset.tab));
   });
@@ -238,14 +236,14 @@ function initListeners() {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 applyTheme();
 
-// Wait for auth before initialising. This fires either:
-//   a) immediately on page load if a session already exists (returning user)
-//   b) after the user submits the login/signup form
-document.addEventListener('wt:auth-ready', async () => {
-  console.log('[wt:auth-ready] fired');
-  // Initialise the UI immediately with whatever is in localStorage cache.
-  // This guarantees buttons and tabs are always interactive, even if the
-  // Supabase fetch below is slow or stalls.
+// ── Auth-ready handler ────────────────────────────────────────────────────────
+// Extracted as a named function so it can be called both from the event listener
+// AND directly when app.js loads after the event already fired (CDN race condition).
+let _appInited = false;
+async function handleAuthReady() {
+  if (_appInited) return;   // guard against double-init on fast networks
+  _appInited = true;
+
   updateWkLabel();
   updateExportLbl();
   initListeners();
@@ -258,4 +256,23 @@ document.addEventListener('wt:auth-ready', async () => {
   } catch (err) {
     console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
   }
-}, { once: false }); // once:false so re-login after sign-out also works
+}
+
+// Listen for the event — covers the login / re-login path.
+// once:false so re-login after sign-out + re-login also works.
+document.addEventListener('wt:auth-ready', () => {
+  _appInited = false;   // allow re-init on sign-out + re-login
+  handleAuthReady();
+}, { once: false });
+
+// Race-condition fix for page refresh over a CDN:
+// auth.js (small file) may resolve getSession() and fire wt:auth-ready before
+// app.js and its many dependencies finish downloading. In that case the event
+// is missed. We detect this by checking getCurrentUser() — auth.js sets it
+// synchronously before dispatching the event, so if it is non-null here, the
+// event already fired and we must initialise the app ourselves.
+if (getCurrentUser()) {
+  // Schedule on next tick so the DOM is fully parsed and module evaluation is
+  // fully complete before we touch the UI.
+  setTimeout(handleAuthReady, 0);
+}
