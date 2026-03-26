@@ -285,6 +285,28 @@ export function initDailyLogListeners() {
     save(d);
   });
 
+  // Journal — Enter collapses (already saved); Shift+Enter = line break
+  document.getElementById('dayGrid').addEventListener('keydown', e => {
+    const ta = e.target.closest('[data-action="save-journal"]');
+    if (!ta || e.key !== 'Enter' || e.shiftKey) return;
+    e.preventDefault();
+    ta.blur();   // triggers focusout → collapses
+  });
+
+  // Journal — collapse when textarea loses focus (click anywhere else)
+  document.getElementById('dayGrid').addEventListener('focusout', e => {
+    const ta = e.target.closest('[data-action="save-journal"]');
+    if (!ta) return;
+    // If focus is moving to the toggle button for this same day, let the click
+    // handler deal with it (it will toggle open→closed).
+    const toggle = document.querySelector(
+      `.journal-toggle[data-day="${ta.dataset.day}"]`
+    );
+    if (e.relatedTarget && e.relatedTarget === toggle) return;
+    const area = document.getElementById(`journal-area-${ta.dataset.day}`);
+    if (area) area.style.display = 'none';
+  });
+
   // ── Block modal ────────────────────────────────────────────────────────────
   document.getElementById('modal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeM();
