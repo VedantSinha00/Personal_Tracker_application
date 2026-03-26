@@ -237,12 +237,19 @@ applyTheme();
 //   a) immediately on page load if a session already exists (returning user)
 //   b) after the user submits the login/signup form
 document.addEventListener('wt:auth-ready', async () => {
-  // Pull latest data from Supabase into localStorage cache
-  await loadFromSupabase();
-
-  // Now initialise the app as normal
+  // Initialise the UI immediately with whatever is in localStorage cache.
+  // This guarantees buttons and tabs are always interactive, even if the
+  // Supabase fetch below is slow or stalls.
   updateWkLabel();
   updateExportLbl();
   initListeners();
   renderAll();
+
+  // Pull latest data from Supabase in the background, then re-render.
+  try {
+    await loadFromSupabase();
+    renderAll();
+  } catch (err) {
+    console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
+  }
 }, { once: false }); // once:false so re-login after sign-out also works
