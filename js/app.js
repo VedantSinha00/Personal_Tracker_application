@@ -45,6 +45,7 @@ function updateWkLabel() {
 // ── Tab switching ─────────────────────────────────────────────────────────────
 let _insightsInited = false;
 function swTab(id) {
+  console.log('[swTab] switching to:', id);
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -125,9 +126,12 @@ function saveIntention() {
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
 function initListeners() {
+  console.log('[initListeners] starting');
 
   // Tabs
-  document.querySelectorAll('.tab').forEach(btn => {
+  const tabs = document.querySelectorAll('.tab');
+  console.log('[initListeners] found', tabs.length, 'tab elements');
+  tabs.forEach(btn => {
     btn.addEventListener('click', () => swTab(btn.dataset.tab));
   });
 
@@ -228,6 +232,7 @@ function initListeners() {
     renderAll();
     updateExportLbl();
   });
+  console.log('[initListeners] complete');
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -237,6 +242,7 @@ applyTheme();
 //   a) immediately on page load if a session already exists (returning user)
 //   b) after the user submits the login/signup form
 document.addEventListener('wt:auth-ready', async () => {
+  console.log('[wt:auth-ready] fired');
   // Initialise the UI immediately with whatever is in localStorage cache.
   // This guarantees buttons and tabs are always interactive, even if the
   // Supabase fetch below is slow or stalls.
