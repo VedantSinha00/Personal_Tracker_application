@@ -276,13 +276,32 @@ export function initDailyLogListeners() {
     }
   });
 
-  // Journal — auto-save on input
+  // Journal — auto-save on input + live indicator update
   document.getElementById('dayGrid').addEventListener('input', e => {
     const ta = e.target.closest('[data-action="save-journal"]');
     if (!ta) return;
     const d = load();
-    d.days[+ta.dataset.day].journal = ta.value;
+    const dayIdx = +ta.dataset.day;
+    d.days[dayIdx].journal = ta.value;
     save(d);
+
+    // Keep the toggle button's green-dot indicator in sync with actual content
+    const hasText = !!ta.value.trim();
+    const toggle  = document.querySelector(
+      `.journal-toggle[data-day="${dayIdx}"]`
+    );
+    if (toggle) {
+      toggle.classList.toggle('has-entry', hasText);
+      // Re-render just the dot span inside the button
+      const existing = toggle.querySelector('.journal-dot');
+      if (hasText && !existing) {
+        const dot = document.createElement('span');
+        dot.className = 'journal-dot';
+        toggle.insertBefore(dot, toggle.childNodes[1]);
+      } else if (!hasText && existing) {
+        existing.remove();
+      }
+    }
   });
 
   // Journal — Enter collapses (already saved); Shift+Enter = line break
