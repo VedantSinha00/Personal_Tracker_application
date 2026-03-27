@@ -843,12 +843,33 @@
       font-family: var(--font-body);
     }
 
-    .rv-stat-lbl {
-      font-size: 9.5px;
+    .rv-sec-lbl {
+      font-size: 11px;
+      font-weight: 600;
       color: var(--text3);
       letter-spacing: 0.5px;
-      font-weight: 600;
+      margin-bottom: 12px;
       text-transform: uppercase;
+    }
+
+    .rv-metrics-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .rv-row-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .rv-metrics-split, .rv-row-split {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
     }
 
     .guide-grid {
