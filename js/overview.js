@@ -125,10 +125,10 @@ export function renderOv(d) {
     <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; align-items:flex-start;">
       <div style="display:flex;flex-direction:column;gap:1.5rem;">
         ${dayCardHTML}
+        ${streaksHTML}
       </div>
       <div style="display:flex;flex-direction:column;gap:1.5rem;">
         ${focusHTML}
-        ${streaksHTML}
       </div>
     </div>
   `;
