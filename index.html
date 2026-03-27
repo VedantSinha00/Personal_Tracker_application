@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <!-- Supabase JS SDK (loaded before any module scripts) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -18,8 +20,10 @@
   <!-- ── Auth screen ──────────────────────────────────────────────────────── -->
   <div id="authScreen" class="auth-screen">
     <div class="auth-card">
+
+      <!-- Logo lockup -->
       <div class="auth-logo">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
           <rect width="32" height="32" rx="8" fill="#1a1916"/>
           <circle cx="8"  cy="13" r="3" fill="#4a9e72"/>
           <circle cx="16" cy="13" r="3" fill="#4a9e72"/>
@@ -28,13 +32,22 @@
           <circle cx="16" cy="21" r="3" fill="#2b2924"/>
           <circle cx="24" cy="21" r="3" fill="#2b2924"/>
         </svg>
-        <span>Weekly Tracker</span>
+        <div class="auth-logo-text">
+          <span class="auth-logo-name">Weekly Tracker</span>
+          <span class="auth-logo-sub">Your week, your way</span>
+        </div>
       </div>
+
+      <!-- Tab pill switcher -->
       <div class="auth-tabs">
         <button class="auth-tab active" data-auth-tab="login">Sign in</button>
         <button class="auth-tab"        data-auth-tab="signup">Create account</button>
       </div>
+
+      <!-- Banner -->
       <div class="auth-banner" id="authBanner" style="display:none;"></div>
+
+      <!-- Sign in panel -->
       <div class="auth-panel active" id="authLogin">
         <div class="auth-field">
           <label>USERNAME</label>
@@ -42,10 +55,18 @@
         </div>
         <div class="auth-field">
           <label>PASSWORD</label>
-          <input type="password" id="loginPassword" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password">
+          <div class="auth-pw-wrap">
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+            <button type="button" class="auth-pw-toggle" data-target="loginPassword" tabindex="-1" aria-label="Show password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
         </div>
+        <button type="button" class="auth-forgot-link" id="forgotLink">Forgot password?</button>
         <button class="auth-submit" id="loginBtn">Sign in</button>
       </div>
+
+      <!-- Create account panel -->
       <div class="auth-panel" id="authSignup">
         <div class="auth-field">
           <label>USERNAME</label>
@@ -57,10 +78,27 @@
         </div>
         <div class="auth-field">
           <label>PASSWORD</label>
-          <input type="password" id="signupPassword" placeholder="min. 6 characters" autocomplete="new-password">
+          <div class="auth-pw-wrap">
+            <input type="password" id="signupPassword" placeholder="Min. 6 characters" autocomplete="new-password">
+            <button type="button" class="auth-pw-toggle" data-target="signupPassword" tabindex="-1" aria-label="Show password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
         </div>
         <button class="auth-submit" id="signupBtn">Create account</button>
       </div>
+
+      <!-- Forgot password panel -->
+      <div class="auth-panel" id="authForgot">
+        <p class="auth-forgot-desc">Enter your email and we'll send you a reset link.</p>
+        <div class="auth-field">
+          <label>EMAIL</label>
+          <input type="email" id="forgotEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button class="auth-submit" id="forgotBtn">Send reset link</button>
+        <button type="button" class="auth-forgot-link" id="backToLogin">← Back to sign in</button>
+      </div>
+
     </div>
   </div>
 
@@ -77,9 +115,9 @@
         <button class="help-btn" data-action="open-help" title="How to use this tracker">?</button>
         <button id="themeBtn" aria-label="Toggle dark mode"
           style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:var(--text2);"
-          title="Toggle dark mode">🌙</button>
-        <button id="accountBtn" class="btn" title="Account settings" style="font-size:12px;">👤 Account</button>
-        <button id="signOutBtn" class="btn" title="Sign out" style="font-size:12px;">Sign out</button>
+          title="Toggle dark mode"><i data-lucide="moon" style="width:16px;height:16px;"></i></button>
+        <button id="accountBtn" class="btn" title="Account settings" style="font-size:12px;display:flex;align-items:center;gap:5px;"><i data-lucide="user" style="width:13px;height:13px;"></i> Account</button>
+        <button id="signOutBtn" class="btn" title="Sign out" style="font-size:12px;display:flex;align-items:center;gap:5px;"><i data-lucide="log-out" style="width:13px;height:13px;"></i> Sign out</button>
         <div class="week-nav">
           <button class="nav-btn" data-dir="-1">←</button>
           <span class="week-lbl" id="wkLbl">—</span>
@@ -91,15 +129,15 @@
     <!-- ── Toolbar ────────────────────────────────────────────────────── -->
     <div class="toolbar">
       <span class="tlbl">Backup:</span>
-      <button class="btn" data-action="export">Export</button>
-      <label class="btn" style="cursor:pointer;">Import
+      <button class="btn" data-action="export" style="display:flex;align-items:center;gap:5px;"><i data-lucide="download" style="width:13px;height:13px;"></i> Export</button>
+      <label class="btn" style="cursor:pointer;display:flex;align-items:center;gap:5px;"><i data-lucide="upload" style="width:13px;height:13px;"></i> Import
         <input type="file" accept=".json" style="display:none" data-action="import">
       </label>
       <span class="export-meta" id="lastExportLbl"></span>
       <span class="tlbl" style="margin-left:auto;"></span>
-      <button class="btn" data-action="open-targets" title="Configure weekly targets">⚙ Targets</button>
-      <button class="btn" data-action="open-habits"  title="Manage custom habits">⚙ Habits</button>
-      <button class="btn" data-action="open-cats"    title="Manage categories">⚙ Categories</button>
+      <button class="btn" data-action="open-targets" title="Configure weekly targets" style="display:flex;align-items:center;gap:5px;"><i data-lucide="settings" style="width:13px;height:13px;"></i> Targets</button>
+      <button class="btn" data-action="open-habits"  title="Manage custom habits" style="display:flex;align-items:center;gap:5px;"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
+      <button class="btn" data-action="open-cats"    title="Manage categories" style="display:flex;align-items:center;gap:5px;"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
     </div>
 
     <!-- ── Tabs ───────────────────────────────────────────────────────── -->

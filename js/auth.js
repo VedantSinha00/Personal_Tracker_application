@@ -172,16 +172,73 @@ async function handleSignOut() {
   showAuth();
 }
 
+// ── Forgot password ───────────────────────────────────────────────────────────
+async function handleForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { showBanner('Please enter your email.'); return; }
+
+  hideBanner();
+  const btn = document.getElementById('forgotBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Send reset link';
+
+  if (error) { showBanner(error.message); return; }
+  showBanner('Reset link sent! Check your email.', false);
+}
+
+// ── Show / hide password toggle ───────────────────────────────────────────────
+function initPwToggles() {
+  document.querySelectorAll('.auth-pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      // Swap the Lucide icon
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.dataset.lucide = isHidden ? 'eye-off' : 'eye';
+        lucide.createIcons({ nodes: [icon] });
+      }
+    });
+  });
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 // Runs immediately when auth.js loads. Checks if there is already a valid
 // session (e.g. user refreshed the page) and skips the login screen if so.
 (async function init() {
   initAuthTabs();
+  initPwToggles();
 
   // Wire up buttons
   document.getElementById('loginBtn').addEventListener('click', handleLogin);
   document.getElementById('signupBtn').addEventListener('click', handleSignup);
   document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+  document.getElementById('forgotBtn').addEventListener('click', handleForgotPassword);
+
+  // Forgot password / back to login links
+  document.getElementById('forgotLink').addEventListener('click', () => {
+    hideBanner();
+    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('authForgot').classList.add('active');
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  });
+  document.getElementById('backToLogin').addEventListener('click', () => {
+    hideBanner();
+    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('authLogin').classList.add('active');
+    document.querySelectorAll('.auth-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.authTab === 'login')
+    );
+  });
 
   // Enter key submits whichever form is visible
   document.getElementById('loginUsername').addEventListener('keydown', e => {
@@ -192,6 +249,9 @@ async function handleSignOut() {
   });
   document.getElementById('signupPassword').addEventListener('keydown', e => {
     if (e.key === 'Enter') handleSignup();
+  });
+  document.getElementById('forgotEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleForgotPassword();
   });
 
   // Check for an existing session (page refresh / returning user)
@@ -214,4 +274,7 @@ async function handleSignOut() {
       showAuth();
     }
   });
+
+  // Initialise Lucide icons now that the DOM is ready
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 })();

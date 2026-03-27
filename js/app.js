@@ -65,6 +65,8 @@ function renderAll() {
   _renderOv(d);
   renderSt(d);
   updateCarryBtn(d);
+  // Refresh Lucide icons after every DOM render (icons may have been replaced)
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ── Week navigation ───────────────────────────────────────────────────────────
@@ -216,6 +218,13 @@ function initListeners() {
     save(d);
     renderSt(d);
     _renderDG(d);
+    _renderOv(d);   // keep Overview in sync when categories change
+  });
+
+  // Stack inputs saved — overview should reflect updated focus text immediately
+  document.addEventListener('wt:stack-saved', () => {
+    const d = load();
+    _renderOv(d);
   });
 
   // Habits changed

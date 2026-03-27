@@ -1,14 +1,11 @@
-// ── overview.js ──────────────────────────────────────────────────────────────
-// Renders the Overview (landing) tab — intention, focus grid, habits,
-// and this-week streaks. Read-only display except for habit checkboxes.
-
-import { FULL } from './constants.js';
+import { DAYS, FULL } from './constants.js';
 import {
   load, save, loadFocus, loadTargets, allHabits, wk,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { sortedCats } from './storage.js';
-import { todayI, getDayDate } from './dailylog.js';
+import { todayI, getDayDate, openM } from './dailylog.js';
+import { catC } from './colours.js';
 
 export function renderOv(d) {
   const el = document.getElementById('ovMain');
@@ -126,7 +123,28 @@ export function renderOv(d) {
       </div>
     </div>`;
 
-  el.innerHTML = intentionHTML + focusHTML + habitsHTML + streaksHTML;
+  // ── Today's blocks ──
+  const todayBlocks  = todayDay.blocks || [];
+  const blocksHTML = `
+    <div class="lp-section">
+      <div class="lp-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+        TODAY'S WORK BLOCKS
+        <button class="add-btn" id="ovLogBlockBtn"
+          style="width:auto;padding:4px 12px;font-size:12px;border-radius:6px;"
+          data-action="ov-log-block">+ log block</button>
+      </div>
+      ${todayBlocks.length === 0
+        ? `<div style="font-size:12px;color:var(--text3);padding:4px 0;">No blocks logged yet today.</div>`
+        : `<div class="ov-blocks" style="margin-top:6px;">
+            ${todayBlocks.map((b, bi) => `
+              <div class="ov-block block-pill" style="${catC(b.category)};cursor:pointer;"
+                data-action="ov-edit-block" data-block="${bi}">
+                ${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}
+              </div>`).join('')}
+          </div>`}
+    </div>`;
+
+  el.innerHTML = intentionHTML + focusHTML + blocksHTML + habitsHTML + streaksHTML;
 }
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
@@ -146,5 +164,14 @@ export function initOverviewListeners() {
         detail: { day: +cust.dataset.day, habit: cust.dataset.habit }
       }));
     }
+  });
+
+  // Delegated click for today's block logging from Overview
+  document.getElementById('ovMain').addEventListener('click', e => {
+    const ti = todayI();
+    if (ti < 0) return;
+    if (e.target.closest('[data-action="ov-log-block"]')) { openM(ti, 'new'); return; }
+    const editBtn = e.target.closest('[data-action="ov-edit-block"]');
+    if (editBtn) { openM(ti, +editBtn.dataset.block); return; }
   });
 }

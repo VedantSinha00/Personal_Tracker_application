@@ -128,6 +128,8 @@ export function saveStackInputs() {
   const intentionEl = document.getElementById('intention');
   if (intentionEl) d.intention = intentionEl.value;
   save(d);
+  // Notify app.js so Overview re-renders without a page reload
+  document.dispatchEvent(new CustomEvent('wt:stack-saved'));
 }
 
 // ── Focus toggle ──────────────────────────────────────────────────────────────

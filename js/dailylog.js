@@ -326,39 +326,40 @@ export function initDailyLogListeners() {
     if (area) area.style.display = 'none';
   });
 
-  // ── Block modal ────────────────────────────────────────────────────────────
+  // ── Block modal — single delegated listener on the stable #modal overlay ───
+  // Using one listener on #modal (which is never re-rendered) prevents the
+  // time-slot, energy, and chip buttons from going dead mid-session.
   document.getElementById('modal').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeM();
-  });
+    if (e.target === e.currentTarget) { closeM(); return; }
 
-  // Energy buttons — use data-energy attribute
-  document.querySelector('.erow').addEventListener('click', e => {
-    const btn = e.target.closest('.eopt');
-    if (btn) _pickEnergyValue(btn.dataset.energy);
-  });
+    const eopt = e.target.closest('.eopt');
+    if (eopt) { _pickEnergyValue(eopt.dataset.energy); return; }
 
-  // Duration quick-pick chips — use data-dur attribute
-  document.querySelector('.dur-chips').addEventListener('click', e => {
     const chip = e.target.closest('.dur-chip');
-    if (!chip) return;
-    document.getElementById('fDur').value = chip.dataset.dur;
-    document.querySelectorAll('.dur-chip').forEach(b => b.classList.remove('picked'));
-    chip.classList.add('picked');
-    document.getElementById('durValidation').textContent = '';
-  });
-
-  // Time slot buttons — use data-slot attribute
-  document.querySelector('.time-slots').addEventListener('click', e => {
-    const btn = e.target.closest('.time-slot');
-    if (!btn) return;
-    if (selSlot === btn.dataset.slot) {
-      selSlot = '';
-      document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('sel-slot'));
+    if (chip) {
+      document.getElementById('fDur').value = chip.dataset.dur;
+      document.querySelectorAll('.dur-chip').forEach(b => b.classList.remove('picked'));
+      chip.classList.add('picked');
+      document.getElementById('durValidation').textContent = '';
       return;
     }
-    selSlot = btn.dataset.slot;
-    document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('sel-slot'));
-    btn.classList.add('sel-slot');
+
+    const slot = e.target.closest('.time-slot');
+    if (slot) {
+      if (selSlot === slot.dataset.slot) {
+        selSlot = '';
+        document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('sel-slot'));
+      } else {
+        selSlot = slot.dataset.slot;
+        document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('sel-slot'));
+        slot.classList.add('sel-slot');
+      }
+      return;
+    }
+
+    if (e.target.id === 'delBtn')                    { delBlock(); return; }
+    if (e.target.closest('#modal .btn-p'))           { saveBlock(); return; }
+    if (e.target.closest('#modal .btn:not(.btn-p)')) { closeM();    return; }
   });
 
   // Duration text input — live validation
@@ -366,9 +367,4 @@ export function initDailyLogListeners() {
   document.getElementById('fDur').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fNotes').focus(); }
   });
-
-  // Save / Cancel / Delete buttons
-  document.querySelector('#modal .btn-p').addEventListener('click', saveBlock);
-  document.querySelector('#modal .btn:not(.btn-p)').addEventListener('click', closeM);
-  document.getElementById('delBtn').addEventListener('click', delBlock);
 }
