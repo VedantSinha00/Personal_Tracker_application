@@ -127,14 +127,7 @@
     </div>
 
     <!-- ── Toolbar ────────────────────────────────────────────────────── -->
-    <div class="toolbar">
-      <span class="tlbl">Backup:</span>
-      <button class="btn" data-action="export" style="display:flex;align-items:center;gap:5px;"><i data-lucide="download" style="width:13px;height:13px;"></i> Export</button>
-      <label class="btn" style="cursor:pointer;display:flex;align-items:center;gap:5px;"><i data-lucide="upload" style="width:13px;height:13px;"></i> Import
-        <input type="file" accept=".json" style="display:none" data-action="import">
-      </label>
-      <span class="export-meta" id="lastExportLbl"></span>
-      <span class="tlbl" style="margin-left:auto;"></span>
+    <div class="toolbar" style="justify-content:flex-end;">
       <button class="btn" data-action="open-targets" title="Configure weekly targets" style="display:flex;align-items:center;gap:5px;"><i data-lucide="settings" style="width:13px;height:13px;"></i> Targets</button>
       <button class="btn" data-action="open-habits"  title="Manage custom habits" style="display:flex;align-items:center;gap:5px;"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
       <button class="btn" data-action="open-cats"    title="Manage categories" style="display:flex;align-items:center;gap:5px;"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
@@ -384,6 +377,17 @@
           <input type="password" id="accountConfirmPassword" placeholder="Confirm new password" autocomplete="new-password">
           <button class="btn btn-p" id="savePasswordBtn" style="width:100%;margin-top:4px;">Update password</button>
         </div>
+      </div>
+
+      <div class="auth-field" style="margin-top:2rem;">
+        <label>DATA BACKUP</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <button class="btn" data-action="export" style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center;"><i data-lucide="download" style="width:13px;height:13px;"></i> Export Data</button>
+          <label class="btn" style="cursor:pointer;display:flex;align-items:center;gap:5px;flex:1;justify-content:center;"><i data-lucide="upload" style="width:13px;height:13px;"></i> Import Data
+            <input type="file" accept=".json" style="display:none" data-action="import">
+          </label>
+        </div>
+        <div class="export-meta" id="lastExportLbl" style="font-size:11px;color:var(--text3);text-align:center;"></div>
       </div>
 
       <div class="mfooter" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1rem;">

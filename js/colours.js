@@ -15,16 +15,11 @@ export function resolveHex(colorKey) {
   return LEGACY_MAP[colorKey] || '#6b6760';
 }
 
-// Given a hex background colour, returns either white or dark text
-// so the badge label is always legible.
+// Given a hex background colour, returns the text colour.
+// Because badges/pills are heavily mixed with the theme's base colour (40% opacity),
+// the standard body text colour (var(--text)) always provides optimal readable contrast.
 export function badgeTextColor(hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  // Perceived luminance formula (standard weights for human vision)
-  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  // Badges are tinted (40% colour, 60% base), so the threshold sits at 0.45
-  return lum > 0.45 ? '#1a1916' : '#ffffff';
+  return 'var(--text)';
 }
 
 // Legacy helper — kept for any callers that still use it.

@@ -123,7 +123,19 @@ export function renderOv(d) {
       </div>
     </div>`;
 
-  el.innerHTML = intentionHTML + focusHTML + dayCardHTML + streaksHTML;
+  const splitHTML = `
+    <div style="display:flex;gap:2.5rem;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:300px;">
+        ${focusHTML}
+      </div>
+      <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1.5rem;">
+        ${dayCardHTML}
+        ${streaksHTML}
+      </div>
+    </div>
+  `;
+
+  el.innerHTML = intentionHTML + splitHTML;
   
   if (typeof lucide !== 'undefined') {
     lucide.createIcons({ root: el });

@@ -1230,6 +1230,38 @@
     }
     .stack-section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+    /* ── STACK TAB TASKS (To-Do List) ─────────────────────────────── */
+    .si-tasks { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      transition: border-color 0.15s;
+    }
+    .task-item:hover { border-color: var(--border2); }
+    .task-checkbox-fake {
+      width: 14px; height: 14px; border: 1.5px solid var(--text3); opacity: 0.5;
+      border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+    }
+    .task-text { flex: 1; font-size: 13px; color: var(--text); line-height: 1.4; word-break: break-word; }
+    .task-del {
+      background: none; border: none; padding: 4px; margin: -4px;
+      color: var(--text3); cursor: pointer; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .task-del:hover { color: var(--red); background: #ff444415; }
+    .task-add { margin-top: 0px; }
+    .task-input {
+      width: 100%; padding: 10px 12px; border-radius: var(--radius-sm);
+      border: 1px dashed var(--border); background: transparent;
+      font-size: 13px; color: var(--text); outline: none;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .task-input::placeholder { color: var(--text3); font-style: italic; }
+    .task-input:focus { border-color: var(--blue); border-style: solid; background: var(--surface); box-shadow: 0 0 0 2px rgba(37,99,168,0.15); }
+
     /* ── CARRY FORWARD BUTTON ─────────────────────────────────────── */
     .carry-btn {
       font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm);
@@ -1465,7 +1497,7 @@
     .habit-cons-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
     .habit-cons-dots { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
     .habit-cons-cell { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
-    .habit-cons-cell.done { }
+
     .habit-cons-cell.missed { background: var(--surface2); }
     .habit-cons-cell.fr { opacity: 0.35; }
 

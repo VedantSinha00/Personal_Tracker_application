@@ -66,9 +66,11 @@ export function renderSt(d, animate) {
           <div class="task-list" id="tasks_${c.name}" data-catname="${c.name}">
             ${tasks.map((t, i) => `
               <div class="task-item" data-idx="${i}">
-                <span class="task-dot">•</span>
+                <div class="task-checkbox-fake"></div>
                 <span class="task-text">${t.text}</span>
-                <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}">×</button>
+                <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}" title="Delete task">
+                  <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                </button>
               </div>
             `).join('')}
           </div>
