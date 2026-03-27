@@ -13,13 +13,15 @@ export function updM(d) {
   const cats = loadCats();
   const hiddenCats = new Set(cats.filter(c => c.hidden).map(c => c.name));
 
-  console.log('[updM] Updating Review metrics...', { habits: allH.length, days: d.days.length });
+  console.log('[updM] Aggregating week data...', { habits: allH.map(h => h.name), days: d.days.length });
 
   // ── Habit Achievements ──
   const habitStats = allH.map(h => {
     let count = 0;
-    d.days.forEach(day => {
-      const done = !!(day.habits && day.habits[h.id]);
+    d.days.forEach((day, i) => {
+      // Defensive check: match by ID or Name (handles schema drift)
+      const done = !!(day.habits && (day.habits[h.id] || day.habits[h.name]));
+      
       if (h.id === 'rest') {
         if (done || day.fullRest) count++;
       } else {
@@ -28,6 +30,8 @@ export function updM(d) {
     });
     return { ...h, count };
   });
+
+  console.log('[updM] Aggregated habit counts:', habitStats.map(s => `${s.name}: ${s.count}`));
 
   const habitHTML = habitStats.map(h => {
     const target = h.target || 0;

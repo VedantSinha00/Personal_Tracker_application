@@ -170,7 +170,18 @@
     </div>
 
     <div id="review" class="sec">
-      <div class="rv-grid">
+      <div class="rv-metrics-split" style="margin-bottom:3rem;">
+        <div class="rv-habits-col">
+          <div class="rv-sec-lbl">HABIT ACHIEVEMENTS</div>
+          <div id="rvHabitsList" class="rv-habits-list"></div>
+        </div>
+        <div class="rv-stats-col">
+          <div class="rv-sec-lbl">WEEKLY SUMMARY</div>
+          <div id="rvCoreStats" class="rv-stats-grid"></div>
+        </div>
+      </div>
+
+      <div class="rv-row-split">
         <div class="rv-card">
           <div class="rv-lbl">WHAT WORKED</div>
           <textarea class="rv-ta" id="rvW" placeholder="Write here..."></textarea>
@@ -184,12 +195,6 @@
         <div class="rv-lbl">ONE THING TO ADJUST</div>
         <textarea class="rv-ta" id="rvA" placeholder="Write here..." style="min-height:80px;"></textarea>
       </div>
-
-      <div class="rv-metrics-split">
-        <div class="rv-habits-col">
-          <div class="rv-sec-lbl">HABIT ACHIEVEMENTS</div>
-          <div id="rvHabitsList" class="rv-habits-list"></div>
-        </div>
         <div class="rv-stats-col">
           <div class="rv-sec-lbl">CORE OUTPUT</div>
           <div id="rvCoreStats" class="rv-stats-grid"></div>
