@@ -274,6 +274,11 @@ function attachStackListeners() {
         d.todos[cat].push({ text: val, done: false });
         save(d);
         renderSt(d);
+        document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+        setTimeout(() => {
+          const inp = document.querySelector(`.task-input[data-catname="${cat}"]`);
+          if (inp) inp.focus();
+        }, 10);
       }
     });
 
@@ -287,6 +292,7 @@ function attachStackListeners() {
           d.todos[cat].splice(idx, 1);
           save(d);
           renderSt(d);
+          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
         }
       }
     });

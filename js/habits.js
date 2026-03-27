@@ -2,7 +2,6 @@
 // Manages the habits modal — rendering, adding, deleting custom habits,
 // and toggling habit checkboxes on individual day cards.
 
-import { BUILTIN_HABITS } from './constants.js';
 import {
   load, save, loadHabits, saveHabits, allHabits,
 } from './storage.js';
@@ -30,13 +29,6 @@ export function closeHabitsModal() {
 function renderHabitList() {
   const custom = loadHabits();
 
-  const builtinHTML = BUILTIN_HABITS.map(h => `
-    <div class="habit-item">
-      <div class="habit-item-dot" style="background:${resolveHex(h.color)}"></div>
-      <span class="habit-item-name">${h.name}</span>
-      <span class="habit-item-target">built-in</span>
-    </div>`).join('');
-
   const customHTML = custom.map((h, i) => `
     <div class="habit-item">
       <div class="habit-item-dot" style="background:${resolveHex(h.color)}"></div>
@@ -46,7 +38,7 @@ function renderHabitList() {
     </div>`).join('');
 
   document.getElementById('habitManagerList').innerHTML =
-    builtinHTML + (customHTML || '<div style="font-size:12px;color:var(--text3);padding:4px 0;">No custom habits yet.</div>');
+    customHTML || '<div style="font-size:12px;color:var(--text3);padding:10px 0;text-align:center;">No habits added yet.</div>';
 }
 
 // ── Add / delete ─────────────────────────────────────────────────────────────
