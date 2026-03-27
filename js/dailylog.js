@@ -49,85 +49,89 @@ export function todayI() {
   return d === 0 ? 6 : d - 1;
 }
 
+export function renderDayCard(dayOffset, day, ti, customHabits) {
+  const habitDots      = day.habits || {};
+  const customHabitHTML = customHabits.map(h => {
+    const p       = catPalette(h.color);
+    const checked = !!habitDots[h.id];
+    return `<label class="habit">
+      <input type="checkbox" ${checked ? 'checked' : ''}
+        data-action="tog-custom-habit"
+        data-day="${dayOffset}" data-habit="${h.id}"
+        style="accent-color:${p.css}">
+      <span>${h.name}</span>
+    </label>`;
+  }).join('');
+
+  const blocks = day.blocks || [];
+  const isPast = (dayOffset < ti);
+  const noBlocks = blocks.length === 0;
+
+  const blockPills = blocks.map((b, bi) =>
+    `<div class="block-pill" style="${catC(b.category)}"
+      data-action="open-block" data-day="${dayOffset}" data-block="${bi}">
+      ${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}
+    </div>`
+  ).join('');
+
+  return `
+    <div class="day-card${dayOffset === ti ? ' today' : ''}${day.fullRest ? ' fr-day' : ''}${isPast && noBlocks ? ' no-log' : ''}">
+      <div class="day-top">
+        <span class="day-name">${FULL[dayOffset]}</span>
+        <span class="day-date">${getDayDate(dayOffset)}</span>
+      </div>
+      <div class="habit-row" style="flex-wrap:wrap;gap:10px 16px;">
+        <label class="habit">
+          <input type="checkbox" ${day.run ? 'checked' : ''}
+            data-action="tog-habit" data-day="${dayOffset}" data-habit="run">
+          <span>Run</span>
+        </label>
+        <label class="habit">
+          <input type="checkbox" ${day.rest ? 'checked' : ''}
+            data-action="tog-habit" data-day="${dayOffset}" data-habit="rest">
+          <span>Rest</span>
+        </label>
+        ${customHabitHTML}
+      </div>
+      <div class="blocks-stack">
+        ${blockPills}
+        ${noBlocks && isPast ? `<div class="missed-msg">Nothing logged</div>` : ''}
+      </div>
+      ${day.fullRest ? '' : `<button class="add-btn"
+        data-action="open-block" data-day="${dayOffset}" data-block="new">+ log block</button>`}
+      <div class="journal-toggle-row">
+        <button class="journal-toggle${day.journal && day.journal.trim() ? ' has-entry' : ''}"
+          data-action="toggle-journal" data-day="${dayOffset}">
+          &#128221;
+          ${day.journal && day.journal.trim() ? '<span class="journal-dot"></span>' : ''}
+          Journal
+        </button>
+        <div class="journal-area" id="journal-area-${dayOffset}" style="display:none;">
+          <textarea class="journal-ta"
+            data-action="save-journal" data-day="${dayOffset}"
+            placeholder="How did the day go? What worked, what didn&#39;t?" rows="3"
+          >${day.journal || ''}</textarea>
+        </div>
+      </div>
+      <div class="day-badges">
+        ${day.fullRest ? '' : `<button class="badge-btn${day.mvd ? ' mvd-on' : ''}"
+          data-action="tog-mvd" data-day="${dayOffset}">${day.mvd ? 'MVD ✓' : 'MVD'}</button>`}
+        <button class="badge-btn${day.fullRest ? ' fr-on' : ''}"
+          data-action="tog-habit" data-day="${dayOffset}" data-habit="fullRest">
+          ${day.fullRest ? 'Full rest ✓' : 'Full rest'}
+        </button>
+      </div>
+    </div>`;
+}
+
 // ── Day grid render ───────────────────────────────────────────────────────────
 export function renderDG(d) {
   const ti           = todayI();
   const customHabits = loadHabits();
 
-  document.getElementById('dayGrid').innerHTML = d.days.map((day, i) => {
-    const habitDots      = day.habits || {};
-    const customHabitHTML = customHabits.map(h => {
-      const p       = catPalette(h.color);
-      const checked = !!habitDots[h.id];
-      return `<label class="habit">
-        <input type="checkbox" ${checked ? 'checked' : ''}
-          data-action="tog-custom-habit"
-          data-day="${i}" data-habit="${h.id}"
-          style="accent-color:${p.css}">
-        <span>${h.name}</span>
-      </label>`;
-    }).join('');
-
-    const blocks = day.blocks || [];
-    const isPast = (i < ti);
-    const noBlocks = blocks.length === 0;
-
-    const blockPills = blocks.map((b, bi) =>
-      `<div class="block-pill" style="${catC(b.category)}"
-        data-action="open-block" data-day="${i}" data-block="${bi}">
-        ${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}
-      </div>`
-    ).join('');
-
-    return `
-      <div class="day-card${i === ti ? ' today' : ''}${day.fullRest ? ' fr-day' : ''}${isPast && noBlocks ? ' no-log' : ''}">
-        <div class="day-top">
-          <span class="day-name">${FULL[i]}</span>
-          <span class="day-date">${getDayDate(i)}</span>
-        </div>
-        <div class="habit-row" style="flex-wrap:wrap;gap:10px 16px;">
-          <label class="habit">
-            <input type="checkbox" ${day.run ? 'checked' : ''}
-              data-action="tog-habit" data-day="${i}" data-habit="run">
-            <span>Run</span>
-          </label>
-          <label class="habit">
-            <input type="checkbox" ${day.rest ? 'checked' : ''}
-              data-action="tog-habit" data-day="${i}" data-habit="rest">
-            <span>Rest</span>
-          </label>
-          ${customHabitHTML}
-        </div>
-        <div class="blocks-stack">
-          ${blockPills}
-          ${noBlocks && isPast ? `<div class="missed-msg">Nothing logged</div>` : ''}
-        </div>
-        ${day.fullRest ? '' : `<button class="add-btn"
-          data-action="open-block" data-day="${i}" data-block="new">+ log block</button>`}
-        <div class="journal-toggle-row">
-          <button class="journal-toggle${day.journal && day.journal.trim() ? ' has-entry' : ''}"
-            data-action="toggle-journal" data-day="${i}">
-            &#128221;
-            ${day.journal && day.journal.trim() ? '<span class="journal-dot"></span>' : ''}
-            Journal
-          </button>
-          <div class="journal-area" id="journal-area-${i}" style="display:none;">
-            <textarea class="journal-ta"
-              data-action="save-journal" data-day="${i}"
-              placeholder="How did the day go? What worked, what didn&#39;t?" rows="3"
-            >${day.journal || ''}</textarea>
-          </div>
-        </div>
-        <div class="day-badges">
-          ${day.fullRest ? '' : `<button class="badge-btn${day.mvd ? ' mvd-on' : ''}"
-            data-action="tog-mvd" data-day="${i}">${day.mvd ? 'MVD ✓' : 'MVD'}</button>`}
-          <button class="badge-btn${day.fullRest ? ' fr-on' : ''}"
-            data-action="tog-habit" data-day="${i}" data-habit="fullRest">
-            ${day.fullRest ? 'Full rest ✓' : 'Full rest'}
-          </button>
-        </div>
-      </div>`;
-  }).join('');
+  document.getElementById('dayGrid').innerHTML = d.days.map((day, i) =>
+    renderDayCard(i, day, ti, customHabits)
+  ).join('');
 }
 
 // ── Habit + MVD toggles ───────────────────────────────────────────────────────
@@ -250,11 +254,12 @@ function validateDur(input) {
 // ── Event wiring ──────────────────────────────────────────────────────────────
 export function initDailyLogListeners() {
 
-  // ── Day grid — all interactions delegated to one container listener ────────
-  // This is the key pattern for dynamically generated content.
-  // Instead of attaching listeners to each card/button/checkbox as they're
-  // created, one listener on the stable #dayGrid parent catches everything.
-  document.getElementById('dayGrid').addEventListener('change', e => {
+  // ── Day cards — all interactions delegated to #appShell ────────
+  // Listening on #appShell allows day-card interactions to work 
+  // uniformly whether the card is in the Daily Log tab or the Overview tab.
+  const appShell = document.getElementById('appShell');
+
+  appShell.addEventListener('change', e => {
     const tog = e.target.closest('[data-action="tog-habit"]');
     if (tog) { togH(+tog.dataset.day, tog.dataset.habit); return; }
 
@@ -262,7 +267,7 @@ export function initDailyLogListeners() {
     if (cust) { togCustomHabit(+cust.dataset.day, cust.dataset.habit); return; }
   });
 
-  document.getElementById('dayGrid').addEventListener('click', e => {
+  appShell.addEventListener('click', e => {
     const block = e.target.closest('[data-action="open-block"]');
     if (block) {
       const bi = block.dataset.block === 'new' ? 'new' : +block.dataset.block;
@@ -284,7 +289,7 @@ export function initDailyLogListeners() {
   });
 
   // Journal — auto-save on input + live indicator update
-  document.getElementById('dayGrid').addEventListener('input', e => {
+  appShell.addEventListener('input', e => {
     const ta = e.target.closest('[data-action="save-journal"]');
     if (!ta) return;
     const d = load();
@@ -312,7 +317,7 @@ export function initDailyLogListeners() {
   });
 
   // Journal — Enter collapses (already saved); Shift+Enter = line break
-  document.getElementById('dayGrid').addEventListener('keydown', e => {
+  appShell.addEventListener('keydown', e => {
     const ta = e.target.closest('[data-action="save-journal"]');
     if (!ta || e.key !== 'Enter' || e.shiftKey) return;
     e.preventDefault();
@@ -320,7 +325,7 @@ export function initDailyLogListeners() {
   });
 
   // Journal — collapse when textarea loses focus (click anywhere else)
-  document.getElementById('dayGrid').addEventListener('focusout', e => {
+  appShell.addEventListener('focusout', e => {
     const ta = e.target.closest('[data-action="save-journal"]');
     if (!ta) return;
     // If focus is moving to the toggle button for this same day, let the click

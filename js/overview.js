@@ -1,10 +1,10 @@
 import { DAYS, FULL } from './constants.js';
 import {
-  load, save, loadFocus, loadTargets, allHabits, wk,
+  load, save, loadFocus, loadTargets, allHabits, wk, loadHabits
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { sortedCats } from './storage.js';
-import { todayI, getDayDate, openM } from './dailylog.js';
+import { todayI, getDayDate, openM, renderDayCard } from './dailylog.js';
 import { catC } from './colours.js';
 
 export function renderOv(d) {
@@ -47,18 +47,21 @@ export function renderOv(d) {
     const items    = (d.todos && d.todos[c.name]) || [];
 
     return `
-      <div class="lp-focus-item lp-${level}">
-        <div class="lp-focus-main">
-          <span class="lp-focus-badge"
-            style="--badge-hex:${hex};--badge-text:${textCol};
-                   background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));
-                   color:${textCol};">${c.name}</span>
-          <span class="lp-focus-text${stackText ? '' : ' empty'}">
+      <div class="lp-focus-item lp-${level}" ${items.length > 0 ? 'data-action="toggle-todos" style="cursor:pointer;"' : ''}>
+        <div class="lp-focus-main" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="lp-focus-badge"
+              style="--badge-hex:${hex};--badge-text:${textCol};
+                     background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));
+                     color:${textCol};">${c.name}</span>
+            ${items.length > 0 ? `<i data-lucide="chevron-down" class="todo-chevron" style="width:16px;height:16px;color:var(--text3);transition:transform 0.2s;"></i>` : ''}
+          </div>
+          <span class="lp-focus-text${stackText ? '' : ' empty'}" style="line-height:1.4;">
             ${stackText || 'No focus set'}
           </span>
         </div>
         ${items.length > 0 ? `
-          <div class="lp-todos">
+          <div class="lp-todos" style="display:none;margin-top:12px;cursor:default;">
             ${items.map((it, idx) => `
               <label class="lp-todo-item${it.done ? ' done' : ''}">
                 <input type="checkbox" ${it.done ? 'checked' : ''}
@@ -73,53 +76,35 @@ export function renderOv(d) {
 
   const focusHTML = `
     <div class="lp-section">
-      <div class="lp-section-hdr">
+      <h2 style="font-size:24px;font-weight:500;color:var(--text);margin-bottom:1.5rem;letter-spacing:-0.4px;">
         TODAY — ${FULL[ti].toUpperCase()}, ${todayDate.toUpperCase()}
-      </div>
+      </h2>
       <div class="lp-focus-grid">
         ${highCats.map(c => focusItem(c, 'high')).join('')}
       </div>
       ${lowCats.length ? `
         <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;
-                    letter-spacing:0.4px;margin:10px 0 6px;">LOW FOCUS</div>
+                    letter-spacing:0.4px;margin:16px 0 8px;">LOW FOCUS</div>
         <div class="lp-focus-grid" style="opacity:0.75;">
           ${lowCats.map(c => focusItem(c, 'low')).join('')}
         </div>` : ''}
     </div>`;
 
-  // ── Habits (interactive checkboxes) ──
-  const allH      = allHabits();
-  const habitDots = todayDay.habits || {};
-
-  const habitsHTML = `
+  // ── Today's Log Card ──
+  const dayCardHTML = `
     <div class="lp-section">
-      <div class="lp-section-hdr">HABITS TODAY</div>
-      <div class="lp-habits">
-        ${allH.map(h => {
-          const isBuiltin = h.builtin;
-          const done = isBuiltin
-            ? (h.id === 'run' ? !!todayDay.run : !!todayDay.rest)
-            : !!habitDots[h.id];
-          const hex = resolveHex(h.color);
-          return `
-            <label class="lp-habit-chip${done ? ' done' : ''}">
-              <input type="checkbox" class="lp-habit-check"
-                ${done ? 'checked' : ''}
-                style="accent-color:${hex}"
-                data-action="${isBuiltin ? 'tog-builtin' : 'tog-custom'}"
-                data-habit="${h.id}"
-                data-day="${ti}">
-              ${h.name}
-            </label>`;
-        }).join('')}
+      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.4px;margin-bottom:12px;">DAILY LOG</div>
+      <div class="ov-day-wrap" style="max-width:320px;">
+        ${renderDayCard(ti, todayDay, ti, loadHabits())}
       </div>
     </div>`;
 
   // ── Habit streaks this week ──
   const t = loadTargets();
+  const allH = allHabits();
   const streaksHTML = `
     <div class="lp-section">
-      <div class="lp-section-hdr">THIS WEEK</div>
+      <div class="lp-section-hdr">THIS WEEK STREAKS</div>
       <div class="lp-streaks">
         ${allH.map(h => {
           const count = h.builtin
@@ -138,34 +123,17 @@ export function renderOv(d) {
       </div>
     </div>`;
 
-  // ── Today's blocks ──
-  const todayBlocks  = todayDay.blocks || [];
-  const blocksHTML = `
-    <div class="lp-section">
-      <div class="lp-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-        TODAY'S WORK BLOCKS
-        <button class="add-btn" id="ovLogBlockBtn"
-          style="width:auto;padding:4px 12px;font-size:12px;border-radius:6px;"
-          data-action="ov-log-block">+ log block</button>
-      </div>
-      ${todayBlocks.length === 0
-        ? `<div style="font-size:12px;color:var(--text3);padding:4px 0;">No blocks logged yet today.</div>`
-        : `<div class="ov-blocks" style="margin-top:6px;">
-            ${todayBlocks.map((b, bi) => `
-              <div class="ov-block block-pill" style="${catC(b.category)};cursor:pointer;"
-                data-action="ov-edit-block" data-block="${bi}">
-                ${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}
-              </div>`).join('')}
-          </div>`}
-    </div>`;
-
-  el.innerHTML = intentionHTML + focusHTML + blocksHTML + habitsHTML + streaksHTML;
+  el.innerHTML = intentionHTML + focusHTML + dayCardHTML + streaksHTML;
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({ root: el });
+  }
 }
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
 export function initOverviewListeners() {
-  // Delegated habit checkbox changes on the overview panel
-  document.getElementById('ovMain').addEventListener('change', e => {
+  document.getElementById('ovMain').addEventListener('click', e => {
+    // ── Pre-existing: Custom event toggles (if any persist) ──
     const tog = e.target.closest('[data-action="tog-builtin"]');
     if (tog) {
       document.dispatchEvent(new CustomEvent('wt:tog-habit', {
@@ -178,26 +146,53 @@ export function initOverviewListeners() {
       document.dispatchEvent(new CustomEvent('wt:tog-custom-habit', {
         detail: { day: +cust.dataset.day, habit: cust.dataset.habit }
       }));
+      return;
     }
-    const todo = e.target.closest('[data-action="tog-todo"]');
-    if (todo) {
-      const cat = todo.dataset.catname;
-      const idx = +todo.dataset.idx;
-      const d = load();
-      if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
-        d.todos[cat][idx].done = todo.checked;
-        save(d);
-        renderOv(d); // Refresh current tab
+
+    // Delegated click for today's block logging from Overview
+    const ti = todayI();
+    if (ti >= 0) { // Only allow logging/editing for current week
+      if (e.target.closest('[data-action="ov-log-block"]')) { openM(ti, 'new'); return; }
+      const editBtn = e.target.closest('[data-action="ov-edit-block"]');
+      if (editBtn) { openM(ti, +editBtn.dataset.block); return; }
+    }
+
+    // ── Accordion toggle for tasks ──
+    const focusItemWrap = e.target.closest('[data-action="toggle-todos"]');
+    // Don't toggle accordion if the user clicked exactly on a checkbox or label inside
+    if (focusItemWrap && !e.target.closest('.lp-todo-item')) {
+      const todosEl = focusItemWrap.querySelector('.lp-todos');
+      const chevron = focusItemWrap.querySelector('.todo-chevron');
+      if (todosEl) {
+        const isExpanded = focusItemWrap.classList.contains('expanded');
+        if (isExpanded) {
+          focusItemWrap.classList.remove('expanded');
+          todosEl.style.display = 'none';
+          if (chevron) chevron.style.transform = '';
+        } else {
+          focusItemWrap.classList.add('expanded');
+          todosEl.style.display = 'flex';
+          if (chevron) chevron.style.transform = 'rotate(180deg)';
+        }
       }
+      return;
     }
   });
 
-  // Delegated click for today's block logging from Overview
-  document.getElementById('ovMain').addEventListener('click', e => {
-    const ti = todayI();
-    if (ti < 0) return;
-    if (e.target.closest('[data-action="ov-log-block"]')) { openM(ti, 'new'); return; }
-    const editBtn = e.target.closest('[data-action="ov-edit-block"]');
-    if (editBtn) { openM(ti, +editBtn.dataset.block); return; }
+  document.getElementById('ovMain').addEventListener('change', e => {
+    // ── Task checkbox tick-off ──
+    if (e.target.closest('[data-action="tog-todo"]')) {
+      const r = e.target.closest('[data-action="tog-todo"]');
+      const cname = r.dataset.catname;
+      const tIdx = +r.dataset.idx;
+
+      const d = load();
+      if (!d.todos) d.todos = {};
+      if (d.todos[cname] && d.todos[cname][tIdx]) {
+        d.todos[cname][tIdx].done = r.checked;
+        save(d);
+        document.dispatchEvent(new CustomEvent('wt:day-changed'));
+      }
+    }
   });
 }
