@@ -50,6 +50,7 @@ function swTab(id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelector(`.tab[data-tab="${id}"]`).classList.add('active');
+  localStorage.setItem('wt_active_tab', id);
   if (id === 'insights') {
     if (!_insightsInited) { initInsights(); _insightsInited = true; }
     else renderInsights();
@@ -127,17 +128,29 @@ function saveIntention() {
 }
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
+let _listenersInited = false;
 function initListeners() {
+  if (_listenersInited) return;
+  _listenersInited = true;
 
   // Tabs
   const tabs = document.querySelectorAll('.tab');
   tabs.forEach(btn => {
     btn.addEventListener('click', () => swTab(btn.dataset.tab));
   });
+  const savedTab = localStorage.getItem('wt_active_tab') || 'overview';
+  if (document.getElementById(savedTab)) swTab(savedTab);
 
   // Week navigation
   document.querySelector('.nav-btn[data-dir="-1"]').addEventListener('click', () => chWk(-1));
   document.querySelector('.nav-btn[data-dir="1"]').addEventListener('click',  () => chWk(1));
+  document.getElementById('wkLbl').addEventListener('click', () => {
+    if (wk !== 0) {
+      setWk(0);
+      updateWkLabel();
+      renderAll();
+    }
+  });
 
   // Toolbar
   document.getElementById('themeBtn').addEventListener('click', toggleTheme);

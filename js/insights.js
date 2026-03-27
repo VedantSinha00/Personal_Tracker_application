@@ -87,13 +87,15 @@ export function renderInsights() {
   let totalHours = 0, totalBlocks = 0, totalRuns = 0, totalFR = 0;
   const energyCounts = { low: 0, medium: 0, high: 0, none: 0 };
   const cats         = loadCats();
+  const hiddenCats   = new Set(cats.filter(c => c.hidden).map(c => c.name));
   const areaHours    = {};
-  cats.forEach(c => { areaHours[c.name] = 0; });
+  cats.forEach(c => { if (!c.hidden) areaHours[c.name] = 0; });
 
-  const slotOrder  = ['early-morning', 'morning', 'afternoon', 'evening', 'night'];
+  const slotOrder  = ['early-morning', 'morning', 'afternoon', 'evening', 'night', 'late-night'];
   const slotLabels = {
     'early-morning': 'Early morning', 'morning': 'Morning',
     'afternoon': 'Afternoon', 'evening': 'Evening', 'night': 'Night',
+    'late-night': 'Late night',
   };
   const slotHours = {};
   slotOrder.forEach(s => { slotHours[s] = 0; });
@@ -120,11 +122,13 @@ export function renderInsights() {
       });
 
       day.blocks.forEach(b => {
+        const cat = b.category || 'Other';
+        if (hiddenCats.has(cat)) return; // Exclude hidden agendas
+
         const h = parseDuration(b.duration);
         wHours += h; totalHours += h;
         wBlocks++; totalBlocks++;
         energyCounts[b.energy || 'none'] = (energyCounts[b.energy || 'none'] || 0) + 1;
-        const cat = b.category || 'Other';
         areaHours[cat] = (areaHours[cat] || 0) + h;
         if (b.slot) slotHours[b.slot] = (slotHours[b.slot] || 0) + h;
       });
