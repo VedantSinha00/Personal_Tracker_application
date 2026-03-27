@@ -126,6 +126,7 @@ export function renderOv(d) {
   const splitHTML = `
     <div style="display:flex;gap:2.5rem;align-items:flex-start;flex-wrap:wrap;">
       <div style="flex:1;min-width:300px;">
+        ${intentionHTML}
         ${focusHTML}
       </div>
       <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1.5rem;">
@@ -135,7 +136,7 @@ export function renderOv(d) {
     </div>
   `;
 
-  el.innerHTML = intentionHTML + splitHTML;
+  el.innerHTML = splitHTML;
   
   if (typeof lucide !== 'undefined') {
     lucide.createIcons({ root: el });
