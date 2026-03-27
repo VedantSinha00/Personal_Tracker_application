@@ -365,26 +365,28 @@
 
   <!-- ── Account modal ──────────────────────────────────────────────────── -->
   <div class="overlay" id="accountModal">
-    <div class="modal">
+    <div class="modal account-modal">
       <div class="modal-title">Account settings</div>
-      <div class="auth-banner" id="accountBanner" style="display:none;"></div>
+      <div class="auth-banner" id="accountBanner" style="display:none;margin-bottom:1rem;"></div>
 
-      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:6px;">USERNAME</div>
-      <div style="display:flex;gap:8px;margin-bottom:1.5rem;">
-        <input type="text" id="accountUsername" maxlength="32" autocomplete="username" style="flex:1;">
-        <button class="btn btn-p" id="saveUsernameBtn">Save</button>
+      <div class="auth-field" style="margin-bottom:1.5rem;">
+        <label>USERNAME</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="accountUsername" maxlength="32" autocomplete="username" style="flex:1;">
+          <button class="btn btn-p" id="saveUsernameBtn" style="padding:0 16px;">Save</button>
+        </div>
       </div>
 
-      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-bottom:6px;">CHANGE PASSWORD</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:0.75rem;">
-        <input type="password" id="accountNewPassword" placeholder="New password (min. 6 characters)" autocomplete="new-password">
-        <input type="password" id="accountConfirmPassword" placeholder="Confirm new password" autocomplete="new-password">
-      </div>
-      <div style="margin-bottom:1.5rem;">
-        <button class="btn btn-p" id="savePasswordBtn">Update password</button>
+      <div class="auth-field">
+        <label>CHANGE PASSWORD</label>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input type="password" id="accountNewPassword" placeholder="New password (min. 6 characters)" autocomplete="new-password">
+          <input type="password" id="accountConfirmPassword" placeholder="Confirm new password" autocomplete="new-password">
+          <button class="btn btn-p" id="savePasswordBtn" style="width:100%;margin-top:4px;">Update password</button>
+        </div>
       </div>
 
-      <div class="mfooter">
+      <div class="mfooter" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1rem;">
         <span></span>
         <button class="btn" id="closeAccountBtn">Close</button>
       </div>

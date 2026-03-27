@@ -1647,6 +1647,120 @@
       line-height: 1.8;
     }
 
+    /* ── Overview Task Lists ── */
+    .lp-todos {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .lp-todo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--text2);
+      transition: color 0.15s;
+    }
+
+    .lp-todo-item:hover {
+      color: var(--text);
+    }
+
+    .lp-todo-item.done .lp-todo-text {
+      text-decoration: line-through;
+      color: var(--text3);
+    }
+
+    .lp-todo-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── Stack Task Inputs ── */
+    .si-tasks {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .task-dot { color: var(--text3); }
+    .task-text { flex: 1; }
+
+    .task-del {
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .task-del:hover { color: var(--red); }
+
+    .task-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid transparent;
+      font-size: 12px;
+      color: var(--text2);
+      padding: 2px 0;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .task-input:focus {
+      border-bottom-color: var(--accent);
+    }
+
+    .lp-todo-input::placeholder { color: var(--text3); font-style: italic; }
+
+    /* ── Missed Day Indicators ── */
+    .day-card.no-log {
+      border: 1px dashed var(--amber-bg);
+      background: color-mix(in srgb, var(--amber-bg) 5%, transparent);
+    }
+
+    .missed-msg {
+      font-size: 11px;
+      color: var(--amber);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 8px;
+      letter-spacing: 0.2px;
+    }
+
+    .account-modal {
+      max-width: 400px;
+    }
+
+    .account-modal .auth-field label {
+      color: var(--text3);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+
+
+
     /* ── Auth screen ──────────────────────────────────────────────────────── */
     .auth-screen {
       min-height: 100vh;

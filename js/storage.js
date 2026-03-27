@@ -33,6 +33,7 @@ export function def() {
   return {
     intention: '',
     stack,
+    todos: {},
     days: DAYS.map(() => ({
       run: false, rest: false, mvd: false, fullRest: false,
       blocks: [], habits: {}, journal: '',

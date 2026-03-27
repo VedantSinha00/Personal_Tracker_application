@@ -68,7 +68,11 @@ export function renderDG(d) {
       </label>`;
     }).join('');
 
-    const blockPills = day.blocks.map((b, bi) =>
+    const blocks = day.blocks || [];
+    const isPast = (i < ti);
+    const noBlocks = blocks.length === 0;
+
+    const blockPills = blocks.map((b, bi) =>
       `<div class="block-pill" style="${catC(b.category)}"
         data-action="open-block" data-day="${i}" data-block="${bi}">
         ${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}
@@ -76,7 +80,7 @@ export function renderDG(d) {
     ).join('');
 
     return `
-      <div class="day-card${i === ti ? ' today' : ''}${day.fullRest ? ' fr-day' : ''}">
+      <div class="day-card${i === ti ? ' today' : ''}${day.fullRest ? ' fr-day' : ''}${isPast && noBlocks ? ' no-log' : ''}">
         <div class="day-top">
           <span class="day-name">${FULL[i]}</span>
           <span class="day-date">${getDayDate(i)}</span>
@@ -94,7 +98,10 @@ export function renderDG(d) {
           </label>
           ${customHabitHTML}
         </div>
-        <div class="blocks-stack">${blockPills}</div>
+        <div class="blocks-stack">
+          ${blockPills}
+          ${noBlocks && isPast ? `<div class="missed-msg">Nothing logged</div>` : ''}
+        </div>
         ${day.fullRest ? '' : `<button class="add-btn"
           data-action="open-block" data-day="${i}" data-block="new">+ log block</button>`}
         <div class="journal-toggle-row">
