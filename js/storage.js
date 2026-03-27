@@ -442,7 +442,16 @@ export async function loadFromSupabase() {
       .order('position');
 
     if (cats && cats.length > 0) {
-      const mapped = cats.map(c => ({ name: c.name, color: c.color }));
+      // Preserve local hidden state since the Supabase table lacks a 'hidden' column
+      const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
+      const hiddenMap = {};
+      localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
+
+      const mapped = cats.map(c => ({ 
+        name: c.name, 
+        color: c.color,
+        hidden: !!hiddenMap[c.name]
+      }));
       localStorage.setItem('wt_categories', JSON.stringify(mapped));
     }
 
