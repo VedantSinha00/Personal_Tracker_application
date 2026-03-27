@@ -165,8 +165,8 @@ export function sortedCats() {
     const extras = cats.filter(c => !order.includes(c.name));
     result = [...mapped, ...extras];
   }
-  const others = result.filter(c => c.name === 'Others');
-  const rest   = result.filter(c => c.name !== 'Others');
+  const others = result.filter(c => c.name === 'Others' || c.name === 'Other');
+  const rest   = result.filter(c => c.name !== 'Others' && c.name !== 'Other');
   return [...rest, ...others];
 }
 

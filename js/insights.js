@@ -112,11 +112,11 @@ export function renderInsights() {
     const days = w.data.days || [];
     let wHours = 0, wBlocks = 0;
     days.forEach(day => {
-      if (day.run)      totalRuns++;
-      if (day.fullRest) totalFR++;
+      if (day.habits?.run) totalRuns++;
+      if (day.fullRest)    totalFR++;
 
-      if (habitDays['run']  !== undefined) habitDays['run'].push({ done: !!day.run,  fullRest: !!day.fullRest });
-      if (habitDays['rest'] !== undefined) habitDays['rest'].push({ done: !!day.rest, fullRest: !!day.fullRest });
+      if (habitDays['run']  !== undefined) habitDays['run'].push({ done: !!day.habits?.run,  fullRest: !!day.fullRest });
+      if (habitDays['rest'] !== undefined) habitDays['rest'].push({ done: !!day.habits?.rest, fullRest: !!day.fullRest });
       customHabits.forEach(h => {
         if (habitDays[h.id] !== undefined)
           habitDays[h.id].push({ done: !!(day.habits && day.habits[h.id]), fullRest: !!day.fullRest });
@@ -166,9 +166,9 @@ export function renderInsights() {
     const cells = (w.data.days || []).map(day => {
       let cls = 'hm-none';
       if (day.fullRest)          cls = 'hm-fr';
-      else if (day.run && day.rest) cls = 'hm-both';
-      else if (day.run)          cls = 'hm-run';
-      else if (day.rest)         cls = 'hm-rest';
+      else if (day.habits?.run && day.habits?.rest) cls = 'hm-both';
+      else if (day.habits?.run)                     cls = 'hm-run';
+      else if (day.habits?.rest)                    cls = 'hm-rest';
       return `<div class="hm-cell ${cls}"></div>`;
     }).join('');
     return `<div class="hm-week-row"><div class="hm-week-lbl">${lbl}</div>${cells}</div>`;

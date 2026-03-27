@@ -4,8 +4,7 @@
 
 import { FULL } from './constants.js';
 import {
-  load, save, loadCats, loadHabits, allHabits,
-  loadTargets, wk,
+  load, save, loadCats, loadHabits, allHabits, wk,
 } from './storage.js';
 import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
