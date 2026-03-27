@@ -155,6 +155,20 @@ export function saveCatArchive(arch) {
   _syncCatArchive(arch);
 }
 
+// ── User cache helpers ───────────────────────────────────────────────────────
+// Wipes all app data from localStorage for the current browser, but keeps the
+// theme preference so it survives sign-out / user switching.
+export function clearUserCache() {
+  const theme = localStorage.getItem('wt_theme');
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('wt_')) keysToRemove.push(k);
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  if (theme) localStorage.setItem('wt_theme', theme);
+}
+
 // ── Export / Import ───────────────────────────────────────────────────────────
 export function exportD() {
   const all = {};
@@ -350,6 +364,15 @@ function loadOrderForOffset(offset) {
 export async function loadFromSupabase() {
   const user = getCurrentUser();
   if (!user) return;
+
+  // ── User-switch guard ────────────────────────────────────────────────────────
+  // If a different user's data is cached in localStorage, clear it first so
+  // the new user always starts with a clean slate before we pull their data.
+  const cachedUid = localStorage.getItem('wt_uid');
+  if (cachedUid && cachedUid !== user.id) {
+    clearUserCache();
+  }
+  localStorage.setItem('wt_uid', user.id);
 
   try {
     // Weekly data

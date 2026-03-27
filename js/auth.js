@@ -14,6 +14,21 @@
 // import) so it attaches to window.supabase. We destructure from there.
 const { createClient } = window.supabase;
 
+// ── Local cache helper ────────────────────────────────────────────────────────
+// Inlined here (not imported from storage.js) to avoid a circular dependency:
+// storage.js already imports from auth.js, so auth.js cannot import storage.js.
+// Behaviour is identical to storage.clearUserCache().
+function _clearUserCache() {
+  const theme = localStorage.getItem('wt_theme');
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('wt_')) keysToRemove.push(k);
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  if (theme) localStorage.setItem('wt_theme', theme);
+}
+
 export const sb = createClient(
   'https://vdskvcjqzyfwhxyxsgag.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkc2t2Y2pxenlmd2h4eXhzZ2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTY3MjAsImV4cCI6MjA5MDAzMjcyMH0.on1s6HXZjFVkx4Xa_DTOB65QGX_0yKFsxMrD59uQn68'
@@ -153,6 +168,7 @@ async function handleSignup() {
 async function handleSignOut() {
   await sb.auth.signOut();
   _currentUser = null;
+  _clearUserCache();   // wipe this user's cached data before showing the login screen
   showAuth();
 }
 
@@ -193,6 +209,9 @@ async function handleSignOut() {
   // sign-out from another tab)
   sb.auth.onAuthStateChange((_event, session) => {
     _currentUser = session?.user || null;
-    if (!_currentUser) showAuth();
+    if (!_currentUser) {
+      _clearUserCache();   // also covers sign-out from another tab
+      showAuth();
+    }
   });
 })();
