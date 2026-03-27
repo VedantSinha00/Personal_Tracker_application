@@ -221,7 +221,7 @@ function initListeners() {
     _renderDG(d); _renderOv(d); _updM(d);
   });
 
-  // Categories changed (add / delete / rename / reorder)
+  // Categories changed (add / delete / rename / reorder / visibility)
   document.addEventListener('wt:cats-changed', () => {
     const d = load();
     // Sync stack keys with current category names
@@ -232,6 +232,8 @@ function initListeners() {
     renderSt(d);
     _renderDG(d);
     _renderOv(d);   // keep Overview in sync when categories change
+    _updM(d);       // instantly update metrics (Total Hours/Blocks) in Review tab
+    if (_insightsInited) renderInsights(); // instantly update Insights graphs
   });
 
   // Stack inputs saved — overview should reflect updated focus text immediately
