@@ -45,9 +45,7 @@ export const DEFAULT_CATS = [
   { name: 'Other',       color: '#495057' },
 ];
 
-// Built-in habits are always present and cannot be deleted.
-// Custom habits added by the user are stored separately in localStorage.
-export const BUILTIN_HABITS = [
-  { id: 'run',  name: 'Run',  color: '#2d6a4f', builtin: true },
-  { id: 'rest', name: 'Rest', color: '#5b4fa8', builtin: true },
+export const DEFAULT_HABITS = [
+  { id: 'run',  name: 'Run',  target: 3, color: '#2d6a4f' },
+  { id: 'rest', name: 'Rest', target: 5, color: '#5b4fa8' },
 ];

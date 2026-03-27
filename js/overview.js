@@ -61,7 +61,7 @@ export function renderOv(d) {
           </span>
         </div>
         ${items.length > 0 ? `
-          <div class="lp-todos" style="display:none;margin-top:12px;cursor:default;">
+          <div class="lp-todos" style="display:flex;flex-direction:column;margin-top:12px;cursor:default;">
             ${items.map((it, idx) => `
               <label class="lp-todo-item${it.done ? ' done' : ''}">
                 <input type="checkbox" ${it.done ? 'checked' : ''}
@@ -129,8 +129,8 @@ export function renderOv(d) {
         ${focusHTML}
       </div>
       <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1.5rem;">
-        ${dayCardHTML}
         ${streaksHTML}
+        ${dayCardHTML}
       </div>
     </div>
   `;
@@ -176,15 +176,15 @@ export function initOverviewListeners() {
       const todosEl = focusItemWrap.querySelector('.lp-todos');
       const chevron = focusItemWrap.querySelector('.todo-chevron');
       if (todosEl) {
-        const isExpanded = focusItemWrap.classList.contains('expanded');
-        if (isExpanded) {
-          focusItemWrap.classList.remove('expanded');
-          todosEl.style.display = 'none';
+        const isCollapsed = focusItemWrap.classList.contains('collapsed');
+        if (isCollapsed) {
+          focusItemWrap.classList.remove('collapsed');
+          todosEl.style.display = 'flex';
           if (chevron) chevron.style.transform = '';
         } else {
-          focusItemWrap.classList.add('expanded');
-          todosEl.style.display = 'flex';
-          if (chevron) chevron.style.transform = 'rotate(180deg)';
+          focusItemWrap.classList.add('collapsed');
+          todosEl.style.display = 'none';
+          if (chevron) chevron.style.transform = 'rotate(-90deg)';
         }
       }
       return;

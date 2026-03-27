@@ -14,7 +14,7 @@
 //
 // When migrating away from Supabase in the future, only this file changes.
 
-import { DAYS, DEFAULT_CATS, BUILTIN_HABITS } from './constants.js';
+import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
 import { sb, getCurrentUser } from './auth.js';
 
 // ── Week state ────────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ export function def() {
     stack,
     todos: {},
     days: DAYS.map(() => ({
-      run: false, rest: false, mvd: false, fullRest: false,
+      mvd: false, fullRest: false,
       blocks: [], habits: {}, journal: '',
     })),
     review: { worked: '', didnt: '', adjust: '' },
@@ -48,8 +48,30 @@ export function def() {
 export function load() {
   try {
     const r = localStorage.getItem(wkKey());
-    return r ? JSON.parse(r) : def();
+    if (r) {
+      const d = JSON.parse(r);
+      return migrateData(d);
+    }
+    return def();
   } catch(e) { return def(); }
+}
+
+function migrateData(d) {
+  if (d && d.days) {
+    d.days.forEach(day => {
+      if (day.run !== undefined) {
+        if (!day.habits) day.habits = {};
+        if (day.run) day.habits.run = true;
+        delete day.run;
+      }
+      if (day.rest !== undefined) {
+        if (!day.habits) day.habits = {};
+        if (day.rest) day.habits.rest = true;
+        delete day.rest;
+      }
+    });
+  }
+  return d;
 }
 
 export function save(d) {
@@ -74,8 +96,8 @@ export function saveCats(cats) {
 export function loadHabits() {
   try {
     const r = localStorage.getItem('wt_habits');
-    return r ? JSON.parse(r) : [];
-  } catch(e) { return []; }
+    return r ? JSON.parse(r) : DEFAULT_HABITS.slice();
+  } catch(e) { return DEFAULT_HABITS.slice(); }
 }
 
 export function saveHabits(h) {
@@ -84,7 +106,7 @@ export function saveHabits(h) {
 }
 
 export function allHabits() {
-  return [...BUILTIN_HABITS, ...loadHabits()];
+  return loadHabits();
 }
 
 // ── Focus levels ──────────────────────────────────────────────────────────────

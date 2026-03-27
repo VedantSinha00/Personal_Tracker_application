@@ -81,16 +81,6 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
         <span class="day-date">${getDayDate(dayOffset)}</span>
       </div>
       <div class="habit-row" style="flex-wrap:wrap;gap:10px 16px;">
-        <label class="habit">
-          <input type="checkbox" ${day.run ? 'checked' : ''}
-            data-action="tog-habit" data-day="${dayOffset}" data-habit="run">
-          <span>Run</span>
-        </label>
-        <label class="habit">
-          <input type="checkbox" ${day.rest ? 'checked' : ''}
-            data-action="tog-habit" data-day="${dayOffset}" data-habit="rest">
-          <span>Rest</span>
-        </label>
         ${customHabitHTML}
       </div>
       <div class="blocks-stack">
