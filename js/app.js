@@ -11,8 +11,7 @@ import { getCurrentUser } from './auth.js';
 
 import {
   load, save, wk, setWk,
-  loadCats, loadTargets, saveTargetsData,
-  exportD, importD, updateExportLbl,
+  loadCats, exportD, importD, updateExportLbl,
 } from './storage.js';
 
 import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
@@ -94,26 +93,6 @@ function applyTheme() {
   }
 }
 
-// ── Targets modal ─────────────────────────────────────────────────────────────
-function openTargetsModal() {
-  const t = loadTargets();
-  document.getElementById('tgtRuns').value = t.runs;
-  document.getElementById('tgtRest').value = t.rest;
-  document.getElementById('targetsModal').classList.add('open');
-}
-function closeTargetsModal() {
-  document.getElementById('targetsModal').classList.remove('open');
-}
-function saveTargets() {
-  const runs = parseInt(document.getElementById('tgtRuns').value) || 3;
-  const rest = parseInt(document.getElementById('tgtRest').value) || 5;
-  saveTargetsData(runs, rest);
-  closeTargetsModal();
-  const d = load();
-  _updM(d);
-  _renderOv(d);
-}
-
 // ── Help modal ────────────────────────────────────────────────────────────────
 function openHelp()  { document.getElementById('helpModal').classList.add('open'); }
 function closeHelp() { document.getElementById('helpModal').classList.remove('open'); }
@@ -156,22 +135,9 @@ function initListeners() {
   document.getElementById('themeBtn').addEventListener('click', toggleTheme);
   document.querySelector('[data-action="export"]').addEventListener('click', exportD);
   document.querySelector('[data-action="import"]').addEventListener('change', importD);
-  document.querySelector('[data-action="open-targets"]').addEventListener('click', openTargetsModal);
   document.querySelector('[data-action="open-habits"]').addEventListener('click', openHabitsModal);
   document.querySelector('[data-action="open-cats"]').addEventListener('click', openCatModal);
   document.querySelector('[data-action="open-help"]').addEventListener('click', openHelp);
-
-  // Targets modal
-  document.getElementById('targetsModal').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeTargetsModal();
-  });
-  document.querySelector('#targetsModal .btn-p').addEventListener('click', saveTargets);
-  document.querySelector('#targetsModal .btn:not(.btn-p)').addEventListener('click', closeTargetsModal);
-  ['tgtRuns', 'tgtRest'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') saveTargets();
-    });
-  });
 
   // Help modal
   document.getElementById('helpModal').addEventListener('click', e => {

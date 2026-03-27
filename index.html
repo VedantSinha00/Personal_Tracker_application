@@ -7,8 +7,9 @@
   <title>Weekly Tracker</title>
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1916'/%3E%3Ccircle cx='8' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='24' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='8' cy='21' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='21' r='3' fill='%232b2924'/%3E%3Ccircle cx='24' cy='21' r='3' fill='%232b2924'/%3E%3C/svg%3E">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -128,7 +129,6 @@
 
     <!-- ── Toolbar ────────────────────────────────────────────────────── -->
     <div class="toolbar" style="justify-content:flex-end;">
-      <button class="btn" data-action="open-targets" title="Configure weekly targets" style="display:flex;align-items:center;gap:5px;"><i data-lucide="settings" style="width:13px;height:13px;"></i> Targets</button>
       <button class="btn" data-action="open-habits"  title="Manage custom habits" style="display:flex;align-items:center;gap:5px;"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
       <button class="btn" data-action="open-cats"    title="Manage categories" style="display:flex;align-items:center;gap:5px;"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
     </div>
@@ -337,30 +337,6 @@
     </div>
   </div>
 
-  <!-- ── Targets modal ──────────────────────────────────────────────────── -->
-  <div class="overlay" id="targetsModal">
-    <div class="modal">
-      <div class="modal-title">Weekly targets</div>
-      <p style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:1.25rem;line-height:1.6;">These targets control the progress bars in Overview and Review. Adjust them to match your actual goals.</p>
-      <div class="targets-row">
-        <div class="target-field">
-          <label>RUNS / WEEK</label>
-          <input type="number" id="tgtRuns" min="0" max="14" value="3">
-        </div>
-        <div class="target-field">
-          <label>REAL REST / WEEK</label>
-          <input type="number" id="tgtRest" min="0" max="7" value="5">
-        </div>
-      </div>
-      <div class="mfooter">
-        <span></span>
-        <div class="mactions">
-          <button class="btn">Cancel</button>
-          <button class="btn btn-p">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Account modal ──────────────────────────────────────────────────── -->
   <div class="overlay" id="accountModal">

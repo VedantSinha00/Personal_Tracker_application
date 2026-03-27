@@ -1,6 +1,6 @@
 import { DAYS, FULL } from './constants.js';
 import {
-  load, save, loadFocus, loadTargets, allHabits, wk, loadHabits
+  load, save, loadFocus, allHabits, wk, loadHabits
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { sortedCats } from './storage.js';
@@ -15,11 +15,11 @@ export function renderOv(d) {
   // ── Intention ──
   const intention = d.intention || '';
   const intentionHTML = `
-    <div class="lp-intention">
-      <div class="lp-intention-lbl">THIS WEEK'S INTENTION</div>
+    <div class="lp-intention" style="background:var(--surface-elevated); padding:var(--space-3); border-radius:var(--radius); box-shadow:var(--elevation-base);">
+      <div class="lp-intention-lbl" style="font-family:var(--font-heading); color:var(--text); font-size:var(--text-md); margin-bottom:var(--space-1);">THIS WEEK'S INTENTION</div>
       ${intention
-        ? `<div class="lp-intention-text">${intention}</div>`
-        : `<div class="lp-intention-empty">No intention set — go to Stack to write one</div>`}
+        ? `<div class="lp-intention-text" style="font-size:var(--text-lg); color:var(--text);">${intention}</div>`
+        : `<div class="lp-intention-empty" style="color:var(--text3);">No intention set — go to Stack to write one</div>`}
     </div>`;
 
   if (ti < 0) {
@@ -93,26 +93,21 @@ export function renderOv(d) {
   // ── Today's Log Card ──
   const dayCardHTML = `
     <div class="lp-section">
-      <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.4px;margin-bottom:12px;">DAILY LOG</div>
-      <div class="ov-day-wrap" style="max-width:320px;">
+      <div style="font-size:11px;color:var(--text3);font-family:var(--font-body);letter-spacing:0.4px;margin-bottom:12px;font-weight:600;">TODAY'S LOG</div>
+      <div class="ov-day-wrap" style="width:100%;">
         ${renderDayCard(ti, todayDay, ti, loadHabits())}
       </div>
     </div>`;
 
   // ── Habit streaks this week ──
-  const t = loadTargets();
   const allH = allHabits();
   const streaksHTML = `
     <div class="lp-section">
       <div class="lp-section-hdr">THIS WEEK STREAKS</div>
       <div class="lp-streaks">
         ${allH.map(h => {
-          const count = h.builtin
-            ? d.days.filter(day => h.id === 'run' ? day.run : day.rest).length
-            : d.days.filter(day => day.habits && day.habits[h.id]).length;
-          const target = h.builtin
-            ? (h.id === 'run' ? t.runs : t.rest)
-            : (h.target || 7);
+          const count = d.days.filter(day => day.habits && day.habits[h.id]).length;
+          const target = h.target || 7;
           const onTrack = count >= Math.round(target * (ti + 1) / 7);
           return `
             <div class="lp-streak-item" style="${onTrack ? 'border-color:var(--accent);' : ''}">
@@ -124,14 +119,16 @@ export function renderOv(d) {
     </div>`;
 
   const splitHTML = `
-    <div style="display:flex;gap:2.5rem;align-items:flex-start;flex-wrap:wrap;">
-      <div style="flex:1;min-width:300px;">
-        ${intentionHTML}
-        ${focusHTML}
-      </div>
-      <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1.5rem;">
-        ${streaksHTML}
+    <div style="margin-bottom: var(--space-4);">
+      ${intentionHTML}
+    </div>
+    <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
         ${dayCardHTML}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        ${focusHTML}
+        ${streaksHTML}
       </div>
     </div>
   `;

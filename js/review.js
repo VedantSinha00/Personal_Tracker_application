@@ -2,16 +2,19 @@
 // Owns the Review tab — the three reflection textareas and the
 // metrics bar (runs / blocks / rest) that summarises the week.
 
-import { load, save, loadTargets, loadCats } from './storage.js';
+import { load, save, loadCats, allHabits } from './storage.js';
 import { parseDuration } from './dailylog.js';
 
 // ── Metrics update ────────────────────────────────────────────────────────────
 // Called after any data change so the bar chart at the top of Review stays
 // in sync with whatever is logged in the daily grid.
 export function updM(d) {
-  const t    = loadTargets();
+  const allH = allHabits();
   const cats = loadCats();
   const hiddenCats = new Set(cats.filter(c => c.hidden).map(c => c.name));
+
+  const runH = allH.find(h => h.id === 'run') || { target: 3 };
+  const restH = allH.find(h => h.id === 'rest') || { target: 5 };
 
   const runs = d.days.filter(x => x.habits && x.habits.run).length;
   const rest = d.days.filter(x => x.habits && x.habits.rest).length;
@@ -39,13 +42,13 @@ export function updM(d) {
   const rvRtb = document.getElementById('rvRtb');
   const rvHb  = document.getElementById('rvHb');
 
-  if (rvR)   rvR.textContent    = runs + ' / ' + t.runs;
+  if (rvR)   rvR.textContent    = runs + ' / ' + runH.target;
   if (rvB)   rvB.textContent    = blks;
-  if (rvRt)  rvRt.textContent   = rest + ' / ' + t.rest;
+  if (rvRt)  rvRt.textContent   = rest + ' / ' + restH.target;
   if (rvH)   rvH.textContent    = (Math.round(hrs * 10) / 10) + 'h';
-  if (rvRb)  rvRb.style.width   = pct(runs, t.runs);
+  if (rvRb)  rvRb.style.width   = pct(runs, runH.target);
   if (rvBb)  rvBb.style.width   = Math.min(100, blks * 10) + '%';
-  if (rvRtb) rvRtb.style.width  = pct(rest, t.rest);
+  if (rvRtb) rvRtb.style.width  = pct(rest, restH.target);
   if (rvHb)  rvHb.style.width   = Math.min(100, hrs * (100 / 40)) + '%'; // 40 hours = full bar context
 }
 

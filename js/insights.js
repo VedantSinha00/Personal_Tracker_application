@@ -3,7 +3,7 @@
 // of every chart, heatmap, and summary panel.
 
 import {
-  loadCats, loadHabits, allHabits, loadTargets, loadCatArchive,
+  loadCats, loadHabits, allHabits, loadCatArchive,
 } from './storage.js';
 import { catPalette, resolveCatColor } from './colours.js';
 import { parseDuration, getMon } from './dailylog.js';
@@ -103,9 +103,10 @@ export function renderInsights() {
   const customHabits = loadHabits();
   const habitDays    = {};
   allHabits().forEach(h => { habitDays[h.id] = []; });
+  
+  const runTgt = customHabits.find(h => h.id === 'run')?.target || 3;
 
   const weekStats = [];
-  const t         = loadTargets();
 
   weeks.forEach(w => {
     const days = w.data.days || [];
@@ -245,7 +246,7 @@ export function renderInsights() {
   const statHTML = `
     <div class="stat-card"><div class="stat-val">${fmtHrs(totalHours)}</div><div class="stat-lbl">TOTAL HOURS</div></div>
     <div class="stat-card"><div class="stat-val">${totalBlocks}</div><div class="stat-lbl">BLOCKS</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${totalRuns}</div><div class="stat-lbl">RUNS (target ${t.runs}/wk)</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${totalRuns}</div><div class="stat-lbl">RUNS (target ${runTgt}/wk)</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${totalFR}</div><div class="stat-lbl">FULL REST DAYS</div></div>`;
 
   // ── Text summary ──
@@ -257,7 +258,7 @@ export function renderInsights() {
   }
   if (totalFR >= 3) summary += `You had <strong>${totalFR} full rest days</strong> — that's on the higher side; worth checking what's draining you. `;
   else if (totalFR > 0) summary += `You took <strong>${totalFR} full rest day${totalFR > 1 ? 's' : ''}</strong>. `;
-  if (totalRuns < weeks.length * t.runs) summary += `Runs were inconsistent — averaged ${(totalRuns / weeks.length).toFixed(1)}/week vs. target of ${t.runs}. `;
+  if (totalRuns < weeks.length * runTgt) summary += `Runs were inconsistent — averaged ${(totalRuns / weeks.length).toFixed(1)}/week vs. target of ${runTgt}. `;
   else summary += `Running was consistent across the period. `;
 
   // ── Legend ──
