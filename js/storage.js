@@ -96,7 +96,14 @@ export function saveCats(cats) {
 export function loadHabits() {
   try {
     const r = localStorage.getItem('wt_habits');
-    return r ? JSON.parse(r) : DEFAULT_HABITS.slice();
+    if (!r) return DEFAULT_HABITS.slice();
+    const arr = JSON.parse(r);
+    const seen = new Set();
+    return arr.filter(h => {
+      if (seen.has(h.id)) return false;
+      seen.add(h.id);
+      return true;
+    });
   } catch(e) { return DEFAULT_HABITS.slice(); }
 }
 

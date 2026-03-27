@@ -50,12 +50,19 @@ export function renderCatList() {
         <input class="cat-name-input" value="${c.name}"
           data-action="rename-cat" data-catidx="${realIdx}"
           ${isOthers ? 'readonly title="Others is always kept"' : ''}>
-        ${isOthers ? '' : `<button class="cat-del" data-action="delete-cat" data-catidx="${realIdx}" title="Remove">&times;</button>`}
+        ${!isOthers ? `
+          <button class="cat-vis" data-action="toggle-vis" data-catidx="${realIdx}" title="${c.hidden ? 'Show in analytics' : 'Hide from analytics'}" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;color:var(--text3);opacity:${c.hidden ? '0.5' : '1'};">
+            <i data-lucide="${c.hidden ? 'eye-off' : 'eye'}" style="width:14px;height:14px;"></i>
+          </button>
+          <button class="cat-del" data-action="delete-cat" data-catidx="${realIdx}" title="Remove">&times;</button>
+        ` : ''}
       </div>`;
   }).join('') || '<div style="font-size:13px;color:var(--text3);padding:4px 0;">No categories yet.</div>';
 
-  // Re-attach drag listeners after every render
   attachCatDragListeners();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({ root: document.getElementById('catList') });
+  }
 }
 
 // ── Add / delete / rename ────────────────────────────────────────────────────
@@ -89,6 +96,14 @@ function deleteCat(idx) {
     saveCatArchive(arch);
   }
   cats.splice(idx, 1);
+  saveCats(cats);
+  renderCatList();
+}
+
+function toggleVis(idx) {
+  const cats = loadCats();
+  if (!cats[idx]) return;
+  cats[idx].hidden = !cats[idx].hidden;
   saveCats(cats);
   renderCatList();
 }
@@ -235,8 +250,11 @@ export function initCategoriesListeners() {
     if (e.key === 'Enter') addCat();
   });
 
-  // Delegated clicks on the category list (delete + colour picker)
+  // Delegated clicks on the category list (delete + colour picker + visibility)
   document.getElementById('catList').addEventListener('click', e => {
+    const visBtn = e.target.closest('[data-action="toggle-vis"]');
+    if (visBtn) { toggleVis(+visBtn.dataset.catidx); return; }
+
     const delBtn = e.target.closest('[data-action="delete-cat"]');
     if (delBtn) { deleteCat(+delBtn.dataset.catidx); return; }
 
