@@ -116,7 +116,7 @@ export function renderInsights() {
       if (day.fullRest)    totalFR++;
 
       if (habitDays['run']  !== undefined) habitDays['run'].push({ done: !!day.habits?.run,  fullRest: !!day.fullRest });
-      if (habitDays['rest'] !== undefined) habitDays['rest'].push({ done: !!day.habits?.rest, fullRest: !!day.fullRest });
+      if (habitDays['rest'] !== undefined) habitDays['rest'].push({ done: !!(day.habits?.rest || day.fullRest), fullRest: !!day.fullRest });
       customHabits.forEach(h => {
         if (habitDays[h.id] !== undefined)
           habitDays[h.id].push({ done: !!(day.habits && day.habits[h.id]), fullRest: !!day.fullRest });
@@ -150,7 +150,7 @@ export function renderInsights() {
   // ── Weekly hours bar chart ──
   const maxWkHrs = Math.max(...weekStats.map(w => w.hours), 0.5);
   const barHTML  = weekStats.map(w => {
-    const h   = Math.max(4, Math.round((w.hours / maxWkHrs) * 90));
+    const h   = Math.max(6, Math.round((w.hours / maxWkHrs) * 120));
     const cls = w.hours >= 5 ? 'strong' : w.hours >= 2 ? 'partial' : 'light';
     return `<div class="wk-bar-wrap" title="${w.label}: ${fmtHrs(w.hours)}">
       <div class="wk-bar-val">${fmtHrs(w.hours)}</div>
@@ -213,7 +213,7 @@ export function renderInsights() {
   // ── Habit consistency ──
   const habitConsHTML = allHabits().map(h => {
     const days         = habitDays[h.id] || [];
-    const activeDays   = days.filter(d => !d.fullRest);
+    const activeDays   = days.filter(d => h.id === 'rest' ? true : !d.fullRest);
     const doneDays     = days.filter(d => d.done).length;
     const pctDone      = activeDays.length > 0 ? Math.round(doneDays / activeDays.length * 100) : 0;
     const barColor     = catPalette(h.color).css;
@@ -324,41 +324,47 @@ export function renderInsights() {
     : `<div style="font-size:13px;color:var(--text3);padding:4px 0;">No journal entries in this period. Start journaling in the Daily Log tab.</div>`;
 
   container.innerHTML = `
-    <div class="ins-sec">
-      <div class="ins-lbl">Hours worked — weekly</div>
-      <div style="padding:24px 20px;"><div class="wk-bars">${barHTML}</div></div>
+    <div class="ins-sec ins-summary-card">
+      <div class="ins-lbl">Executive Summary</div>
+      <div style="padding:24px;font-size:15px;color:var(--text);line-height:1.9;font-family:var(--font-body);">${summary}</div>
+    </div>
+    <div class="ins-grid">
+      <div class="ins-sec">
+        <div class="ins-lbl">Weekly Momentum</div>
+        <div style="padding:24px 20px;"><div class="wk-bars">${barHTML}</div></div>
+      </div>
+      <div class="ins-sec">
+        <div class="ins-lbl">Habit Heatmap</div>
+        <div style="padding:24px 20px;"><div class="hm-weeks">${hmHTML}</div></div>
+      </div>
+    </div>
+    <div class="ins-grid">
+      <div class="ins-sec">
+        <div class="ins-lbl">Aereas of Focus</div>
+        <div style="padding:24px 20px;"><div class="area-dist">${areaHTML}</div></div>
+      </div>
+      <div class="ins-sec">
+        <div class="ins-lbl">Time of Day Distribution</div>
+        <div style="padding:24px 20px;"><div class="area-dist">${slotHTML}</div></div>
+      </div>
     </div>
     <div class="ins-sec">
-      <div class="ins-lbl">Habit heatmap — each row is one week (Mon → Sun)</div>
-      <div style="padding:24px 20px;"><div class="hm-weeks">${hmHTML}</div></div>
-    </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Hours by area</div>
-      <div style="padding:24px 20px;"><div class="area-dist">${areaHTML}</div></div>
-    </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Hours by time of day</div>
-      <div style="padding:24px 20px;"><div class="area-dist">${slotHTML}</div></div>
-    </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Habit consistency</div>
+      <div class="ins-lbl">Habit Consistency</div>
       <div class="habit-cons-list">${habitConsHTML}</div>
     </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Energy distribution</div>
-      <div style="padding:24px 20px;"><div class="energy-row">${energyHTML}</div></div>
-    </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Totals</div>
-      <div style="padding:24px 20px;"><div class="stat-row">${statHTML}</div></div>
-    </div>
-    <div class="ins-sec">
-      <div class="ins-lbl">Summary</div>
-      <div style="padding:20px;font-size:14px;color:var(--text2);line-height:1.9;">${summary}</div>
+    <div class="ins-grid">
+      <div class="ins-sec">
+        <div class="ins-lbl">Energy Distribution</div>
+        <div style="padding:24px 20px;"><div class="energy-row">${energyHTML}</div></div>
+      </div>
+      <div class="ins-sec">
+        <div class="ins-lbl">Period Totals</div>
+        <div style="padding:24px 20px;"><div class="stat-row">${statHTML}</div></div>
+      </div>
     </div>
     <div class="ins-sec">
       <div class="ins-lbl">Daily journals</div>
-      <div style="padding:12px 20px;">${journalHTML}</div>
+      <div style="padding:12px 24px;">${journalHTML}</div>
     </div>
     <div class="ins-sec">${legendHTML}</div>`;
 }

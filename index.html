@@ -170,28 +170,6 @@
     </div>
 
     <div id="review" class="sec">
-      <div class="metrics-row" style="margin-bottom:1.5rem;">
-        <div class="metric">
-          <div class="mlbl">RUNS</div>
-          <div class="mval" id="rvR">0 / 3</div>
-          <div class="bar"><div class="bfill g" id="rvRb" style="width:0%"></div></div>
-        </div>
-        <div class="metric">
-          <div class="mlbl">WORK BLOCKS</div>
-          <div class="mval" id="rvB">0</div>
-          <div class="bar"><div class="bfill b" id="rvBb" style="width:0%"></div></div>
-        </div>
-        <div class="metric">
-          <div class="mlbl">REAL REST</div>
-          <div class="mval" id="rvRt">0 / 5</div>
-          <div class="bar"><div class="bfill p" id="rvRtb" style="width:0%"></div></div>
-        </div>
-        <div class="metric">
-          <div class="mlbl">TOTAL HOURS</div>
-          <div class="mval" id="rvH">0</div>
-          <div class="bar"><div class="bfill" style="background:var(--amber);width:0%" id="rvHb"></div></div>
-        </div>
-      </div>
       <div class="rv-grid">
         <div class="rv-card">
           <div class="rv-lbl">WHAT WORKED</div>
@@ -202,9 +180,20 @@
           <textarea class="rv-ta" id="rvD" placeholder="Write here..."></textarea>
         </div>
       </div>
-      <div class="rv-card">
+      <div class="rv-card" style="margin-bottom:2rem;">
         <div class="rv-lbl">ONE THING TO ADJUST</div>
-        <textarea class="rv-ta" id="rvA" placeholder="Write here..." style="min-height:60px;"></textarea>
+        <textarea class="rv-ta" id="rvA" placeholder="Write here..." style="min-height:80px;"></textarea>
+      </div>
+
+      <div class="rv-metrics-split">
+        <div class="rv-habits-col">
+          <div class="rv-sec-lbl">HABIT ACHIEVEMENTS</div>
+          <div id="rvHabitsList" class="rv-habits-list"></div>
+        </div>
+        <div class="rv-stats-col">
+          <div class="rv-sec-lbl">CORE OUTPUT</div>
+          <div id="rvCoreStats" class="rv-stats-grid"></div>
+        </div>
       </div>
     </div>
 

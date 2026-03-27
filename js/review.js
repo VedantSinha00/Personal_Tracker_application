@@ -13,12 +13,43 @@ export function updM(d) {
   const cats = loadCats();
   const hiddenCats = new Set(cats.filter(c => c.hidden).map(c => c.name));
 
-  const runH = allH.find(h => h.id === 'run') || { target: 3 };
-  const restH = allH.find(h => h.id === 'rest') || { target: 5 };
+  console.log('[updM] Updating Review metrics...', { habits: allH.length, days: d.days.length });
 
-  const runs = d.days.filter(x => x.habits && x.habits.run).length;
-  const rest = d.days.filter(x => x.habits && x.habits.rest).length;
+  // ── Habit Achievements ──
+  const habitStats = allH.map(h => {
+    let count = 0;
+    d.days.forEach(day => {
+      const done = !!(day.habits && day.habits[h.id]);
+      if (h.id === 'rest') {
+        if (done || day.fullRest) count++;
+      } else {
+        if (done) count++;
+      }
+    });
+    return { ...h, count };
+  });
 
+  const habitHTML = habitStats.map(h => {
+    const target = h.target || 0;
+    const pct    = target > 0 ? Math.min(100, Math.round(h.count / target * 100)) : 0;
+    const color  = h.color || 'var(--accent)';
+
+    return `
+      <div class="rv-habit-row">
+        <div class="rv-habit-info">
+          <span class="rv-habit-lbl">${h.name.toUpperCase()}</span>
+          <span class="rv-habit-val">${h.count}${target ? ' / ' + target : ''}</span>
+        </div>
+        <div class="rv-habit-bar-bg">
+          <div class="rv-habit-bar-fill" style="width:${pct}%; background:${color};"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const habitsList = document.getElementById('rvHabitsList');
+  if (habitsList) habitsList.innerHTML = habitHTML;
+
+  // ── Core Stats ──
   let blks = 0;
   let hrs  = 0;
   d.days.forEach(day => {
@@ -31,25 +62,46 @@ export function updM(d) {
     });
   });
 
-  const pct  = (v, tgt) => Math.min(100, Math.round(v / tgt * 100)) + '%';
+  const avg = blks > 0 ? (hrs / blks) : 0;
+  const coreStats = [
+    { id: 'blks', label: 'WORK BLOCKS', value: blks, color: 'var(--blue)' },
+    { id: 'hrs',  label: 'TOTAL HOURS', value: (Math.round(hrs * 10) / 10) + 'h', color: 'var(--amber)' },
+    { id: 'avg',  label: 'AVG BLOCK',   value: (Math.round(avg * 10) / 10) + 'h', color: 'var(--accent)' },
+  ];
 
-  const rvR   = document.getElementById('rvR');
-  const rvB   = document.getElementById('rvB');
-  const rvRt  = document.getElementById('rvRt');
-  const rvH   = document.getElementById('rvH');
-  const rvRb  = document.getElementById('rvRb');
-  const rvBb  = document.getElementById('rvBb');
-  const rvRtb = document.getElementById('rvRtb');
-  const rvHb  = document.getElementById('rvHb');
+  const statsGrid = document.getElementById('rvCoreStats');
+  if (statsGrid) {
+    statsGrid.innerHTML = coreStats.map(s => `
+      <div class="rv-stat-card">
+        <div class="rv-stat-val" style="color:${s.color}">${s.value}</div>
+        <div class="rv-stat-lbl">${s.label}</div>
+      </div>
+    `).join('');
+  }
 
-  if (rvR)   rvR.textContent    = runs + ' / ' + runH.target;
-  if (rvB)   rvB.textContent    = blks;
-  if (rvRt)  rvRt.textContent   = rest + ' / ' + restH.target;
-  if (rvH)   rvH.textContent    = (Math.round(hrs * 10) / 10) + 'h';
-  if (rvRb)  rvRb.style.width   = pct(runs, runH.target);
-  if (rvBb)  rvBb.style.width   = Math.min(100, blks * 10) + '%';
-  if (rvRtb) rvRtb.style.width  = pct(rest, restH.target);
-  if (rvHb)  rvHb.style.width   = Math.min(100, hrs * (100 / 40)) + '%'; // 40 hours = full bar context
+  // ── Legacy Fallback (for stale index.html) ──
+  // If the user has an old HTML file, update the old IDs so they still see results.
+  const legacyMap = {
+    'rvR':  habitStats.find(h => h.id === 'run'),
+    'rvRt': habitStats.find(h => h.id === 'rest'),
+    'rvB':  { value: blks },
+    'rvH':  { value: (Math.round(hrs * 10) / 10) + 'h' }
+  };
+
+  Object.entries(legacyMap).forEach(([id, data]) => {
+    const el = document.getElementById(id);
+    if (el && data) {
+      if (id === 'rvR' || id === 'rvRt') {
+        el.textContent = `${data.count} / ${data.target || 5}`;
+        const bar = document.getElementById(id + 'b');
+        if (bar) bar.style.width = Math.min(100, Math.round(data.count / (data.target || 5) * 100)) + '%';
+      } else {
+        el.textContent = data.value;
+        const bar = document.getElementById(id + 'b');
+        if (bar) bar.style.width = '100%'; // fallback simple bar
+      }
+    }
+  });
 }
 
 // ── Save review fields ────────────────────────────────────────────────────────
