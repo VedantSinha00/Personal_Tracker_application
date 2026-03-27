@@ -50,7 +50,7 @@ export function catPalette(colorKey) {
 export function catStyle(colorKey) {
   const hex = resolveHex(colorKey);
   const text = badgeTextColor(hex);
-  return `--badge-hex:${hex};--badge-text:${text};background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));color:${text};`;
+  return `--badge-hex:${hex};--badge-text:${text};background:color-mix(in srgb,${hex} 15%,transparent);border-left-color:${hex};color:var(--text);`;
 }
 
 // Resolves a category name → its hex colour string.

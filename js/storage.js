@@ -170,20 +170,6 @@ export function sortedCats() {
   return [...rest, ...others];
 }
 
-// ── Targets ───────────────────────────────────────────────────────────────────
-export function loadTargets() {
-  try {
-    const r = localStorage.getItem('wt_targets');
-    return r ? JSON.parse(r) : { runs: 3, rest: 5 };
-  } catch(e) { return { runs: 3, rest: 5 }; }
-}
-
-export function saveTargetsData(runs, rest) {
-  localStorage.setItem('wt_targets', JSON.stringify({ runs, rest }));
-  if (_syncQueue['targets']) clearTimeout(_syncQueue['targets']);
-  _syncQueue['targets'] = setTimeout(() => _syncTargets(runs, rest), 1500);
-}
-
 // ── Category archive ──────────────────────────────────────────────────────────
 export function loadCatArchive() {
   try { return JSON.parse(localStorage.getItem('wt_cat_archive') || '{}'); }
@@ -355,21 +341,6 @@ async function _syncHabits(habits) {
   }
 }
 
-async function _syncTargets(runs, rest) {
-  const user = getCurrentUser();
-  if (!user) return;
-  try {
-    await sb.from('targets').upsert({
-      user_id:    user.id,
-      runs,
-      rest,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
-  } catch(err) {
-    console.warn('[sync] targets failed:', err.message);
-  }
-}
-
 async function _syncCatArchive(arch) {
   const user = getCurrentUser();
   if (!user) return;
@@ -482,20 +453,6 @@ export async function loadFromSupabase() {
         target: h.target,
       }));
       localStorage.setItem('wt_habits', JSON.stringify(mapped));
-    }
-
-    // Targets
-    const { data: targets } = await sb
-      .from('targets')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (targets) {
-      localStorage.setItem('wt_targets', JSON.stringify({
-        runs: targets.runs,
-        rest: targets.rest,
-      }));
     }
 
     // Cat archive
