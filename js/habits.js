@@ -91,15 +91,10 @@ export function initHabitsListeners() {
   });
 
   // Done button
-  document.getElementById('habitsModal').querySelector('.btn-p').addEventListener('click', closeHabitsModal);
+  document.querySelector('#habitsModal .mfooter .btn-p').addEventListener('click', closeHabitsModal);
 
   // Add button
-  document.querySelector('#habitsModal .btn-p[data-action="add"]') ||
-    document.getElementById('habitsModal').querySelectorAll('.btn-p')[0];
-
-  // We target the Add button by position since it shares btn-p with Done.
-  // The Add button is the one inside .habit-add-row.
-  document.querySelector('.habit-add-row .btn-p').addEventListener('click', addCustomHabit);
+  document.querySelector('#habitsModal .habit-add-row .btn-p').addEventListener('click', addCustomHabit);
 
   // Enter key in name input
   document.getElementById('habitNameInput').addEventListener('keydown', e => {

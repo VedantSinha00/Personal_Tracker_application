@@ -66,8 +66,10 @@ export function renderSt(d, animate) {
           <div class="task-list" id="tasks_${c.name}" data-catname="${c.name}">
             ${tasks.map((t, i) => `
               <div class="task-item" data-idx="${i}">
-                <div class="task-checkbox-fake"></div>
-                <span class="task-text">${t.text}</span>
+                <label class="task-checkbox-wrap" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;">
+                  <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${c.name}" data-idx="${i}">
+                  <span class="task-text${t.done ? ' done' : ''}" style="${t.done ? 'text-decoration:line-through;color:var(--text3);' : ''}">${t.text}</span>
+                </label>
                 <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}" title="Delete task">
                   <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
                 </button>
@@ -136,6 +138,10 @@ export function renderSt(d, animate) {
 
   // Re-attach delegated listeners for inputs and focus toggles
   attachStackListeners();
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({ root: document.getElementById('stackDragContainer') });
+  }
 }
 
 // ── Save stack inputs ─────────────────────────────────────────────────────────
@@ -290,6 +296,22 @@ function attachStackListeners() {
         const d = load();
         if (d.todos && d.todos[cat]) {
           d.todos[cat].splice(idx, 1);
+          save(d);
+          renderSt(d);
+          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+        }
+        return;
+      }
+    });
+
+    fresh.addEventListener('change', e => {
+      const tog = e.target.closest('[data-action="tog-task"]');
+      if (tog) {
+        const cat = tog.dataset.catname;
+        const idx = +tog.dataset.idx;
+        const d = load();
+        if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
+          d.todos[cat][idx].done = tog.checked;
           save(d);
           renderSt(d);
           document.dispatchEvent(new CustomEvent('wt:stack-saved'));
