@@ -15,7 +15,7 @@ export function renderOv(d) {
   // ── Intention ──
   const intention = d.intention || '';
   const intentionHTML = `
-    <div class="lp-intention" style="background:var(--surface-elevated); padding:var(--space-4); border-radius:var(--radius-lg); box-shadow:var(--elevation-base); flex: 1;">
+    <div class="lp-intention" style="background:var(--surface-elevated); padding:var(--space-4); border-radius:24px; box-shadow:var(--elevation-base); flex: 1;">
       <div class="lp-intention-lbl" style="font-family:var(--font-heading); color:var(--text3); font-size:12px; margin-bottom:var(--space-2); letter-spacing:0.5px; font-weight:600;">THIS WEEK'S INTENTION</div>
       ${intention
         ? `<div class="lp-intention-text" style="font-size:24px; font-weight:600; color:var(--text); line-height:1.3;">${intention}</div>`
@@ -117,9 +117,9 @@ export function renderOv(d) {
     </div>`;
 
   const splitHTML = `
-    <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; margin-bottom: 2rem; align-items: flex-end;">
+    <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; margin-bottom: 1.5rem; align-items: flex-start;">
       ${intentionHTML}
-      <div style="padding-bottom: 8px;">
+      <div style="padding-top: 10px;">
         <div style="font-size:12px; color:var(--text3); font-family:var(--font-heading); letter-spacing:0.5px; margin-bottom:4px; font-weight:600;">TODAY</div>
         <div style="font-size:24px; font-weight:600; color:var(--text); letter-spacing:-0.5px; white-space:nowrap;">
           ${FULL[ti].toUpperCase()}, ${todayDate.toUpperCase()}

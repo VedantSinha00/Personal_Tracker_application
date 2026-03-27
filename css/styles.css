@@ -124,9 +124,10 @@
     }
 
     .header h1 {
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.3px;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      font-family: var(--font-heading);
     }
 
     .header p {
@@ -582,6 +583,31 @@
       border-radius: 4px;
       background: var(--surface2);
       color: var(--text2);
+    }
+
+    /* Header Refinements */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-btn {
+      height: 36px;
+      padding: 0 14px;
+      font-size: 13px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      justify-content: center;
     }
 
     .intention-box {

@@ -112,13 +112,17 @@
         <h1>Personal tracker</h1>
         <p id="wkSub">current week</p>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <button class="help-btn" data-action="open-help" title="How to use this tracker">?</button>
-        <button id="themeBtn" aria-label="Toggle dark mode"
-          style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:var(--text2);"
-          title="Toggle dark mode"><i data-lucide="moon" style="width:16px;height:16px;"></i></button>
-        <button id="accountBtn" class="btn" title="Account settings" style="font-size:12px;display:flex;align-items:center;gap:5px;"><i data-lucide="user" style="width:13px;height:13px;"></i> Account</button>
-        <button id="signOutBtn" class="btn" title="Sign out" style="font-size:12px;display:flex;align-items:center;gap:5px;"><i data-lucide="log-out" style="width:13px;height:13px;"></i> Sign out</button>
+      <div class="header-actions">
+        <button class="btn icon-btn" data-action="open-help" title="How to use this tracker">?</button>
+        <button id="themeBtn" aria-label="Toggle dark mode" class="btn icon-btn" title="Toggle dark mode">
+          <i data-lucide="moon" style="width:16px;height:16px;"></i>
+        </button>
+        <button id="accountBtn" class="btn header-btn" title="Account settings">
+          <i data-lucide="user" style="width:14px;height:14px;"></i> Account
+        </button>
+        <button id="signOutBtn" class="btn header-btn" title="Sign out">
+          <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sign out
+        </button>
         <div class="week-nav">
           <button class="nav-btn" data-dir="-1">←</button>
           <span class="week-lbl" id="wkLbl" title="Click to reset to current week" style="cursor:pointer;">—</span>
