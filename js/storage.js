@@ -74,9 +74,16 @@ function migrateData(d) {
   return d;
 }
 
+const _syncQueue = {};
+
 export function save(d) {
+  d.__updated_at = new Date().toISOString();
   localStorage.setItem(wkKey(), JSON.stringify(d));
-  _syncWeek(wk, d);   // fire-and-forget background sync to Supabase
+  
+  if (_syncQueue['week_' + wk]) clearTimeout(_syncQueue['week_' + wk]);
+  _syncQueue['week_' + wk] = setTimeout(() => {
+    _syncWeek(wk, d); // fire-and-forget background sync
+  }, 1500);
 }
 
 // ── Categories ────────────────────────────────────────────────────────────────
@@ -89,7 +96,8 @@ export function loadCats() {
 
 export function saveCats(cats) {
   localStorage.setItem('wt_categories', JSON.stringify(cats));
-  _syncCategories(cats);
+  if (_syncQueue['cats']) clearTimeout(_syncQueue['cats']);
+  _syncQueue['cats'] = setTimeout(() => _syncCategories(cats), 1500);
 }
 
 // ── Custom habits ─────────────────────────────────────────────────────────────
@@ -109,7 +117,8 @@ export function loadHabits() {
 
 export function saveHabits(h) {
   localStorage.setItem('wt_habits', JSON.stringify(h));
-  _syncHabits(h);
+  if (_syncQueue['habits']) clearTimeout(_syncQueue['habits']);
+  _syncQueue['habits'] = setTimeout(() => _syncHabits(h), 1500);
 }
 
 export function allHabits() {
@@ -171,7 +180,8 @@ export function loadTargets() {
 
 export function saveTargetsData(runs, rest) {
   localStorage.setItem('wt_targets', JSON.stringify({ runs, rest }));
-  _syncTargets(runs, rest);
+  if (_syncQueue['targets']) clearTimeout(_syncQueue['targets']);
+  _syncQueue['targets'] = setTimeout(() => _syncTargets(runs, rest), 1500);
 }
 
 // ── Category archive ──────────────────────────────────────────────────────────
@@ -182,7 +192,8 @@ export function loadCatArchive() {
 
 export function saveCatArchive(arch) {
   localStorage.setItem('wt_cat_archive', JSON.stringify(arch));
-  _syncCatArchive(arch);
+  if (_syncQueue['cat_archive']) clearTimeout(_syncQueue['cat_archive']);
+  _syncQueue['cat_archive'] = setTimeout(() => _syncCatArchive(arch), 1500);
 }
 
 // ── User cache helpers ───────────────────────────────────────────────────────
@@ -256,6 +267,8 @@ export function loadFocusKey() { return 'wt_focus_'; }
 async function _syncWeek(offset, d) {
   const user = getCurrentUser();
   if (!user) return;
+  // Use the exact timestamp generated when save() mapped it to localStorage
+  const now = d.__updated_at || new Date().toISOString();
   try {
     const focus     = loadFocusForOffset(offset);
     const itemOrder = loadOrderForOffset(offset);
@@ -268,8 +281,8 @@ async function _syncWeek(offset, d) {
       review:      d.review      || {},
       focus,
       item_order:  itemOrder     || [],
-      updated_at:  new Date().toISOString(),
-    }, { onConflict: 'user_id,week_offset' });
+      updated_at:  now,
+    }, { onConflict: 'user_id, week_offset' });
   } catch(err) {
     console.warn('[sync] weekly_data failed:', err.message);
   }

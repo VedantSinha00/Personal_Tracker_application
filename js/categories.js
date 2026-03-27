@@ -106,6 +106,7 @@ function toggleVis(idx) {
   cats[idx].hidden = !cats[idx].hidden;
   saveCats(cats);
   renderCatList();
+  document.dispatchEvent(new CustomEvent('wt:cats-changed'));
 }
 
 function renameCat(idx, newName) {
