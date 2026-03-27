@@ -44,15 +44,30 @@ export function renderOv(d) {
     const hex      = resolveHex(c.color);
     const textCol  = badgeTextColor(hex);
     const stackText = stk[c.name] || '';
+    const items    = (d.todos && d.todos[c.name]) || [];
+
     return `
       <div class="lp-focus-item lp-${level}">
-        <span class="lp-focus-badge"
-          style="--badge-hex:${hex};--badge-text:${textCol};
-                 background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));
-                 color:${textCol};">${c.name}</span>
-        <span class="lp-focus-text${stackText ? '' : ' empty'}">
-          ${stackText || 'No focus set'}
-        </span>
+        <div class="lp-focus-main">
+          <span class="lp-focus-badge"
+            style="--badge-hex:${hex};--badge-text:${textCol};
+                   background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));
+                   color:${textCol};">${c.name}</span>
+          <span class="lp-focus-text${stackText ? '' : ' empty'}">
+            ${stackText || 'No focus set'}
+          </span>
+        </div>
+        ${items.length > 0 ? `
+          <div class="lp-todos">
+            ${items.map((it, idx) => `
+              <label class="lp-todo-item${it.done ? ' done' : ''}">
+                <input type="checkbox" ${it.done ? 'checked' : ''}
+                  data-action="tog-todo" data-catname="${c.name}" data-idx="${idx}">
+                <span class="lp-todo-text">${it.text}</span>
+              </label>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>`;
   }
 
@@ -163,6 +178,17 @@ export function initOverviewListeners() {
       document.dispatchEvent(new CustomEvent('wt:tog-custom-habit', {
         detail: { day: +cust.dataset.day, habit: cust.dataset.habit }
       }));
+    }
+    const todo = e.target.closest('[data-action="tog-todo"]');
+    if (todo) {
+      const cat = todo.dataset.catname;
+      const idx = +todo.dataset.idx;
+      const d = load();
+      if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
+        d.todos[cat][idx].done = todo.checked;
+        save(d);
+        renderOv(d); // Refresh current tab
+      }
     }
   });
 

@@ -37,28 +37,50 @@ export function renderSt(d, animate) {
   function buildItem(c, level) {
     const hex  = resolveHex(c.color);
     const text = badgeTextColor(hex);
+    const tasks = stkTodos[c.name] || [];
+
     return `
       <div class="si focus-${level}" id="si_wrap_${c.name}"
           data-catname="${c.name}" data-level="${level}">
-        <div class="drag-zone" title="Drag to reorder">
-          <span class="drag-handle">⠿</span>
-          <span class="stag" style="--badge-hex:${hex};--badge-text:${text};">${c.name}</span>
+        <div class="si-main">
+          <div class="drag-zone" title="Drag to reorder">
+            <span class="drag-handle">⠿</span>
+            <span class="stag" style="--badge-hex:${hex};--badge-text:${text};">${c.name}</span>
+          </div>
+          <input class="sinput" id="si_${c.name}"
+            placeholder="Main focus / objective..."
+            value="${stk[c.name] || ''}"
+            data-action="stack-input"
+            data-catname="${c.name}">
+          <div class="focus-toggle">
+            <button data-action="focus-toggle" data-catname="${c.name}"
+              class="${level === 'high' ? 'focus-high-on' : ''}"
+              title="High focus">▲ High</button>
+            <button data-action="focus-toggle" data-catname="${c.name}"
+              class="${level === 'low' ? 'focus-low-on' : ''}"
+              title="Low focus">▼ Low</button>
+          </div>
         </div>
-        <input class="sinput" id="si_${c.name}"
-          placeholder="Focus / next step..."
-          value="${stk[c.name] || ''}"
-          data-action="stack-input"
-          data-catname="${c.name}">
-        <div class="focus-toggle">
-          <button data-action="focus-toggle" data-catname="${c.name}"
-            class="${level === 'high' ? 'focus-high-on' : ''}"
-            title="High focus">▲ High</button>
-          <button data-action="focus-toggle" data-catname="${c.name}"
-            class="${level === 'low' ? 'focus-low-on' : ''}"
-            title="Low focus">▼ Low</button>
+
+        <div class="si-tasks">
+          <div class="task-list" id="tasks_${c.name}" data-catname="${c.name}">
+            ${tasks.map((t, i) => `
+              <div class="task-item" data-idx="${i}">
+                <span class="task-dot">•</span>
+                <span class="task-text">${t.text}</span>
+                <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}">×</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="task-add">
+            <input class="task-input" placeholder="Add a task..."
+              data-action="add-task" data-catname="${c.name}">
+          </div>
         </div>
       </div>`;
   }
+
+  const stkTodos = d.todos || {};
 
   // ── F (First): record positions before any DOM change ──────────────────────
   // This is the F step of FLIP. We snapshot every item's current pixel
@@ -210,24 +232,18 @@ export function updateCarryBtn(d) {
     : 'Copy last week\'s stack items into this week';
 }
 
-// ── Delegated stack listeners ─────────────────────────────────────────────────
-// Called after every render. Attaches to the two stable containers
-// (#highS and #lowS) so re-renders don't orphan listeners.
 function attachStackListeners() {
   ['highS', 'lowS'].forEach(id => {
     const container = document.getElementById(id);
     if (!container) return;
 
-    // Remove old listeners by replacing the node — cleanest approach
-    // for containers that get fully re-rendered each time.
     const fresh = container.cloneNode(true);
     container.parentNode.replaceChild(fresh, container);
 
-    // Stack text inputs — save on every keystroke
+    // Stack text inputs
     fresh.addEventListener('input', e => {
       if (e.target.dataset.action === 'stack-input') saveStackInputs();
     });
-    // Deselect on Enter
     fresh.addEventListener('keydown', e => {
       if (e.target.dataset.action === 'stack-input' && e.key === 'Enter') {
         e.preventDefault();
@@ -238,10 +254,39 @@ function attachStackListeners() {
       if (e.target.dataset.action === 'stack-input') e.target.select();
     }, true);
 
-    // Focus toggle buttons
+    // Focus toggle
     fresh.addEventListener('click', e => {
       const btn = e.target.closest('[data-action="focus-toggle"]');
       if (btn) toggleFocus(btn.dataset.catname);
+    });
+
+    // Task management
+    fresh.addEventListener('keydown', e => {
+      if (e.target.dataset.action === 'add-task' && e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (!val) return;
+        const cat = e.target.dataset.catname;
+        const d = load();
+        if (!d.todos) d.todos = {};
+        if (!d.todos[cat]) d.todos[cat] = [];
+        d.todos[cat].push({ text: val, done: false });
+        save(d);
+        renderSt(d);
+      }
+    });
+
+    fresh.addEventListener('click', e => {
+      const delBtn = e.target.closest('[data-action="del-task"]');
+      if (delBtn) {
+        const cat = delBtn.dataset.catname;
+        const idx = +delBtn.dataset.idx;
+        const d = load();
+        if (d.todos && d.todos[cat]) {
+          d.todos[cat].splice(idx, 1);
+          save(d);
+          renderSt(d);
+        }
+      }
     });
   });
 }
