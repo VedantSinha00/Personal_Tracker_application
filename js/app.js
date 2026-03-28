@@ -50,6 +50,9 @@ function swTab(id) {
   document.getElementById(id).classList.add('active');
   document.querySelector(`.tab[data-tab="${id}"]`).classList.add('active');
   localStorage.setItem('wt_active_tab', id);
+  if (id === 'review') {
+    _updM(load());
+  }
   if (id === 'insights') {
     if (!_insightsInited) { initInsights(); _insightsInited = true; }
     else renderInsights();
@@ -213,6 +216,7 @@ function initListeners() {
     const d = load();
     _renderDG(d);
     _renderOv(d);
+    _updM(d);
   });
 
   // Import complete
