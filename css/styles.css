@@ -765,7 +765,21 @@
     .rv-habits-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .rv-habits-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .rv-habits-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .rv-habits-list::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 4px;
     }
 
     .rv-habit-row {
