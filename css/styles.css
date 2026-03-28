@@ -93,6 +93,7 @@
       --elevation-modal: 0 32px 64px -16px rgba(0, 0, 0, 0.5), 0 16px 32px -8px rgba(0, 0, 0, 0.3);
       
       --badge-base: #2C2C30;
+      --surface-grad: linear-gradient(180deg, #222225 0%, #1c1c1f 100%);
     }
 
     html {

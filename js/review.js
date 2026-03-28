@@ -19,8 +19,18 @@ export function updM(d) {
   const habitStats = allH.map(h => {
     let count = 0;
     d.days.forEach((day, i) => {
-      // Defensive check: match by ID or Name (handles schema drift)
-      const done = !!(day.habits && (day.habits[h.id] || day.habits[h.name]));
+      // Robust check: match by ID, Exact Name, or Case-Insensitive Name
+      let done = false;
+      if (day.habits) {
+        if (day.habits[h.id]) done = true;
+        else if (day.habits[h.name]) done = true;
+        else {
+          // Check all keys for a case-insensitive match
+          const keys = Object.keys(day.habits);
+          const lowerName = h.name.toLowerCase();
+          if (keys.some(k => k.toLowerCase() === lowerName)) done = true;
+        }
+      }
       
       if (h.id === 'rest') {
         if (done || day.fullRest) count++;
