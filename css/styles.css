@@ -853,6 +853,42 @@
       text-transform: uppercase;
     }
 
+    .rv-card {
+      background: var(--surface-grad);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--elevation-base);
+      transition: all 0.2s ease;
+    }
+
+    .rv-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+
+    .rv-ta {
+      width: 100%;
+      min-height: 120px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+    }
+
+    .rv-ta::placeholder {
+      color: var(--text3);
+      opacity: 0.5;
+    }
+
     .rv-metrics-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
