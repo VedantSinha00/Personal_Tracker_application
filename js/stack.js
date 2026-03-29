@@ -181,7 +181,7 @@ export function carryForward() {
 
   const btn = document.getElementById('carryBtn');
 
-  if (!prev || !prev.stack) {
+  if (!prev || (!prev.stack && !prev.todos)) {
     btn.textContent = '✕ Nothing to carry';
     setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
     return;
@@ -189,12 +189,29 @@ export function carryForward() {
 
   const d    = load();
   if (!d.stack) d.stack = {};
+  if (!d.todos) d.todos = {};
   const cats = loadCats();
   let carried = 0;
 
   cats.forEach(c => {
+    // 1. Carry text inputs
     const prevVal = prev.stack ? (prev.stack[c.name] || '') : '';
     if (prevVal && !d.stack[c.name]) { d.stack[c.name] = prevVal; carried++; }
+
+    // 2. Carry unfinished tasks (todos)
+    if (prev.todos && prev.todos[c.name]) {
+      const uncomps = prev.todos[c.name].filter(t => !t.done);
+      if (uncomps.length > 0) {
+        if (!d.todos[c.name]) d.todos[c.name] = [];
+        uncomps.forEach(ut => {
+          // Avoid exact string duplicates
+          if (!d.todos[c.name].find(dt => dt.text === ut.text)) {
+            d.todos[c.name].push({ text: ut.text, done: false });
+            carried++;
+          }
+        });
+      }
+    }
   });
 
   // Carry focus levels
