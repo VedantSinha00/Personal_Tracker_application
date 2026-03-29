@@ -18,7 +18,7 @@ const TF_OPTIONS = [
   { label: '1 year',   weeks: 52   },
   { label: 'All time', weeks: 9999 },
 ];
-let curTF = 1;
+let curTF = 0;
 
 // ── Data helpers ──────────────────────────────────────────────────────────────
 function getAllWeeks() {
@@ -246,9 +246,7 @@ export function renderInsights() {
   // ── Stat row ──
   const statHTML = `
     <div class="stat-card"><div class="stat-val">${fmtHrs(totalHours)}</div><div class="stat-lbl">TOTAL HOURS</div></div>
-    <div class="stat-card"><div class="stat-val">${totalBlocks}</div><div class="stat-lbl">BLOCKS</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${totalRuns}</div><div class="stat-lbl">RUNS (target ${runTgt}/wk)</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${totalFR}</div><div class="stat-lbl">FULL REST DAYS</div></div>`;
+    <div class="stat-card"><div class="stat-val">${totalBlocks}</div><div class="stat-lbl">BLOCKS</div></div>`;
 
   // ── Text summary ──
   let summary = `Over the last <strong>${TF_OPTIONS[curTF].label}</strong> you logged <strong>${fmtHrs(totalHours)}</strong> of work across <strong>${weeks.length} week${weeks.length !== 1 ? 's' : ''}</strong> — averaging <strong>${fmtHrs(avgHrs)}/week</strong> (${totalBlocks} blocks). `;
