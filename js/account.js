@@ -53,7 +53,8 @@ async function handleUpdateUsername() {
     .eq('id', user.id);
 
   if (dbError) {
-    showBanner(dbError.message);
+    const msg = dbError.details ? `${dbError.message}: ${dbError.details}` : dbError.message;
+    showBanner(msg);
     btn.disabled    = false;
     btn.textContent = 'Save';
     return;
@@ -84,7 +85,11 @@ async function handleUpdatePassword() {
   btn.disabled    = false;
   btn.textContent = 'Update password';
 
-  if (error) { showBanner(error.message); return; }
+  if (error) { 
+    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
+    showBanner(msg); 
+    return; 
+  }
 
   document.getElementById('accountNewPassword').value    = '';
   document.getElementById('accountConfirmPassword').value = '';

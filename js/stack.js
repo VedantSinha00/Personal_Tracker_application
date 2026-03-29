@@ -9,7 +9,7 @@ import {
   load, save,
   loadCats, loadFocus, saveFocus,
   loadOrder, saveOrder, orderKey,
-  sortedCats, wk,
+  sortedCats, wk, getAbsWk,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 
@@ -174,7 +174,7 @@ function toggleFocus(catName) {
 // Copies last week's stack text, focus levels, and order into this week,
 // but only for fields that are currently empty.
 export function carryForward() {
-  const prevKey = 'wt_wk_' + (wk - 1);
+  const prevKey = 'wt_wk_' + getAbsWk(wk - 1);
   let prev;
   try { const r = localStorage.getItem(prevKey); prev = r ? JSON.parse(r) : null; }
   catch(e) { prev = null; }
@@ -198,8 +198,8 @@ export function carryForward() {
   });
 
   // Carry focus levels
-  const prevFocusKey = 'wt_focus_' + (wk - 1);
-  const prevOrderKey = 'wt_order_' + (wk - 1);
+  const prevFocusKey = 'wt_focus_' + getAbsWk(wk - 1);
+  const prevOrderKey = 'wt_order_' + getAbsWk(wk - 1);
   try {
     const pf = localStorage.getItem(prevFocusKey);
     if (pf) {
