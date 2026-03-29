@@ -17,13 +17,30 @@
 import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
 import { sb, getCurrentUser } from './auth.js';
 
-// ── Week state ────────────────────────────────────────────────────────────────
+// ── Week state (Absolute Anchored) ───────────────────────────────────────────
 export let wk = 0;
 export function setWk(val) { wk = val; }
 
-export function wkKey()    { return 'wt_wk_' + wk; }
-export function orderKey() { return 'wt_order_' + wk; }
-export function focusKey() { return 'wt_focus_' + wk; }
+export function getAbsWk(relativeOffset) {
+  // Epoch: Midnight local time of Monday, March 23, 2026
+  const d = new Date();
+  const dy = d.getDay();
+  d.setDate(d.getDate() + (dy === 0 ? -6 : 1 - dy) + relativeOffset * 7);
+  d.setHours(0,0,0,0);
+  
+  const epoch = new Date(2026, 2, 23, 0, 0, 0, 0);
+  return Math.round((d.getTime() - epoch.getTime()) / (7 * 24 * 60 * 60 * 1000));
+}
+
+export function getMonFromAbs(absOffset) {
+  const m = new Date(2026, 2, 23, 0, 0, 0, 0);
+  m.setDate(m.getDate() + absOffset * 7);
+  return m;
+}
+
+export function wkKey()    { return 'wt_wk_' + getAbsWk(wk); }
+export function orderKey() { return 'wt_order_' + getAbsWk(wk); }
+export function focusKey() { return 'wt_focus_' + getAbsWk(wk); }
 
 // ── Default week data ─────────────────────────────────────────────────────────
 export function def() {
@@ -80,9 +97,10 @@ export function save(d) {
   d.__updated_at = new Date().toISOString();
   localStorage.setItem(wkKey(), JSON.stringify(d));
   
-  if (_syncQueue['week_' + wk]) clearTimeout(_syncQueue['week_' + wk]);
-  _syncQueue['week_' + wk] = setTimeout(() => {
-    _syncWeek(wk, d); // fire-and-forget background sync
+  const absWk = getAbsWk(wk);
+  if (_syncQueue['week_' + absWk]) clearTimeout(_syncQueue['week_' + absWk]);
+  _syncQueue['week_' + absWk] = setTimeout(() => {
+    _syncWeek(absWk, d); // fire-and-forget background sync
   }, 1500);
 }
 
@@ -138,7 +156,7 @@ export function loadFocus() {
 export function saveFocus(f) {
   localStorage.setItem(focusKey(), JSON.stringify(f));
   // Merge into weekly data sync — read current week data and re-sync
-  _syncWeekFocusOrder(wk);
+  _syncWeekFocusOrder(getAbsWk(wk));
 }
 
 // ── Stack item order ──────────────────────────────────────────────────────────
@@ -151,7 +169,7 @@ export function loadOrder() {
 
 export function saveOrder(arr) {
   localStorage.setItem(orderKey(), JSON.stringify(arr));
-  _syncWeekFocusOrder(wk);
+  _syncWeekFocusOrder(getAbsWk(wk));
 }
 
 export function sortedCats() {
@@ -258,17 +276,26 @@ async function _syncWeek(offset, d) {
   try {
     const focus     = loadFocusForOffset(offset);
     const itemOrder = loadOrderForOffset(offset);
-    await sb.from('weekly_data').upsert({
+    const payload = {
       user_id:     user.id,
       week_offset: offset,
       intention:   d.intention   || '',
       stack:       d.stack       || {},
+      todos:       d.todos       || {},
       days:        d.days        || [],
       review:      d.review      || {},
       focus,
       item_order:  itemOrder     || [],
       updated_at:  now,
-    }, { onConflict: 'user_id, week_offset' });
+    };
+    const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
+    if (error && error.message && error.message.includes('todos')) {
+      delete payload.todos;
+      await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
+      console.warn('[sync] Missing todos column. Tasks saved locally.');
+    } else if (error) {
+      console.warn('[sync] weekly_data failed:', error.message);
+    }
   } catch(err) {
     console.warn('[sync] weekly_data failed:', err.message);
   }
@@ -282,17 +309,26 @@ async function _syncWeekFocusOrder(offset) {
     const focus     = loadFocusForOffset(offset);
     const itemOrder = loadOrderForOffset(offset);
     const d         = load(); // load current week from localStorage cache
-    await sb.from('weekly_data').upsert({
+    const payload = {
       user_id:     user.id,
       week_offset: offset,
       intention:   d.intention   || '',
       stack:       d.stack       || {},
+      todos:       d.todos       || {},
       days:        d.days        || [],
       review:      d.review      || {},
       focus,
       item_order:  itemOrder     || [],
       updated_at:  new Date().toISOString(),
-    }, { onConflict: 'user_id,week_offset' });
+    };
+    const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id,week_offset' });
+    if (error && error.message && error.message.includes('todos')) {
+      delete payload.todos;
+      await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id,week_offset' });
+      console.warn('[sync] Missing todos column. Tasks saved locally.');
+    } else if (error) {
+      console.warn('[sync] weekly_data (focus/order) failed:', error.message);
+    }
   } catch(err) {
     console.warn('[sync] weekly_data (focus/order) failed:', err.message);
   }
@@ -402,9 +438,14 @@ export async function loadFromSupabase() {
         const local = localStorage.getItem(key);
         const localTs = local ? (JSON.parse(local).__updated_at || 0) : 0;
         if (!localTs || new Date(row.updated_at) > new Date(localTs)) {
+          // preserve local todos if Supabase doesn't have them yet
+          const existingLocal = localStorage.getItem(key);
+          const oldD = existingLocal ? JSON.parse(existingLocal) : {};
+
           const d = {
             intention:   row.intention  || '',
             stack:       row.stack      || {},
+            todos:       row.todos      !== undefined ? row.todos : (oldD.todos || {}),
             days:        row.days       || [],
             review:      row.review     || {},
             __updated_at: row.updated_at,

@@ -3,10 +3,10 @@
 // of every chart, heatmap, and summary panel.
 
 import {
-  loadCats, loadHabits, allHabits, loadCatArchive,
+  loadCats, loadHabits, allHabits, loadCatArchive, getAbsWk, getMonFromAbs
 } from './storage.js';
 import { catPalette, resolveCatColor } from './colours.js';
-import { parseDuration, getMon } from './dailylog.js';
+import { parseDuration } from './dailylog.js';
 
 // ── Time-frame options ────────────────────────────────────────────────────────
 const TF_OPTIONS = [
@@ -37,7 +37,8 @@ function getAllWeeks() {
 function getInsightsData() {
   const maxWeeks = TF_OPTIONS[curTF].weeks;
   const all      = getAllWeeks();
-  const relevant = all.filter(w => w.offset <= 0 && w.offset >= -maxWeeks + 1);
+  const currentAbsWk = getAbsWk(0);
+  const relevant = all.filter(w => w.offset <= currentAbsWk && w.offset >= currentAbsWk - maxWeeks + 1);
   relevant.sort((a, b) => a.offset - b.offset);
   return relevant;
 }
@@ -134,7 +135,7 @@ export function renderInsights() {
         if (b.slot) slotHours[b.slot] = (slotHours[b.slot] || 0) + h;
       });
     });
-    const mon = getMon(w.offset);
+    const mon = getMonFromAbs(w.offset);
     weekStats.push({
       label:  mon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       hours:  wHours,
@@ -161,7 +162,7 @@ export function renderInsights() {
 
   // ── Habit heatmap ──
   const hmHTML = weeks.map(w => {
-    const mon   = getMon(w.offset);
+    const mon   = getMonFromAbs(w.offset);
     const lbl   = mon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
     const cells = (w.data.days || []).map(day => {
       let cls = 'hm-none';
@@ -301,7 +302,7 @@ export function renderInsights() {
   const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const journalEntries = [];
   weeks.forEach(w => {
-    const mon = getMon(w.offset);
+    const mon = getMonFromAbs(w.offset);
     (w.data.days || []).forEach((day, i) => {
       if (day.journal && day.journal.trim()) {
         const date = new Date(mon);

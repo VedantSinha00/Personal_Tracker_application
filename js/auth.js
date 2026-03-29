@@ -105,7 +105,10 @@ async function handleLogin() {
 
   if (rpcError || !email) {
     setLoading('loginBtn', false);
-    showBanner('Username not found. Please check and try again.');
+    const msg = rpcError 
+      ? `Lookup failed: ${rpcError.message}${rpcError.details ? ' - ' + rpcError.details : ''}` 
+      : 'Username not found. Please check and try again.';
+    showBanner(msg);
     return;
   }
 
@@ -115,7 +118,8 @@ async function handleLogin() {
   setLoading('loginBtn', false);
 
   if (error) {
-    showBanner(error.message);
+    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
+    showBanner(msg);
     return;
   }
 
@@ -149,7 +153,8 @@ async function handleSignup() {
   setLoading('signupBtn', false);
 
   if (error) {
-    showBanner(error.message);
+    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
+    showBanner(msg);
     return;
   }
 
@@ -189,7 +194,11 @@ async function handleForgotPassword() {
   btn.disabled = false;
   btn.textContent = 'Send reset link';
 
-  if (error) { showBanner(error.message); return; }
+  if (error) { 
+    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
+    showBanner(msg); 
+    return; 
+  }
   showBanner('Reset link sent! Check your email.', false);
 }
 
