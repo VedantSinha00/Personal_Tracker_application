@@ -34,7 +34,7 @@ export const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkc2t2Y2pxenlmd2h4eXhzZ2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTY3MjAsImV4cCI6MjA5MDAzMjcyMH0.on1s6HXZjFVkx4Xa_DTOB65QGX_0yKFsxMrD59uQn68'
 );
 
-// ── Current user ──────────────────────────────────────────────────────────────
+// ── current user ──────────────────────────────────────────────────────────────
 // A module-level cache so storage.js can call getCurrentUser() synchronously
 // after the session has been established.
 let _currentUser = null;
@@ -52,238 +52,141 @@ function showAuth() {
   document.getElementById('appShell').style.display    = 'none';
 }
 
-function showBanner(msg, isError = true) {
-  const b = document.getElementById('authBanner');
+function showSetupProfile() {
+  const user = getCurrentUser();
+  const name = user?.user_metadata?.full_name?.split(' ')[0]?.toLowerCase() || '';
+  document.getElementById('setupUsername').value = name;
+  document.getElementById('setupProfileModal').classList.add('open');
+}
+
+function hideSetupProfile() {
+  document.getElementById('setupProfileModal').classList.remove('open');
+}
+
+function showBanner(msg, isError = true, id = 'authBanner') {
+  const b = document.getElementById(id);
+  if (!b) return;
   b.textContent    = msg;
   b.style.display  = 'block';
   b.className      = 'auth-banner ' + (isError ? 'auth-banner-error' : 'auth-banner-ok');
 }
 
-function hideBanner() {
-  const b = document.getElementById('authBanner');
-  b.style.display = 'none';
-  b.textContent   = '';
-}
-
-function setLoading(btnId, loading) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-  btn.disabled     = loading;
-  btn.textContent  = loading
-    ? (btnId === 'loginBtn' ? 'Signing in…' : 'Creating account…')
-    : (btnId === 'loginBtn' ? 'Sign in'     : 'Create account');
-}
-
-// ── Auth tab switching ────────────────────────────────────────────────────────
-function initAuthTabs() {
-  document.querySelectorAll('.auth-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.authTab;
-      document.querySelectorAll('.auth-tab').forEach(t =>
-        t.classList.toggle('active', t.dataset.authTab === target)
-      );
-      document.querySelectorAll('.auth-panel').forEach(p =>
-        p.classList.toggle('active', p.id === 'auth' + target.charAt(0).toUpperCase() + target.slice(1))
-      );
-      hideBanner();
-    });
-  });
-}
-
-// ── Login ─────────────────────────────────────────────────────────────────────
-async function handleLogin() {
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-
-  if (!username || !password) { showBanner('Please fill in both fields.'); return; }
-
-  hideBanner();
-  setLoading('loginBtn', true);
-
-  // Step 1: resolve username → email via Supabase RPC
-  const { data: email, error: rpcError } = await sb.rpc('get_email_by_username', { p_username: username });
-
-  if (rpcError || !email) {
-    setLoading('loginBtn', false);
-    const msg = rpcError 
-      ? `Lookup failed: ${rpcError.message}${rpcError.details ? ' - ' + rpcError.details : ''}` 
-      : 'Username not found. Please check and try again.';
-    showBanner(msg);
-    return;
+function hideBanner(id = 'authBanner') {
+  const b = document.getElementById(id);
+  if (b) {
+    b.style.display = 'none';
+    b.textContent   = '';
   }
-
-  // Step 2: sign in with the resolved email + password
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-  setLoading('loginBtn', false);
-
-  if (error) {
-    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
-    showBanner(msg);
-    return;
-  }
-
-  _currentUser = data.user;
-  showApp();
-  // Fire an event so app.js knows to initialise / re-render with the new user's data
-  document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: data.user } }));
 }
 
-// ── Signup ────────────────────────────────────────────────────────────────────
-async function handleSignup() {
-  const username = document.getElementById('signupUsername').value.trim();
-  const email    = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
-
-  if (!username)            { showBanner('Please choose a username.');         return; }
-  if (!email)               { showBanner('Please enter your email.');          return; }
-  if (password.length < 6) { showBanner('Password must be at least 6 characters.'); return; }
-
-  hideBanner();
-  setLoading('signupBtn', true);
-
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
+// ── Google Login ──────────────────────────────────────────────────────────────
+async function handleGoogleLogin() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
     options: {
-      data: { username },   // stored in raw_user_meta_data, picked up by the DB trigger
-    },
+      redirectTo: window.location.origin + window.location.pathname
+    }
   });
 
-  setLoading('signupBtn', false);
-
   if (error) {
-    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
-    showBanner(msg);
+    showBanner(`Login failed: ${error.message}`);
+  }
+}
+
+// ── Setup Profile ─────────────────────────────────────────────────────────────
+async function handleSetupProfile() {
+  const username = document.getElementById('setupUsername').value.trim();
+  if (!username) { showBanner('Please choose a username.', true, 'setupBanner'); return; }
+
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const btn = document.getElementById('setupSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  // 1. Create/Update profile
+  const { error: dbError } = await sb
+    .from('profiles')
+    .upsert({ id: user.id, username: username });
+
+  if (dbError) {
+    showBanner(dbError.message, true, 'setupBanner');
+    btn.disabled = false;
+    btn.textContent = 'Finish Setup';
     return;
   }
 
-  // Supabase may require email confirmation depending on project settings.
-  // If the session is immediately available, log them in. Otherwise prompt.
-  if (data.session) {
-    _currentUser = data.user;
-    showApp();
-    document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: data.user } }));
-  } else {
-    showBanner('Account created! Check your email to confirm, then sign in.', false);
-  }
+  // 2. Update auth metadata
+  await sb.auth.updateUser({ data: { username: username } });
+
+  hideSetupProfile();
+  showApp();
+  document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
 }
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
 async function handleSignOut() {
   await sb.auth.signOut();
   _currentUser = null;
-  _clearUserCache();   // wipe this user's cached data before showing the login screen
+  _clearUserCache();
   showAuth();
 }
 
-// ── Forgot password ───────────────────────────────────────────────────────────
-async function handleForgotPassword() {
-  const email = document.getElementById('forgotEmail').value.trim();
-  if (!email) { showBanner('Please enter your email.'); return; }
-
-  hideBanner();
-  const btn = document.getElementById('forgotBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending…';
-
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + window.location.pathname,
-  });
-
-  btn.disabled = false;
-  btn.textContent = 'Send reset link';
-
-  if (error) { 
-    const msg = error.details ? `${error.message}: ${error.details}` : error.message;
-    showBanner(msg); 
-    return; 
-  }
-  showBanner('Reset link sent! Check your email.', false);
-}
-
-// ── Show / hide password toggle ───────────────────────────────────────────────
-function initPwToggles() {
-  document.querySelectorAll('.auth-pw-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      const isHidden = input.type === 'password';
-      input.type = isHidden ? 'text' : 'password';
-      // Swap the Lucide icon
-      const icon = btn.querySelector('i');
-      if (icon) {
-        icon.dataset.lucide = isHidden ? 'eye-off' : 'eye';
-        lucide.createIcons({ nodes: [icon] });
-      }
-    });
-  });
-}
-
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-// Runs immediately when auth.js loads. Checks if there is already a valid
-// session (e.g. user refreshed the page) and skips the login screen if so.
 (async function init() {
-  initAuthTabs();
-  initPwToggles();
-
   // Wire up buttons
-  document.getElementById('loginBtn').addEventListener('click', handleLogin);
-  document.getElementById('signupBtn').addEventListener('click', handleSignup);
+  document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
+  document.getElementById('setupSubmitBtn').addEventListener('click', handleSetupProfile);
   document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
-  document.getElementById('forgotBtn').addEventListener('click', handleForgotPassword);
 
-  // Forgot password / back to login links
-  document.getElementById('forgotLink').addEventListener('click', () => {
-    hideBanner();
-    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('authForgot').classList.add('active');
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  });
-  document.getElementById('backToLogin').addEventListener('click', () => {
-    hideBanner();
-    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('authLogin').classList.add('active');
-    document.querySelectorAll('.auth-tab').forEach(t =>
-      t.classList.toggle('active', t.dataset.authTab === 'login')
-    );
-  });
-
-  // Enter key submits whichever form is visible
-  document.getElementById('loginUsername').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleLogin();
-  });
-  document.getElementById('loginPassword').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleLogin();
-  });
-  document.getElementById('signupPassword').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleSignup();
-  });
-  document.getElementById('forgotEmail').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleForgotPassword();
-  });
-
-  // Check for an existing session (page refresh / returning user)
+  // Check for an existing session
   const { data: { session } } = await sb.auth.getSession();
 
   if (session) {
     _currentUser = session.user;
-    showApp();
-    document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: session.user } }));
+    
+    // Check if user has a username
+    const username = _currentUser.user_metadata?.username;
+    
+    if (!username) {
+      // Re-verify from DB in case metadata is stale
+      const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
+      if (profile?.username) {
+        // Update local metadata cache
+        _currentUser.user_metadata = { ..._currentUser.user_metadata, username: profile.username };
+        showApp();
+        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+      } else {
+        showSetupProfile();
+      }
+    } else {
+      showApp();
+      document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+    }
   } else {
     showAuth();
   }
 
-  // Keep _currentUser in sync if the session changes (e.g. token refresh,
-  // sign-out from another tab)
-  sb.auth.onAuthStateChange((_event, session) => {
+  // Keep _currentUser in sync
+  sb.auth.onAuthStateChange(async (_event, session) => {
     _currentUser = session?.user || null;
     if (!_currentUser) {
-      _clearUserCache();   // also covers sign-out from another tab
+      _clearUserCache();
       showAuth();
+    } else {
+      // If we just signed in and have no username, trigger setup
+      if (!_currentUser.user_metadata?.username) {
+        const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
+        if (!profile?.username) {
+          showSetupProfile();
+        } else {
+          showApp();
+          document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+        }
+      }
     }
   });
 
-  // Initialise Lucide icons now that the DOM is ready
   if (typeof lucide !== 'undefined') lucide.createIcons();
 })();
