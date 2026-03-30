@@ -2230,35 +2230,46 @@
       color: var(--text3);
     }
 
-    /* Pill tab switcher */
-    .auth-tabs {
+    .auth-social {
+      margin-top: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .auth-google-btn {
+      width: 100%;
       display: flex;
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 4px;
-      margin-bottom: 1.5rem;
-      gap: 4px;
-    }
-
-    .auth-tab {
-      flex: 1;
-      padding: 8px 0;
-      border: none;
-      border-radius: 7px;
-      background: transparent;
-      color: var(--text2);
-      font-size: 13px;
-      font-family: var(--font-body);
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.18s;
-    }
-
-    .auth-tab.active {
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
       background: var(--surface);
       color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .auth-google-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--text3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+
+    .auth-google-btn:active {
+      transform: translateY(0);
+    }
+
+    .auth-footer-note {
+      font-size: 12px;
+      color: var(--text3);
+      text-align: center;
+      line-height: 1.5;
     }
 
     /* Banner */
@@ -2266,7 +2277,7 @@
       padding: 10px 14px;
       border-radius: 8px;
       font-size: 13px;
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
       line-height: 1.5;
     }
 
@@ -2320,57 +2331,9 @@
       box-shadow: 0 0 0 3px rgba(74,158,114,0.12);
     }
 
-    /* Password wrapper with eye toggle */
-    .auth-pw-wrap {
-      position: relative;
-    }
-
-    .auth-pw-wrap input {
-      padding-right: 42px;
-    }
-
-    .auth-pw-toggle {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text3);
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.15s;
-    }
-
-    .auth-pw-toggle:hover { color: var(--text2); }
-    .auth-pw-toggle svg   { width: 16px; height: 16px; }
-
-    /* Forgot password link */
-    .auth-forgot-link {
-      display: block;
-      background: none;
-      border: none;
-      color: var(--text3);
-      font-size: 12px;
-      cursor: pointer;
-      padding: 0;
+    /* Fields */
+    .auth-field {
       margin-bottom: 1.25rem;
-      text-align: left;
-      font-family: var(--font-body);
-      transition: color 0.15s;
-    }
-
-    .auth-forgot-link:hover { color: var(--text2); }
-
-    /* Forgot panel description */
-    .auth-forgot-desc {
-      font-size: 13px;
-      color: var(--text2);
-      margin-bottom: 1.25rem;
-      line-height: 1.6;
     }
 
     /* Submit button */
