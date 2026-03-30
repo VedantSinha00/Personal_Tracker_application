@@ -143,7 +143,7 @@ async function handleSignOut() {
   // Check for OAuth errors in the URL
   const hashObj = new URLSearchParams(window.location.hash.substring(1));
   const queryObj = new URLSearchParams(window.location.search);
-  const errorDesc = hashObj.get('error_description') || queryObj.get('error_description');
+  const errorDesc = hashObj.get('error_description') || queryObj.get('error_description') || hashObj.get('error') || queryObj.get('error');
   if (errorDesc) {
     showBanner(`Auth Error: ${errorDesc.replace(/\+/g, ' ')}`);
     // Clean up the URL
