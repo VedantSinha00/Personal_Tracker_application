@@ -79,6 +79,7 @@ function showAuth() {
 }
 
 function showSetupProfile() {
+  hideLoadingScreen();
   const user = getCurrentUser();
   const name = user?.user_metadata?.full_name?.split(' ')[0]?.toLowerCase() || '';
   document.getElementById('setupUsername').value = name;
@@ -131,24 +132,31 @@ async function handleSetupProfile() {
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
-  // 1. Create/Update profile
-  const { error: dbError } = await sb
-    .from('profiles')
-    .upsert({ id: user.id, username: username });
+  try {
+    // 1. Create/Update profile with a bit of a timeout check
+    const { error: dbError } = await sb
+      .from('profiles')
+      .upsert({ id: user.id, username: username });
 
-  if (dbError) {
-    showBanner(dbError.message, true, 'setupBanner');
+    if (dbError) {
+      showBanner(dbError.message, true, 'setupBanner');
+      btn.disabled = false;
+      btn.textContent = 'Finish Setup';
+      return;
+    }
+
+    // 2. Update auth metadata
+    await sb.auth.updateUser({ data: { username: username } });
+
+    hideSetupProfile();
+    showApp();
+    document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+  } catch (err) {
+    console.error('[auth] Profile setup failed:', err);
+    showBanner('Connection failed. Please try again.', true, 'setupBanner');
     btn.disabled = false;
     btn.textContent = 'Finish Setup';
-    return;
   }
-
-  // 2. Update auth metadata
-  await sb.auth.updateUser({ data: { username: username } });
-
-  hideSetupProfile();
-  showApp();
-  document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
 }
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
