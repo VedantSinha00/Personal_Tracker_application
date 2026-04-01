@@ -1,10 +1,24 @@
-// ── app.js ───────────────────────────────────────────────────────────────────
-// Entry point. Imports every module, wires top-level listeners, and
-// bootstraps the app on page load.
-//
-// This is the only file that knows about all other modules. Every other
-// module is deliberately unaware of its siblings — it communicates upward
-// via custom events, and app.js decides what to re-render in response.
+// ── Global Error Handling ────────────────────────────────────────────────────
+// Catch errors early in the boot process.
+window.onerror = function(msg, url, line, col, error) {
+  console.error('[Global Error]', { msg, url, line, col, error });
+  // If the loader is still visible, show an error message
+  const loader = document.getElementById('loadingScreen');
+  if (loader && loader.style.display !== 'none' && loader.style.opacity !== '0') {
+    const errorEl = document.getElementById('initError');
+    const contentEl = document.getElementById('loadingContent');
+    if (errorEl && contentEl) {
+      contentEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      document.getElementById('initErrorMsg').textContent = 
+        'An unexpected script error occurred. Please try refreshing the page.';
+    }
+  }
+};
+
+window.onunhandledrejection = function(event) {
+  console.error('[Unhandled Rejection]', event.reason);
+};
 
 import { loadFromSupabase } from './storage.js';
 import { getCurrentUser } from './auth.js';
