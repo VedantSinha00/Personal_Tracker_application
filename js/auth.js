@@ -10,9 +10,12 @@
 // in the app — no risk of multiple connections or token conflicts.
 
 // ── Supabase client ───────────────────────────────────────────────────────────
-// supabase-js is loaded via CDN script tag in index.html (not an ES module
-// import) so it attaches to window.supabase. We destructure from there.
-const { createClient } = window.supabase;
+// supabase-js is loaded via CDN script tag in index.html.
+// We check for its existence to prevent a crash if the CDN is blocked/down.
+if (typeof window.supabase === 'undefined') {
+  console.error('[auth] Supabase SDK not found. Possible CDN failure or network block.');
+}
+const { createClient } = window.supabase || { createClient: () => null };
 
 // ── Local cache helper ────────────────────────────────────────────────────────
 // Inlined here (not imported from storage.js) to avoid a circular dependency:
@@ -34,6 +37,19 @@ export const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkc2t2Y2pxenlmd2h4eXhzZ2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTY3MjAsImV4cCI6MjA5MDAzMjcyMH0.on1s6HXZjFVkx4Xa_DTOB65QGX_0yKFsxMrD59uQn68'
 );
 
+if (!sb) {
+  setTimeout(() => showInitError('The Supabase SDK failed to load. Please check your internet connection or disable any strict ad-blockers.'), 100);
+}
+
+function showInitError(msg) {
+  const loader = document.getElementById('loadingContent');
+  const error = document.getElementById('initError');
+  const errorMsg = document.getElementById('initErrorMsg');
+  if (loader) loader.style.display = 'none';
+  if (error) error.style.display = 'block';
+  if (errorMsg) errorMsg.textContent = msg;
+}
+
 // ── current user ──────────────────────────────────────────────────────────────
 // A module-level cache so storage.js can call getCurrentUser() synchronously
 // after the session has been established.
@@ -42,12 +58,22 @@ let _currentUser = null;
 export function getCurrentUser() { return _currentUser; }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
+function hideLoadingScreen() {
+  const loader = document.getElementById('loadingScreen');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => { loader.style.display = 'none'; }, 400);
+  }
+}
+
 function showApp() {
+  hideLoadingScreen();
   document.getElementById('authScreen').style.display  = 'none';
   document.getElementById('appShell').style.display    = '';
 }
 
 function showAuth() {
+  hideLoadingScreen();
   document.getElementById('authScreen').style.display  = '';
   document.getElementById('appShell').style.display    = 'none';
 }
@@ -135,68 +161,82 @@ async function handleSignOut() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 (async function init() {
-  // Wire up buttons
-  document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
-  document.getElementById('setupSubmitBtn').addEventListener('click', handleSetupProfile);
-  document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+  try {
+    if (!sb) return; // Error already handled above
 
-  // Check for OAuth errors in the URL
-  const hashObj = new URLSearchParams(window.location.hash.substring(1));
-  const queryObj = new URLSearchParams(window.location.search);
-  const errorDesc = hashObj.get('error_description') || queryObj.get('error_description') || hashObj.get('error') || queryObj.get('error');
-  if (errorDesc) {
-    showBanner(`Auth Error: ${errorDesc.replace(/\+/g, ' ')}`);
-    // Clean up the URL
-    window.history.replaceState(null, '', window.location.pathname);
-  }
+    // Wire up buttons
+    document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
+    document.getElementById('setupSubmitBtn').addEventListener('click', handleSetupProfile);
+    document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
 
-  // Check for an existing session
-  const { data: { session } } = await sb.auth.getSession();
-
-  if (session) {
-    _currentUser = session.user;
-    
-    // Check if user has a username
-    const username = _currentUser.user_metadata?.username;
-    
-    if (!username) {
-      // Re-verify from DB in case metadata is stale
-      const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
-      if (profile?.username) {
-        // Update local metadata cache
-        _currentUser.user_metadata = { ..._currentUser.user_metadata, username: profile.username };
-        showApp();
-        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
-      } else {
-        showSetupProfile();
-      }
-    } else {
-      showApp();
-      document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+    // Check for OAuth errors in the URL
+    const hashObj = new URLSearchParams(window.location.hash.substring(1));
+    const queryObj = new URLSearchParams(window.location.search);
+    const errorDesc = hashObj.get('error_description') || queryObj.get('error_description') || hashObj.get('error') || queryObj.get('error');
+    if (errorDesc) {
+      showBanner(`Auth Error: ${errorDesc.replace(/\+/g, ' ')}`);
+      // Clean up the URL
+      window.history.replaceState(null, '', window.location.pathname);
     }
-  } else {
-    showAuth();
-  }
 
-  // Keep _currentUser in sync
-  sb.auth.onAuthStateChange(async (_event, session) => {
-    _currentUser = session?.user || null;
-    if (!_currentUser) {
-      _clearUserCache();
-      showAuth();
-    } else {
-      // If we just signed in and have no username, trigger setup
-      if (!_currentUser.user_metadata?.username) {
+    // Check for an existing session with a timeout
+    const sessionPromise = sb.auth.getSession();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timed out')), 8000)
+    );
+
+    console.log('[auth] Initializing session...');
+    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+    console.log('[auth] Session check complete. Session:', !!session);
+
+    if (session) {
+      _currentUser = session.user;
+      
+      // Check if user has a username
+      const username = _currentUser.user_metadata?.username;
+      
+      if (!username) {
+        // Re-verify from DB in case metadata is stale
         const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
-        if (!profile?.username) {
-          showSetupProfile();
-        } else {
+        if (profile?.username) {
+          // Update local metadata cache
+          _currentUser.user_metadata = { ..._currentUser.user_metadata, username: profile.username };
           showApp();
           document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+        } else {
+          showSetupProfile();
+        }
+      } else {
+        showApp();
+        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+      }
+    } else {
+      showAuth();
+    }
+
+    // Keep _currentUser in sync
+    sb.auth.onAuthStateChange(async (_event, session) => {
+      _currentUser = session?.user || null;
+      if (!_currentUser) {
+        _clearUserCache();
+        showAuth();
+      } else {
+        // If we just signed in and have no username, trigger setup
+        if (!_currentUser.user_metadata?.username) {
+          const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
+          if (!profile?.username) {
+            showSetupProfile();
+          } else {
+            showApp();
+            document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+          }
         }
       }
-    }
-  });
+    });
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } catch (err) {
+    console.error('[auth] Initialization failed:', err);
+    showInitError('We couldn\'t start the app. ' + (err.message || 'Unknown network error.'));
+  }
 })();
