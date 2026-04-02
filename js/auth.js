@@ -10,12 +10,10 @@
 // in the app — no risk of multiple connections or token conflicts.
 
 // ── Supabase client ───────────────────────────────────────────────────────────
-// supabase-js is loaded via CDN script tag in index.html.
-// We check for its existence to prevent a crash if the CDN is blocked/down.
-if (typeof window.supabase === 'undefined') {
-  console.error('[auth] Supabase SDK not found. Possible CDN failure or network block.');
-}
-const { createClient } = window.supabase || { createClient: () => null };
+import { sb, getCurrentUser as _getU, setCurrentUser } from './sb.js';
+
+export { sb };
+export function getCurrentUser() { return _getU(); }
 
 // ── Local cache helper ────────────────────────────────────────────────────────
 // Inlined here (not imported from storage.js) to avoid a circular dependency:
@@ -32,15 +30,10 @@ function _clearUserCache() {
   if (theme) localStorage.setItem('wt_theme', theme);
 }
 
-export const sb = createClient(
-  'https://vdskvcjqzyfwhxyxsgag.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkc2t2Y2pxenlmd2h4eXhzZ2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTY3MjAsImV4cCI6MjA5MDAzMjcyMH0.on1s6HXZjFVkx4Xa_DTOB65QGX_0yKFsxMrD59uQn68'
-);
+// ── current user ──────────────────────────────────────────────────────────────
+// Re-export getCurrentUser for consistency, though it's imported above from sb.js.
 
-if (!sb) {
-  setTimeout(() => showInitError('The Supabase SDK failed to load. Please check your internet connection or disable any strict ad-blockers.'), 100);
-}
-
+// ── Init error helper ─────────────────────────────────────────────────────────
 function showInitError(msg) {
   const loader = document.getElementById('loadingContent');
   const error = document.getElementById('initError');
@@ -49,13 +42,6 @@ function showInitError(msg) {
   if (error) error.style.display = 'block';
   if (errorMsg) errorMsg.textContent = msg;
 }
-
-// ── current user ──────────────────────────────────────────────────────────────
-// A module-level cache so storage.js can call getCurrentUser() synchronously
-// after the session has been established.
-let _currentUser = null;
-
-export function getCurrentUser() { return _currentUser; }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
 function hideLoadingScreen() {
@@ -150,7 +136,7 @@ async function handleSetupProfile() {
 
     hideSetupProfile();
     showApp();
-    document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+    document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: getCurrentUser() } }));
   } catch (err) {
     console.error('[auth] Profile setup failed:', err);
     showBanner('Connection failed. Please try again.', true, 'setupBanner');
@@ -162,7 +148,7 @@ async function handleSetupProfile() {
 // ── Sign out ──────────────────────────────────────────────────────────────────
 async function handleSignOut() {
   await sb.auth.signOut();
-  _currentUser = null;
+  setCurrentUser(null);
   _clearUserCache();
   showAuth();
 }
@@ -172,10 +158,48 @@ async function handleSignOut() {
   try {
     if (!sb) return; // Error already handled above
 
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
     // Wire up buttons
-    document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
+    document.getElementById('googleLoginBtn').addEventListener('click', () => {
+      if (isLocal) {
+        window.location.reload(); // In dev mode, just refresh to re-trigger bypass
+      } else {
+        handleGoogleLogin();
+      }
+    });
     document.getElementById('setupSubmitBtn').addEventListener('click', handleSetupProfile);
-    document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+    document.getElementById('signOutBtn').addEventListener('click', () => {
+      if (isLocal) {
+        setCurrentUser(null);
+        _clearUserCache();
+        window.location.reload();
+      } else {
+        handleSignOut();
+      }
+    });
+
+    // ── LOCAL DEV MODE BYPASS ─────────────────────────────────────────────────
+    if (isLocal) {
+      console.log('[auth] Local dev mode active. Bypassing Google login.');
+      const mockUser = {
+        id: 'dev-user-local',
+        email: 'dev@local.test',
+        user_metadata: { username: 'dev-local', full_name: 'Dev Local' }
+      };
+      setCurrentUser(mockUser);
+      
+      showApp();
+      // Delay event slightly to ensure app.js listener is ready
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: mockUser } }));
+      }, 50);
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return; 
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
 
     // Check for OAuth errors in the URL
     const hashObj = new URLSearchParams(window.location.hash.substring(1));
@@ -198,25 +222,27 @@ async function handleSignOut() {
     console.log('[auth] Session check complete. Session:', !!session);
 
     if (session) {
-      _currentUser = session.user;
+      setCurrentUser(session.user);
+      const user = session.user;
       
       // Check if user has a username
-      const username = _currentUser.user_metadata?.username;
+      const username = user.user_metadata?.username;
       
       if (!username) {
         // Re-verify from DB in case metadata is stale
-        const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
+        const { data: profile } = await sb.from('profiles').select('username').eq('id', user.id).single();
         if (profile?.username) {
           // Update local metadata cache
-          _currentUser.user_metadata = { ..._currentUser.user_metadata, username: profile.username };
+          user.user_metadata = { ...user.user_metadata, username: profile.username };
+          setCurrentUser(user);
           showApp();
-          document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+          document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
         } else {
           showSetupProfile();
         }
       } else {
         showApp();
-        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+        document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
       }
     } else {
       showAuth();
@@ -224,19 +250,20 @@ async function handleSignOut() {
 
     // Keep _currentUser in sync
     sb.auth.onAuthStateChange(async (_event, session) => {
-      _currentUser = session?.user || null;
-      if (!_currentUser) {
+      const user = session?.user || null;
+      setCurrentUser(user);
+      if (!user) {
         _clearUserCache();
         showAuth();
       } else {
         // If we just signed in and have no username, trigger setup
-        if (!_currentUser.user_metadata?.username) {
-          const { data: profile } = await sb.from('profiles').select('username').eq('id', _currentUser.id).single();
+        if (!user.user_metadata?.username) {
+          const { data: profile } = await sb.from('profiles').select('username').eq('id', user.id).single();
           if (!profile?.username) {
             showSetupProfile();
           } else {
             showApp();
-            document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: _currentUser } }));
+            document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
           }
         }
       }

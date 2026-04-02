@@ -86,11 +86,15 @@ export function renderInsights() {
 
   // ── Aggregate data across all weeks ──
   let totalHours = 0, totalBlocks = 0, totalRuns = 0, totalFR = 0;
-  const energyCounts = { low: 0, medium: 0, high: 0, none: 0 };
+  const focusCounts  = { low: 0, medium: 0, high: 0, none: 0 };
   const cats         = loadCats();
   const hiddenCats   = new Set(cats.filter(c => c.hidden).map(c => c.name));
   const areaHours    = {};
-  cats.forEach(c => { if (!c.hidden) areaHours[c.name] = 0; });
+  cats.forEach(c => { 
+    if (!c.hidden) {
+      areaHours[c.name] = 0; 
+    }
+  });
 
   const slotOrder  = ['early-morning', 'morning', 'afternoon', 'evening', 'night', 'late-night'];
   const slotLabels = {
@@ -130,7 +134,8 @@ export function renderInsights() {
         const h = parseDuration(b.duration);
         wHours += h; totalHours += h;
         wBlocks++; totalBlocks++;
-        energyCounts[b.energy || 'none'] = (energyCounts[b.energy || 'none'] || 0) + 1;
+        const fq = b.focusQuality || b.energy || 'none';
+        focusCounts[fq] = (focusCounts[fq] || 0) + 1;
         areaHours[cat] = (areaHours[cat] || 0) + h;
         if (b.slot) slotHours[b.slot] = (slotHours[b.slot] || 0) + h;
       });
@@ -144,8 +149,8 @@ export function renderInsights() {
   });
 
   const topArea = Object.entries(areaHours).sort((a, b) => b[1] - a[1]).filter(e => e[1] > 0)[0];
-  const totalE  = energyCounts.low + energyCounts.medium + energyCounts.high;
-  const pct     = v => totalE > 0 ? Math.round(v / totalE * 100) : 0;
+  const totalF  = focusCounts.low + focusCounts.medium + focusCounts.high;
+  const pct     = v => totalF > 0 ? Math.round(v / totalF * 100) : 0;
   const avgHrs  = weeks.length > 0 ? totalHours / weeks.length : 0;
 
   // ── Weekly hours bar chart ──
@@ -203,12 +208,12 @@ export function renderInsights() {
       }).join('')
     : '<div style="font-size:13px;color:var(--text3)">No time-of-day data yet. Start selecting a time slot when logging blocks.</div>';
 
-  // ── Energy breakdown ──
-  const eColors   = { high: 'var(--accent)', medium: 'var(--amber)', low: 'var(--red)' };
-  const energyHTML = ['high', 'medium', 'low'].map(e => `
-    <div class="energy-card">
-      <div class="energy-val" style="color:${eColors[e]}">${pct(energyCounts[e])}%</div>
-      <div class="energy-lbl">${e.toUpperCase()} ENERGY</div>
+  // ── Focus Quality breakdown ──
+  const fColors   = { high: 'var(--accent)', medium: 'var(--amber)', low: 'var(--red)' };
+  const focusHTML = ['high', 'medium', 'low'].map(f => `
+    <div class="focusQuality-card energy-card">
+      <div class="energy-val" style="color:${fColors[f]}">${pct(focusCounts[f])}%</div>
+      <div class="energy-lbl">${f.toUpperCase()} FOCUS</div>
     </div>`).join('');
 
   // ── Habit consistency ──
@@ -251,9 +256,9 @@ export function renderInsights() {
   // ── Text summary ──
   let summary = `Over the last <strong>${TF_OPTIONS[curTF].label}</strong> you logged <strong>${fmtHrs(totalHours)}</strong> of work across <strong>${weeks.length} week${weeks.length !== 1 ? 's' : ''}</strong> — averaging <strong>${fmtHrs(avgHrs)}/week</strong> (${totalBlocks} blocks). `;
   if (topArea) summary += `Most of your time went to <strong>${topArea[0]}</strong> (${fmtHrs(topArea[1])})${weeks.length > 1 ? " — that's a clear priority signal" : ''}. `;
-  if (totalE > 0) {
-    const dominant = pct(energyCounts.high) >= 40 ? 'high' : pct(energyCounts.medium) >= 40 ? 'medium' : 'low';
-    summary += `Energy was mostly <strong>${dominant}</strong> (${pct(energyCounts[dominant])}% of blocks). `;
+  if (totalF > 0) {
+    const dominant = pct(focusCounts.high) >= 40 ? 'high' : pct(focusCounts.medium) >= 40 ? 'medium' : 'low';
+    summary += `Focus was mostly <strong>${dominant}</strong> (${pct(focusCounts[dominant])}% of blocks). `;
   }
   if (totalFR >= 3) summary += `You had <strong>${totalFR} full rest days</strong> — that's on the higher side; worth checking what's draining you. `;
   else if (totalFR > 0) summary += `You took <strong>${totalFR} full rest day${totalFR > 1 ? 's' : ''}</strong>. `;
@@ -289,10 +294,10 @@ export function renderInsights() {
         <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div> Nothing logged</div>
         <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">WORK AREAS — colour per category</div>
         ${catLegendItems}${archLegend}
-        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">ENERGY — how you felt during each block</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> High energy</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Medium energy</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Low energy</div>
+        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">FOCUS QUALITY — how you felt during each block</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> High focus</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Medium focus</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Low focus</div>
       </div>
     </div>`;
 
@@ -353,9 +358,13 @@ export function renderInsights() {
     </div>
     <div class="ins-grid">
       <div class="ins-sec">
-        <div class="ins-lbl">Energy Distribution</div>
-        <div style="padding:24px 20px;"><div class="energy-row">${energyHTML}</div></div>
       </div>
+      <div class="ins-sec">
+        <div class="ins-lbl">Focus Quality Distribution</div>
+        <div style="padding:24px 20px;"><div class="energy-row">${focusHTML}</div></div>
+      </div>
+    </div>
+    <div class="ins-grid">
       <div class="ins-sec">
         <div class="ins-lbl">Period Totals</div>
         <div style="padding:24px 20px;"><div class="stat-row">${statHTML}</div></div>

@@ -12,6 +12,12 @@ import {
   sortedCats, wk, getAbsWk,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
+import { pushToBacklog, toggleBacklogView } from './backlog.js';
+
+// Re-render when items are pulled from backlog
+document.addEventListener('wt:backlog-changed', () => {
+  renderSt(load());
+});
 
 // ── Drag state ────────────────────────────────────────────────────────────────
 // These three variables are the entire shared state of an in-progress drag.
@@ -70,8 +76,11 @@ export function renderSt(d, animate) {
                   <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${c.name}" data-idx="${i}">
                   <span class="task-text${t.done ? ' done' : ''}" style="${t.done ? 'text-decoration:line-through;color:var(--text3);' : ''}">${t.text}</span>
                 </label>
+                <button class="task-backlog" data-action="push-backlog" data-catname="${c.name}" data-idx="${i}" title="Send to global backlog">
+                  <i data-lucide="inbox"></i>
+                </button>
                 <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}" title="Delete task">
-                  <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                  <i data-lucide="trash-2"></i>
                 </button>
               </div>
             `).join('')}
@@ -97,7 +106,13 @@ export function renderSt(d, animate) {
   }
 
   // ── L (Last): update the DOM ───────────────────────────────────────────────
-  document.getElementById('highS').innerHTML = highCats.map(c => buildItem(c, 'high')).join('');
+  const highS = document.getElementById('highS');
+  if (highS) {
+    highS.innerHTML = '';
+    highCats.forEach(c => {
+      highS.insertAdjacentHTML('beforeend', buildItem(c, 'high'));
+    });
+  }
   document.getElementById('lowS').innerHTML  = lowCats.map(c  => buildItem(c, 'low')).join('');
 
   // Show/hide section labels and the "no low focus" empty hint
@@ -319,6 +334,24 @@ function attachStackListeners() {
         }
         return;
       }
+
+      const backlogBtn = e.target.closest('[data-action="push-backlog"]');
+      if (backlogBtn) {
+        const cat = backlogBtn.dataset.catname;
+        const idx = +backlogBtn.dataset.idx;
+        const d = load();
+        if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
+          const task = d.todos[cat][idx];
+          pushToBacklog(task.text, cat);
+          
+          // Remove from current week
+          d.todos[cat].splice(idx, 1);
+          save(d);
+          renderSt(d);
+          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+        }
+        return;
+      }
     });
 
     fresh.addEventListener('change', e => {
@@ -524,4 +557,10 @@ export function initStackListeners() {
 
   // Carry forward button
   document.getElementById('carryBtn').addEventListener('click', carryForward);
+
+  // Navigate to Backlog View (internal)
+  const gotoBtn = document.getElementById('gotoBacklogBtn');
+  if (gotoBtn) {
+    gotoBtn.onclick = () => toggleBacklogView(true);
+  }
 }

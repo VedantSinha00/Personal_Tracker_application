@@ -21,7 +21,7 @@ window.onunhandledrejection = function(event) {
 };
 
 import { loadFromSupabase } from './storage.js';
-import { getCurrentUser } from './auth.js';
+import { getCurrentUser } from './sb.js';
 
 import {
   load, save, wk, setWk,
@@ -38,6 +38,9 @@ import { renderSt, saveStackInputs, updateCarryBtn,
 import { openCatModal, closeCatModal, initCategoriesListeners } from './categories.js';
 import { openHabitsModal, closeHabitsModal, initHabitsListeners } from './habits.js';
 import { initInsights, renderInsights } from './insights.js';
+import { initBacklog, renderBacklog } from './backlog.js';
+
+import { initTimerTick } from './timer.js';
 
 // ── Week label ────────────────────────────────────────────────────────────────
 function wkLabel() {
@@ -82,6 +85,7 @@ function renderAll() {
   _renderOv(d);
   renderSt(d);
   updateCarryBtn(d);
+  renderBacklog();
   // Refresh Lucide icons after every DOM render (icons may have been replaced)
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -165,6 +169,13 @@ function initListeners() {
   // Intention input (Stack tab)
   document.getElementById('intention').addEventListener('input', saveIntention);
 
+  // Timer Stop button
+  document.getElementById('timerStopBtn').addEventListener('click', () => {
+    // Import stopTimer logic from dailylog instead of app itself to avoid circulars
+    // though here we are in app.js. The plan says dailylog manages the save modal.
+    document.dispatchEvent(new CustomEvent('wt:timer-stopped'));
+  });
+
   // Module-level listeners
   initDailyLogListeners();
   initOverviewListeners();
@@ -238,6 +249,14 @@ function initListeners() {
     renderAll();
     updateExportLbl();
   });
+
+  // Backlog changed (pull / push)
+  document.addEventListener('wt:backlog-changed', () => {
+    const d = load();
+    renderSt(d);
+    _renderOv(d); // Refresh overview to reflect the new stack items
+  });
+
   console.log('[initListeners] complete');
 }
 
@@ -255,6 +274,7 @@ async function handleAuthReady() {
   updateWkLabel();
   updateExportLbl();
   initListeners();
+  initTimerTick(); // Resume timer if running
   renderAll();
 
   // Pull latest data from Supabase in the background, then re-render.
