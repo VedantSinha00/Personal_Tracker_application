@@ -66,21 +66,35 @@ export function updM(d) {
   // ── Core Stats ──
   let blks = 0;
   let hrs  = 0;
+  let allBlocks = [];
   d.days.forEach(day => {
     if (!day.blocks) return;
     day.blocks.forEach(b => {
       if (!hiddenCats.has(b.category)) {
         blks++;
         hrs += parseDuration(b.duration);
+        allBlocks.push(b);
       }
     });
   });
 
   const avg = blks > 0 ? (hrs / blks) : 0;
+
+  function focusMultiplier(q) {
+    if (q === 'high')   return 1.0;
+    if (q === 'medium') return 0.6;
+    if (q === 'low')    return 0.3;
+    return 0.8;
+  }
+
+
+  const weightedTotal = allBlocks.reduce((sum, b) => sum + parseDuration(b.duration) * focusMultiplier(b.focusQuality || b.energy), 0);
+
   const coreStats = [
+    { id: 'whrs', label: 'WEIGHTED HOURS', value: (Math.round(weightedTotal * 10) / 10) + 'h', color: 'var(--purple)' },
     { id: 'blks', label: 'WORK BLOCKS', value: blks, color: 'var(--blue)' },
     { id: 'hrs',  label: 'TOTAL HOURS', value: (Math.round(hrs * 10) / 10) + 'h', color: 'var(--amber)' },
-    { id: 'avg',  label: 'AVG BLOCK',   value: (Math.round(avg * 10) / 10) + 'h', color: 'var(--accent)' },
+    { id: 'avg',  label: 'AVG BLOCK',   value: (Math.round(avg * 10) / 10) + 'h', color: 'var(--text2)' },
   ];
 
   const statsGrid = document.getElementById('rvCoreStats');

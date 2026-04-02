@@ -15,7 +15,7 @@
 // When migrating away from Supabase in the future, only this file changes.
 
 import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
-import { sb, getCurrentUser } from './auth.js';
+import { sb, getCurrentUser } from './sb.js';
 
 // ── Week state (Absolute Anchored) ───────────────────────────────────────────
 export let wk = 0;
@@ -200,6 +200,45 @@ export function saveCatArchive(arch) {
   _syncQueue['cat_archive'] = setTimeout(() => _syncCatArchive(arch), 1500);
 }
 
+// ── Backlog ───────────────────────────────────────────────────────────────────
+export function loadBacklog() {
+  try {
+    const r = localStorage.getItem('wt_backlog');
+    return r ? JSON.parse(r) : { items: [] };
+  } catch(e) { return { items: [] }; }
+}
+
+export function saveBacklog(b) {
+  localStorage.setItem('wt_backlog', JSON.stringify(b));
+  if (_syncQueue['backlog']) clearTimeout(_syncQueue['backlog']);
+  _syncQueue['backlog'] = setTimeout(() => _syncBacklog(b), 1500);
+}
+
+async function _syncBacklog(b) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    await sb.from('backlog').upsert({
+      user_id:    user.id,
+      items:      b.items || [],
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+  } catch(err) {
+    console.warn('[sync] backlog failed:', err.message);
+  }
+}
+
+// ── Active Timer ──────────────────────────────────────────────────────────────
+export function loadTimer() {
+  try { return JSON.parse(localStorage.getItem('wt_timer') || 'null'); }
+  catch(e) { return null; }
+}
+
+export function saveTimer(t) {
+  if (t === null) localStorage.removeItem('wt_timer');
+  else localStorage.setItem('wt_timer', JSON.stringify(t));
+}
+
 // ── User cache helpers ───────────────────────────────────────────────────────
 // Wipes all app data from localStorage for the current browser, but keeps the
 // theme preference so it survives sign-out / user switching.
@@ -236,19 +275,28 @@ export function exportD() {
 }
 
 export function importD(e) {
+  console.log('Import started');
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file) { console.log('No file selected'); return; }
   const r = new FileReader();
   r.onload = ev => {
+    console.log('File loaded, parsing JSON');
     try {
-      const all = JSON.parse(ev.target.result);
+      const raw = ev.target.result;
+      const cleaned = raw.replace(/^\uFEFF/, '');
+      const all = JSON.parse(cleaned);
       const keyCount = Object.keys(all).filter(k => k.startsWith('wt_wk_')).length;
+      console.log('Parsed JSON, week keys count:', keyCount);
       if (!confirm(`This will import ${keyCount} week(s) of data. Existing data for those weeks will be overwritten. Continue?`)) return;
       Object.keys(all).forEach(k => {
-        if (k.startsWith('wt_')) localStorage.setItem(k, JSON.stringify(all[k]));
+        if (k.startsWith('wt_')) {
+          localStorage.setItem(k, JSON.stringify(all[k]));
+          console.log('Set localStorage key', k);
+        }
       });
       document.dispatchEvent(new CustomEvent('wt:import-complete'));
     } catch(err) {
+      console.error('Import error', err);
       alert('Could not read file. Make sure it is a valid tracker export.');
     }
   };
@@ -497,15 +545,28 @@ export async function loadFromSupabase() {
     }
 
     // Cat archive
-    const { data: arch } = await sb
-      .from('cat_archive')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    try {
+      const { data: arch } = await sb
+        .from('cat_archive')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (arch && arch.archive) {
+        localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
+      }
+    } catch(e) { console.warn('[load] cat_archive skip:', e.message); }
 
-    if (arch && arch.archive) {
-      localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
-    }
+    // Backlog
+    try {
+      const { data: bData } = await sb
+        .from('backlog')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (bData && bData.items) {
+        localStorage.setItem('wt_backlog', JSON.stringify({ items: bData.items }));
+      }
+    } catch(e) { console.warn('[load] backlog skip:', e.message); }
 
   } catch(err) {
     console.warn('[loadFromSupabase] failed:', err.message);

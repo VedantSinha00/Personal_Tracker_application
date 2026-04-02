@@ -10,9 +10,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=fixed_v7">
+  <link rel="stylesheet" href="css/styles.css?v=phase2_v1">
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Global error catcher for diagnosing silent module failures -->
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      document.body.innerHTML += '<div style="position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;">Global Error: ' + msg + '\n' + url + ':' + line + ':' + col + '\n' + (error && error.stack) + '</div>';
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+       document.body.innerHTML += '<div style="position:fixed;top:80px;left:0;width:100%;background:orange;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;">Unhandled Rejection: ' + e.reason + '</div>';
+    });
+  </script>
   <!-- Supabase JS SDK (loaded before any module scripts) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -168,6 +178,12 @@
           <span class="week-lbl" id="wkLbl" title="Click to reset to current week" style="cursor:pointer;">—</span>
           <button class="nav-btn" data-dir="1">→</button>
         </div>
+        <!-- ── Phase 2: Stopwatch Indicator ── -->
+        <div id="timerIndicator" style="display:none;" class="timer-banner">
+          <span id="timerCategoryBadge" class="timer-badge"></span>
+          <span id="timerDisplay" class="timer-clock">0:00</span>
+          <button id="timerStopBtn" class="timer-stop-btn">Stop</button>
+        </div>
       </div>
     </div>
 
@@ -187,25 +203,59 @@
     </div>
 
     <!-- ── Tab panels ─────────────────────────────────────────────────── -->
-    <div id="ov"       class="sec active"><div id="ovMain"></div></div>
+    <div id="ov"       class="sec active"><div id="ovTimerContainer"></div><div id="ovMain"></div></div>
     <div id="days"     class="sec"><div class="day-grid" id="dayGrid"></div></div>
-
     <div id="stack" class="sec">
-      <div class="intention-box">
-        <div class="ilbl">THIS WEEK'S INTENTION</div>
-        <input class="iinput" id="intention" placeholder="What would make this week a win?">
+      <div id="stackWeeklyView">
+        <!-- 🎯 Hero Intention: Bold, centered, non-green -->
+        <div class="intention-box predominant">
+          <div class="ilbl">THIS WEEK'S INTENTION</div>
+          <input class="iinput" id="intention" placeholder="What would make this week a win?">
+        </div>
+
+        <!-- 🛠️ Action Row: Quick Add (Left) & Controls (Right) -->
+        <div class="stack-action-row">
+          <div class="backlog-add-form integrated">
+            <input type="text" id="backlogItemInput" placeholder="Quick add to backlog..." class="backlog-input">
+            <select id="backlogCatSelect" class="backlog-select backlog-cat-select"></select>
+            <button class="btn btn-p add-backlog-item-btn">Add</button>
+          </div>
+          
+          <div class="stack-controls-group">
+            <button class="carry-btn" id="gotoBacklogBtn" title="Show Backlog to pull tasks">
+              <i data-lucide="inbox"></i> <span>Backlog</span>
+            </button>
+            <button class="carry-btn" id="carryBtn" title="Carry items from last week">↩ Carry from last week</button>
+          </div>
+        </div>
+        <div id="stackDragContainer">
+          <div class="stack-section-lbl" id="highLbl" style="display:none">HIGH FOCUS</div>
+          <div id="highS"></div>
+          <div class="stack-section-lbl stack-section-drop" id="lowLbl" data-level="low" style="display:none;margin-top:1.2rem;">LOW FOCUS</div>
+          <div id="lowS"></div>
+          <div class="stack-section-lbl stack-section-drop" id="highLbl2" data-level="high" style="display:none;">↑ HIGH FOCUS</div>
+          <div id="lowEmptyHint" style="display:none;margin-top:0.5rem;padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);text-align:center;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">No low focus items</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-        <div class="sg-title" style="margin-bottom:0;">FOCUS AREAS</div>
-        <button class="carry-btn" id="carryBtn" title="Copy last week's stack items into this week">↩ Carry from last week</button>
-      </div>
-      <div id="stackDragContainer">
-        <div class="stack-section-lbl" id="highLbl" style="display:none">HIGH FOCUS</div>
-        <div id="highS"></div>
-        <div class="stack-section-lbl stack-section-drop" id="lowLbl" data-level="low" style="display:none;margin-top:1.2rem;">LOW FOCUS</div>
-        <div id="lowS"></div>
-        <div class="stack-section-lbl stack-section-drop" id="highLbl2" data-level="high" style="display:none;">↑ HIGH FOCUS</div>
-        <div id="lowEmptyHint" style="display:none;margin-top:0.5rem;padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);text-align:center;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">No low focus items</div>
+
+      <!-- ── Backlog Sub-view (Mirrors Stack precisely) ─────────────────── -->
+      <div id="stackBacklogView" style="display:none;">
+        <div class="stack-action-row">
+          <div class="backlog-add-form integrated">
+            <input type="text" id="backlogItemInputTab" placeholder="Quick add to backlog..." class="backlog-input">
+            <select id="backlogCatSelectTab" class="backlog-select backlog-cat-select"></select>
+            <button class="btn btn-p add-backlog-item-btn" data-input-id="backlogItemInputTab" data-select-id="backlogCatSelectTab">Add</button>
+          </div>
+          
+          <div class="stack-controls-group">
+            <button class="carry-btn" id="hideBacklogBtn">
+              <i data-lucide="arrow-left"></i> <span>Back to Weekly Sprint</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="stack-section-lbl">BACKLOG</div>
+        <div id="backlogList" style="margin-top:0.5rem;"></div>
       </div>
     </div>
 
@@ -301,11 +351,20 @@
   <!-- ── Block modal ────────────────────────────────────────────────────── -->
   <div class="overlay" id="modal">
     <div class="modal">
-      <div class="modal-title" id="mTitle">Log work block</div>
+      <div class="modal-title" id="mTitle">Log block</div>
+      <div class="modal-error" id="fError"></div>
+      
       <div class="frow">
         <label class="flbl">AREA</label>
         <select id="fCat"><option value="">Select...</option></select>
       </div>
+
+      <div class="frow" id="intentRow">
+        <label class="flbl">WHAT ARE YOU PLANNING TO WORK ON?</label>
+        <textarea id="fIntent" placeholder="e.g. Finish the login flow refactor" maxlength="120"></textarea>
+        <div id="fIntentCount" style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px;">0 / 120</div>
+      </div>
+
       <div class="frow">
         <label class="flbl">TIME OF DAY</label>
         <div class="time-slots">
@@ -317,6 +376,7 @@
           <button class="time-slot" data-slot="late-night">Late night</button>
         </div>
       </div>
+
       <div class="frow">
         <label class="flbl">DURATION</label>
         <input type="text" id="fDur" placeholder="e.g. 45 min or 1h 30m">
@@ -329,18 +389,30 @@
         </div>
         <div class="dur-validation" id="durValidation"></div>
       </div>
+
       <div class="frow">
-        <label class="flbl">ENERGY</label>
+        <label class="flbl">FOCUS QUALITY</label>
         <div class="erow">
           <button class="eopt" data-energy="low">Low</button>
           <button class="eopt" data-energy="medium">Medium</button>
           <button class="eopt" data-energy="high">High</button>
         </div>
       </div>
+
+      <div class="frow" id="linkedTasksRow" style="display:none;">
+        <label class="flbl">RELEVANT STACK TASKS</label>
+        <div id="fLinkedTasks" class="linked-tasks-list"></div>
+        <div class="inline-add-task">
+            <input type="text" id="fNewTask" placeholder="Add a new task to this area...">
+        </div>
+      </div>
+
+
       <div class="frow">
         <label class="flbl">NOTES</label>
-        <textarea id="fNotes" placeholder="What did you actually work on?"></textarea>
+        <textarea id="fNotes" placeholder="Any extra context?"></textarea>
       </div>
+
       <div class="mfooter">
         <button class="del-btn" id="delBtn" style="display:none;">Delete block</button>
         <div class="mactions">
@@ -371,6 +443,53 @@
   </div>
 
 
+  <!-- ── Phase 2: Start Stopwatch Modal ────────────────────────────────────── -->
+  <div class="overlay" id="startTimerModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-title">Push to start</div>
+      <div class="modal-error" id="stError"></div>
+      <div class="start-timer-modal-body">
+        <div class="frow">
+          <label class="flbl">AREA</label>
+          <select id="stCat"><option value="">Select...</option></select>
+        </div>
+        <div class="frow">
+          <label class="flbl" style="display:flex;justify-content:space-between;align-items:center;">
+            WHAT WILL YOU WORK ON?
+            <span id="stIntentCount" style="font-size:10px;color:var(--text3);">0 / 120</span>
+          </label>
+          <textarea id="stIntent" placeholder="e.g. Finish the login flow refactor" maxlength="120" style="min-height:60px;"></textarea>
+        </div>
+        <div class="frow">
+          <label class="flbl">STARTED</label>
+          <div class="offset-chips" id="stOffsets">
+            <button class="offset-chip selected" data-offset="0">Now</button>
+            <button class="offset-chip" data-offset="5">-5m</button>
+            <button class="offset-chip" data-offset="10">-10m</button>
+            <button class="offset-chip" data-offset="15">-15m</button>
+            <button class="offset-chip" data-offset="30">-30m</button>
+          </div>
+          <div class="st-manual-wrap">
+            <span style="font-size:12px;color:var(--text3);">Other:</span>
+            <input type="number" id="stManualOffset" class="st-manual-input" placeholder="0">
+            <span style="font-size:12px;color:var(--text3);">mins ago</span>
+          </div>
+        </div>
+
+        <!-- ── Unified Start: Tasks (Notes moved to end) ── -->
+        <div class="frow" id="stTasksRow" style="display:none;">
+          <label class="flbl">RELEVANT STACK TASKS</label>
+          <div id="stLinkedTasks" class="linked-tasks-list"></div>
+        </div>
+
+        <div class="mfooter" style="margin-top:0;">
+          <button class="btn" id="stCancelBtn">Cancel</button>
+          <button class="btn btn-p" id="stStartBtn">Start stopwatch</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Account modal ──────────────────────────────────────────────────── -->
   <div class="overlay" id="accountModal">
     <div class="modal account-modal">
@@ -389,9 +508,22 @@
         <label>DATA BACKUP</label>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <button class="btn" data-action="export" style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center;"><i data-lucide="download" style="width:13px;height:13px;"></i> Export Data</button>
-          <label class="btn" style="cursor:pointer;display:flex;align-items:center;gap:5px;flex:1;justify-content:center;"><i data-lucide="upload" style="width:13px;height:13px;"></i> Import Data
-            <input type="file" accept=".json" style="display:none" data-action="import">
-          </label>
+          <button class="btn" id="importBtn" type="button" style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center;">
+  <i data-lucide="upload" style="width:13px;height:13px;"></i> Import Data
+</button>
+<input type="file" accept=".json" style="display:none" data-action="import" id="importFile">
+<script>
+  document.getElementById('importBtn').addEventListener('click', () => {
+    const fileInput = document.getElementById('importFile');
+    fileInput.value = '';
+    fileInput.click();
+  });
+  // Close modal after successful import
+  document.addEventListener('wt:import-complete', () => {
+    const modal = document.getElementById('accountModal');
+    if (modal) modal.classList.remove('open');
+  });
+</script>
         </div>
         <div class="export-meta" id="lastExportLbl" style="font-size:11px;color:var(--text3);text-align:center;"></div>
       </div>
@@ -403,8 +535,9 @@
     </div>
   </div>
 
-  <script type="module" src="js/auth.js?v=auth_v2_fix"></script>
-  <script type="module" src="js/account.js?v=auth_v2_fix"></script>
-  <script type="module" src="js/app.js?v=auth_v2_fix"></script>
+  <script type="module" src="js/auth.js?v=phase2_v1"></script>
+  <script type="module" src="js/account.js?v=phase2_v1"></script>
+  <script type="module" src="js/app.js?v=phase2_v1"></script>
+  <script type="module" src="js/backlog.js?v=v1"></script>
 </body>
 </html>

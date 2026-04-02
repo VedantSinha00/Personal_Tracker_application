@@ -2,13 +2,8 @@
 // Owns the Daily Log tab (day grid) and the block logging modal.
 // All day-card interactions route through delegated listeners on #dayGrid.
 
-import { FULL } from './constants.js';
-import {
   load, save, loadCats, loadHabits, allHabits, wk,
 } from './storage.js';
-import { catC, catPalette } from './colours.js';
-import { populateCatSelect } from './categories.js';
-import { startTimer, stopTimer } from './timer.js';
 
 // ── Modal state ───────────────────────────────────────────────────────────────
 let editDay       = null;
