@@ -21,7 +21,7 @@ export function stopTimer() {
   _timerInterval = null;
   saveTimer(null);
   
-  const indicator = document.getElementById('timerIndicator');
+  const indicator = document.getElementById('stopwatchIndicator');
   if (indicator) indicator.style.display = 'none';
 
   // Clear other displays
@@ -40,9 +40,9 @@ export function initTimerTick() {
   const t = loadTimer();
   if (!t) return;
 
-  const indicator = document.getElementById('timerIndicator');
-  const badge = document.getElementById('timerCategoryBadge');
-  const display = document.getElementById('timerDisplay');
+  const indicator = document.getElementById('stopwatchIndicator');
+  const badge = document.getElementById('stopwatchCategoryBadge');
+  const display = document.getElementById('stopwatchDisplay');
   
   if (indicator) indicator.style.display = 'flex';
   if (badge) badge.textContent = t.cat;

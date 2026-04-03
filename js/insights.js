@@ -278,28 +278,7 @@ export function renderInsights() {
       return `<div class="legend-item"><div class="legend-dot" style="background:${p.css};opacity:0.5;"></div> ${name} <span style="font-size:10px;color:var(--text3);">(archived)</span></div>`;
     }).join('');
 
-  const legendHTML = `
-    <div class="legend-card">
-      <div class="ins-lbl" style="margin-bottom:8px;">HOW TO READ THIS PAGE</div>
-      <div class="legend-grid">
-        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">BAR CHART — weekly hours worked</div>
-        <div class="legend-item"><div class="legend-bar" style="background:var(--blue)"></div> &ge; 5 hrs (strong week)</div>
-        <div class="legend-item"><div class="legend-bar" style="background:#93b8e0"></div> 2&ndash;5 hrs (partial week)</div>
-        <div class="legend-item"><div class="legend-bar" style="background:#c8ddf0"></div> &lt; 2 hrs (light week)</div>
-        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">HABIT HEATMAP — one square per day</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Both run + rest</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#9bc4a8"></div> Run only</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#b8b0e0"></div> Rest only</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--purple);opacity:0.5"></div> Full rest day</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div> Nothing logged</div>
-        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">WORK AREAS — colour per category</div>
-        ${catLegendItems}${archLegend}
-        <div style="width:100%;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:8px;">FOCUS QUALITY — how you felt during each block</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> High focus</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Medium focus</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Low focus</div>
-      </div>
-    </div>`;
+
 
   // ── Daily journals ──
   const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -373,7 +352,6 @@ export function renderInsights() {
     <div class="ins-sec">
       <div class="ins-lbl">Daily journals</div>
       <div style="padding:12px 24px;">${journalHTML}</div>
-    </div>
-    <div class="ins-sec">${legendHTML}</div>`;
+    </div>`;
 }
 

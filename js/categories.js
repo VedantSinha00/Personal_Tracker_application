@@ -135,18 +135,37 @@ function renameCat(idx, newName) {
 }
 
 // ── Populate the category <select> in the block modal ───────────────────────
+// ── Populate the category <select> dropdowns throughout the app ───────────
 export function populateCatSelect() {
-  const sel = document.getElementById('fCat');
-  const cur = sel.value;
-  // Use loadCats() so the dropdown order matches the Manage Categories modal.
-  // sortedCats() applies the Stack tab's per-week reorder which is unrelated.
-  const allCats = loadCats();
-  const others  = allCats.filter(c => c.name === 'Others');
-  const rest    = allCats.filter(c => c.name !== 'Others');
-  const cats    = [...rest, ...others];
-  sel.innerHTML = '<option value="">Select...</option>' +
-    cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-  if (cur) sel.value = cur;
+  const cats = sortedCats();
+  const options = cats
+    .filter(c => !c.hidden)
+    .map(c => `<option value="${c.name}">${c.name}</option>`)
+    .join('');
+  
+  // Log Modal dropdown
+  const fCat = document.getElementById('fCat');
+  if (fCat) {
+    const oldVal = fCat.value;
+    fCat.innerHTML = '<option value="" disabled selected>Select Area</option>' + options;
+    if (oldVal && cats.find(c => c.name === oldVal)) fCat.value = oldVal;
+  }
+  
+  // Timer Modal dropdown
+  const stCat = document.getElementById('stCat');
+  if (stCat) {
+    const oldVal = stCat.value;
+    stCat.innerHTML = '<option value="" disabled selected>Select Area</option>' + options;
+    if (oldVal && cats.find(c => c.name === oldVal)) stCat.value = oldVal;
+  }
+
+  // Backlog / Stack Quick-Add selects
+  const backlogSelects = document.querySelectorAll('.backlog-cat-select');
+  backlogSelects.forEach(sel => {
+    const oldVal = sel.value;
+    sel.innerHTML = options;
+    if (oldVal && cats.find(c => c.name === oldVal)) sel.value = oldVal;
+  });
 }
 
 // ── Inline colour picker popover ─────────────────────────────────────────────
@@ -233,6 +252,24 @@ function attachCatDragListeners() {
   });
 }
 
+// ── Ensure a category exists (used by Pull to Week) ─────────────────────
+export function ensureCatExists(name) {
+  if (!name) return 'Others';
+  const cats = loadCats();
+  const existing = cats.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existing) return existing.name;
+
+  // Otherwise create it
+  const entry = { name, color: '#2563a8' }; // Default blue
+  const othersIdx = cats.findIndex(c => c.name === 'Others');
+  if (othersIdx !== -1) cats.splice(othersIdx, 0, entry);
+  else cats.push(entry);
+  
+  saveCats(cats);
+  populateCatSelect();
+  return name;
+}
+
 // ── Event wiring ─────────────────────────────────────────────────────────────
 export function initCategoriesListeners() {
   // Overlay background click → close
@@ -270,7 +307,6 @@ export function initCategoriesListeners() {
     if (input) renameCat(+input.dataset.catidx, input.value);
   });
 
-  // Enter key in rename inputs submits the rename
   document.getElementById('catList').addEventListener('keydown', e => {
     const input = e.target.closest('[data-action="rename-cat"]');
     if (input && e.key === 'Enter') input.blur();

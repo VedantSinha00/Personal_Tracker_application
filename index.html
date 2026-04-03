@@ -179,10 +179,10 @@
           <button class="nav-btn" data-dir="1">→</button>
         </div>
         <!-- ── Phase 2: Stopwatch Indicator ── -->
-        <div id="timerIndicator" style="display:none;" class="timer-banner">
-          <span id="timerCategoryBadge" class="timer-badge"></span>
-          <span id="timerDisplay" class="timer-clock">0:00</span>
-          <button id="timerStopBtn" class="timer-stop-btn">Stop</button>
+        <div id="stopwatchIndicator" style="display:none;" class="timer-banner">
+          <span id="stopwatchCategoryBadge" class="timer-badge"></span>
+          <span id="stopwatchDisplay" class="timer-clock">0:00</span>
+          <button id="stopwatchStopBtn" class="timer-stop-btn">Stop</button>
         </div>
       </div>
     </div>
@@ -216,7 +216,7 @@
         <!-- 🛠️ Action Row: Quick Add (Left) & Controls (Right) -->
         <div class="stack-action-row">
           <div class="backlog-add-form integrated">
-            <input type="text" id="backlogItemInput" placeholder="Quick add to backlog..." class="backlog-input">
+            <input type="text" id="backlogItemInput" placeholder="Quick add task to agenda..." class="backlog-input">
             <select id="backlogCatSelect" class="backlog-select backlog-cat-select"></select>
             <button class="btn btn-p add-backlog-item-btn">Add</button>
           </div>
@@ -242,7 +242,7 @@
       <div id="stackBacklogView" style="display:none;">
         <div class="stack-action-row">
           <div class="backlog-add-form integrated">
-            <input type="text" id="backlogItemInputTab" placeholder="Quick add to backlog..." class="backlog-input">
+            <input type="text" id="backlogItemInputTab" placeholder="Quick add task to agenda..." class="backlog-input">
             <select id="backlogCatSelectTab" class="backlog-select backlog-cat-select"></select>
             <button class="btn btn-p add-backlog-item-btn" data-input-id="backlogItemInputTab" data-select-id="backlogCatSelectTab">Add</button>
           </div>
@@ -341,6 +341,20 @@
           <div class="hc-body">You watch shows actively — tracking characters, figuring things out. That's entertainment, not rest. It doesn't restore you.<br><br>Real rest quietens input rather than replacing it: music alone, lying down without a screen, being outside. At least one daily, ideally right after classes as a transition ritual.</div>
           <div class="hc-rule">Track with the Rest checkbox. Shows belong on weekends.</div>
         </div>
+        <div class="hc">
+          <div class="hc-title">The pull system <span class="hc-badge" style="background:var(--blue-bg);color:var(--blue);">Backlog</span></div>
+          <div class="hc-body">The Backlog is for items that aren't part of this week's sprint. It's your "maybe later" list.<br><br>Don't clutter your Weekly Sprint with too many tasks. Periodically "pull" an item from your Backlog into your Sprint when you have extra capacity. This keeps your focus sharp and your sprint manageable.</div>
+          <div class="hc-rule">Move items between Backlog and Sprint in the Stack tab.</div>
+        </div>
+        <div class="hc">
+          <div class="hc-title">Insights Legend</div>
+          <div class="hc-body">
+            <strong style="font-weight:500;">Momentum:</strong> Blue (5h+), Light Blue (2-5h), White (&lt;2h)<br>
+            <strong style="font-weight:500;">Heatmap:</strong> Green (Run+Rest), Light Green (Run), Purple (Rest), Dark Purple (Full Rest)<br>
+            <strong style="font-weight:500;">Focus:</strong> High (Green), Medium (Amber), Low (Red)
+          </div>
+          <div class="hc-rule">Hover over elements in Insights for more details.</div>
+        </div>
       </div>
       <div style="margin-top:1.25rem;text-align:right;">
         <button class="btn btn-p">Got it</button>
@@ -354,15 +368,14 @@
       <div class="modal-title" id="mTitle">Log block</div>
       <div class="modal-error" id="fError"></div>
       
-      <div class="frow">
-        <label class="flbl">AREA</label>
-        <select id="fCat"><option value="">Select...</option></select>
-      </div>
-
       <div class="frow" id="intentRow">
         <label class="flbl">WHAT ARE YOU PLANNING TO WORK ON?</label>
         <textarea id="fIntent" placeholder="e.g. Finish the login flow refactor" maxlength="120"></textarea>
         <div id="fIntentCount" style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px;">0 / 120</div>
+      </div>
+      <div class="frow">
+        <label class="flbl">CATEGORY / AREA</label>
+        <select id="fCat" class="cat-select"></select>
       </div>
 
       <div class="frow">
@@ -444,11 +457,11 @@
 
 
   <!-- ── Phase 2: Start Stopwatch Modal ────────────────────────────────────── -->
-  <div class="overlay" id="startTimerModal">
+  <div class="overlay" id="startStopwatchModal">
     <div class="modal" style="max-width: 400px;">
       <div class="modal-title">Push to start</div>
       <div class="modal-error" id="stError"></div>
-      <div class="start-timer-modal-body">
+      <div class="start-stopwatch-modal-body">
         <div class="frow">
           <label class="flbl">AREA</label>
           <select id="stCat"><option value="">Select...</option></select>
@@ -535,9 +548,10 @@
     </div>
   </div>
 
-  <script type="module" src="js/auth.js?v=phase2_v1"></script>
-  <script type="module" src="js/account.js?v=phase2_v1"></script>
-  <script type="module" src="js/app.js?v=phase2_v1"></script>
-  <script type="module" src="js/backlog.js?v=v1"></script>
+  <script type="module" src="js/auth.js?v=phase2_v2"></script>
+  <script type="module" src="js/account.js?v=phase2_v2"></script>
+  <script type="module" src="js/toast.js?v=v2"></script>
+  <script type="module" src="js/app.js?v=phase2_v2"></script>
+  <script type="module" src="js/backlog.js?v=v2"></script>
 </body>
 </html>
