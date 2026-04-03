@@ -337,16 +337,18 @@ export function renderInsights() {
     </div>
     <div class="ins-grid">
       <div class="ins-sec">
+        <div class="ins-lbl">Period Totals</div>
+        <div style="padding:24px 20px;"><div class="stat-row">${statHTML}</div></div>
       </div>
       <div class="ins-sec">
         <div class="ins-lbl">Focus Quality Distribution</div>
         <div style="padding:24px 20px;"><div class="energy-row">${focusHTML}</div></div>
       </div>
     </div>
-    <div class="ins-grid">
-      <div class="ins-sec">
-        <div class="ins-lbl">Period Totals</div>
-        <div style="padding:24px 20px;"><div class="stat-row">${statHTML}</div></div>
+    <div class="ins-sec">
+      <div class="ins-lbl">Category Legend</div>
+      <div style="padding:20px 24px;">
+        <div class="legend-grid">${catLegendItems}${archLegend}</div>
       </div>
     </div>
     <div class="ins-sec">
