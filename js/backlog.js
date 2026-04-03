@@ -4,6 +4,8 @@
 
 import { loadBacklog, saveBacklog, loadCats, load, save } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
+import { showToast } from './toast.js';
+import { populateCatSelect, ensureCatExists } from './categories.js';
 
 export function initBacklog() {
   // Navigation: Toggle within Stack
@@ -33,14 +35,7 @@ export function initBacklog() {
     }
   });
 
-  syncBacklogCats();
-}
-
-function syncBacklogCats() {
-  const selects = document.querySelectorAll('.backlog-cat-select');
-  const cats = loadCats();
-  const html = cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-  selects.forEach(s => { s.innerHTML = html; });
+  populateCatSelect();
 }
 
 export function toggleBacklogView(showBacklog) {
@@ -75,13 +70,6 @@ export function renderBacklog() {
   const backlog = loadBacklog();
   const cats = loadCats();
   const d = load();
-  const stkTodos = d.todos || {};
-
-  // Count total active items in stack for the limit check
-  let stackItemCount = 0;
-  Object.values(stkTodos).forEach(list => {
-    stackItemCount += list.length;
-  });
 
   const catsMap = {};
   cats.forEach(c => catsMap[c.name] = c);
@@ -95,43 +83,39 @@ export function renderBacklog() {
     const c = catsMap[item.category] || { name: item.category, color: 'gray' };
     const hex = resolveHex(c.color);
     const tasks = item.tasks || [];
-    const tColor = badgeTextColor(hex);
     
     return `
-      <div class="si" data-idx="${idx}">
-        <div class="si-main" style="gap:1rem;">
+      <div class="backlog-agenda-card" data-idx="${idx}">
+        <div class="backlog-header">
           <span class="stag" style="background:color-mix(in srgb, ${hex} 20%, transparent); color:var(--text); border:1px solid color-mix(in srgb, ${hex} 30%, transparent);">${item.category}</span>
-          <input class="sinput" value="${item.text}" 
+          <input class="backlog-title-input" value="${item.text || ''}" 
                  data-action="edit-backlog-title" data-idx="${idx}"
-                 placeholder="Backlog item description..." 
-                 style="flex:1; font-size:14px; font-weight:500;">
-          <div class="backlog-item-actions" style="display:flex; gap:8px;">
-            <button class="btn-s del-backlog-item" data-idx="${idx}" title="Delete entire card from backlog">
-              <i data-lucide="trash-2"></i>
-            </button>
-          </div>
+                 placeholder="Agenda focus for this area..." 
+                 style="flex:1;">
+          <button class="btn-s del-backlog-item" data-idx="${idx}" title="Delete entire agenda box">
+            <i data-lucide="trash-2"></i>
+          </button>
         </div>
 
-        <div class="si-tasks">
-          <div class="task-list">
-            ${tasks.map((t, ti) => `
-              <div class="task-item">
-                <span class="task-text" contenteditable="true" 
-                      data-action="edit-backlog-task" data-idx="${idx}" data-tidx="${ti}"
-                      style="flex:1; font-size:13px; color:var(--text); padding: 2px 0;">${t.text}</span>
-                <button class="task-pull" data-action="pull-backlog-task" data-idx="${idx}" data-tidx="${ti}" title="Pull task to this week">
-                  <i data-lucide="inbox"></i>
-                </button>
-                <button class="task-del" data-action="del-backlog-task" data-idx="${idx}" data-tidx="${ti}" title="Delete sub-task">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </div>
-            `).join('')}
-          </div>
-          <div class="task-add">
-            <input class="task-input backlog-task-add-input" placeholder="Add a sub-task..."
-                   data-idx="${idx}">
-          </div>
+        <div class="backlog-task-list">
+          ${tasks.map((t, ti) => `
+            <div class="backlog-task-item">
+              <span class="task-text" contenteditable="true" 
+                    data-action="edit-backlog-task" data-idx="${idx}" data-tidx="${ti}">${t.text}</span>
+              <button class="task-pull" data-action="pull-backlog-task" data-idx="${idx}" data-tidx="${ti}" title="Pull task to this week">
+                <i data-lucide="inbox"></i>
+              </button>
+              <button class="task-del" data-action="del-backlog-task" data-idx="${idx}" data-tidx="${ti}" title="Delete task">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="backlog-add-task-row">
+          <input class="backlog-add-task-input backlog-task-add-input" 
+                 placeholder="Add a task..."
+                 data-idx="${idx}">
         </div>
       </div>
     `;
@@ -144,16 +128,12 @@ export function renderBacklog() {
     const delTaskBtn = e.target.closest('[data-action="del-backlog-task"]');
 
     if (pullTaskBtn) {
-      if (stackItemCount >= 5) {
-        alert("Stack is full (5 item limit). Complete or remove items from your current Stack before pulling more.");
-        return;
-      }
       const idx = +pullTaskBtn.dataset.idx;
       const ti  = +pullTaskBtn.dataset.tidx;
       pullTaskToWeek(idx, ti);
     }
     if (delBtn) {
-      if (confirm("Delete this entire backlog card?")) {
+      if (confirm("Delete this entire Agenda box?")) {
         const bl = loadBacklog();
         bl.items.splice(+delBtn.dataset.idx, 1);
         saveBacklog(bl);
@@ -227,16 +207,26 @@ function pullTaskToWeek(idx, ti) {
 
   const taskToMove = item.tasks[ti];
   const d = load();
+
+  // Ensure category exists in the main system
+  const targetCat = ensureCatExists(item.category);
+
+  // LIMIT CHECK: 5 per category
   if (!d.todos) d.todos = {};
-  if (!d.todos[item.category]) d.todos[item.category] = [];
+  if (!d.todos[targetCat]) d.todos[targetCat] = [];
+  
+  if (d.todos[targetCat].length >= 5) {
+    showToast(`Stack full for ${targetCat} (5 item limit reach). Complete or remove tasks first.`, 'warning');
+    return;
+  }
   
   // Smart Agenda: If category isn't in focus yet, use the card's title as focus
-  if (!d.stack[item.category]) {
-    d.stack[item.category] = item.text;
+  if (!d.stack[targetCat] && item.text) {
+    d.stack[targetCat] = item.text;
   }
 
-  // Add task to semana
-  d.todos[item.category].push({
+  // Add task to week
+  d.todos[targetCat].push({
     text: taskToMove.text,
     done: false
   });
@@ -248,24 +238,62 @@ function pullTaskToWeek(idx, ti) {
   saveBacklog(bl);
   
   renderBacklog();
-  // Notify other components (like Stack tab) to refresh
   document.dispatchEvent(new CustomEvent('wt:backlog-changed'));
-}
-
-function pullToWeek(idx) {
-  // Kept for internal logic if needed, but removed from UI
-  // Could be used for a 'Pull All' if we ever add it back
+  showToast(`Pulled "${taskToMove.text}" to your ${targetCat} stack!`, 'success');
 }
 
 function addBacklogItem(text, category) {
-  const backlog = loadBacklog();
-  backlog.items.push({
-    id: Date.now().toString(),
-    text,
-    category,
-    created_at: new Date().toISOString()
+  const bl = loadBacklog();
+  
+  // Normalize comparison to find existing category box
+  const targetCat = category.trim();
+  const existing = bl.items.find(i => i.category.trim().toLowerCase() === targetCat.toLowerCase());
+  
+  if (existing) {
+    if (!existing.tasks) existing.tasks = [];
+    existing.tasks.push({ text, done: false });
+    showToast(`Added task to ${existing.category} agenda`, 'success');
+  } else {
+    bl.items.push({
+      id: Date.now().toString(),
+      category: targetCat,
+      text: '', // Start with empty focus title
+      tasks: [{ text, done: false }],
+      created_at: new Date().toISOString()
+    });
+    showToast(`Created ${targetCat} agenda box`, 'success');
+  }
+  
+  // Ensure we never have duplicates in the data structure
+  consolidateBacklog(bl);
+  saveBacklog(bl);
+}
+
+/**
+ * Merges any duplicate category boxes in the backlog.
+ */
+function consolidateBacklog(bl) {
+  const consolidated = [];
+  const map = new Map();
+
+  bl.items.forEach(item => {
+    const catKey = item.category.trim().toLowerCase();
+    if (map.has(catKey)) {
+      const existing = map.get(catKey);
+      // Merge tasks
+      if (item.tasks) {
+        if (!existing.tasks) existing.tasks = [];
+        existing.tasks.push(...item.tasks);
+      }
+      // Keep titles if more descriptive? (Join them if both exist, otherwise take one)
+      if (item.text && !existing.text) existing.text = item.text;
+    } else {
+      map.set(catKey, item);
+      consolidated.push(item);
+    }
   });
-  saveBacklog(backlog);
+
+  bl.items = consolidated;
 }
 
 export function pushToBacklog(taskText, category) {

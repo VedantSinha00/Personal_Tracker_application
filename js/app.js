@@ -170,7 +170,7 @@ function initListeners() {
   document.getElementById('intention').addEventListener('input', saveIntention);
 
   // Timer Stop button
-  document.getElementById('timerStopBtn').addEventListener('click', () => {
+  document.getElementById('stopwatchStopBtn').addEventListener('click', () => {
     // Import stopTimer logic from dailylog instead of app itself to avoid circulars
     // though here we are in app.js. The plan says dailylog manages the save modal.
     document.dispatchEvent(new CustomEvent('wt:timer-stopped'));

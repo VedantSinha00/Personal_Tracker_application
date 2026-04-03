@@ -309,10 +309,18 @@ function attachStackListeners() {
         const d = load();
         if (!d.todos) d.todos = {};
         if (!d.todos[cat]) d.todos[cat] = [];
+
+        // LIMIT CHECK: 5 per category in the active stack
+        if (d.todos[cat].length >= 5) {
+          showToast(`Full capacity for ${cat}! Complete or remove missions before adding more.`, 'warning');
+          return;
+        }
+
         d.todos[cat].push({ text: val, done: false });
         save(d);
         renderSt(d);
         document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+        showToast(`Added mission to ${cat}`, 'success');
         setTimeout(() => {
           const inp = document.querySelector(`.task-input[data-catname="${cat}"]`);
           if (inp) inp.focus();

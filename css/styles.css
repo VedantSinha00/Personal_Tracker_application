@@ -2765,10 +2765,12 @@ h1, h2, h3, .modal-title, .app-title, .lp-section-hdr, .hc-title, .sg-title { fo
 .st-manual-input::-webkit-outer-spin-button,
 .st-manual-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 .st-manual-input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 @keyframes fadeIn {
@@ -2776,6 +2778,207 @@ h1, h2, h3, .modal-title, .app-title, .lp-section-hdr, .hc-title, .sg-title { fo
   to { opacity: 1; transform: translateY(0); }
 }
 
-html[data-theme="light"] .backlog-card {
+
+/* ── BADGE BUTTONS (MVD / FULL REST) ────────────────────────────── */
+.badge-btn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--text3);
+  color: var(--text);
+}
+
+.badge-btn.mvd-on {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-color: #d1b88e;
+}
+
+.badge-btn.fr-on {
+  background: var(--purple-bg);
+  color: var(--purple);
+  border-color: #b0a8d6;
+}
+
+html[data-theme="light"] .backlog-agenda-card {
   background: #f8faff; border-color: #e0e9f5;
 }
+
+/* ── TOAST NOTIFICATIONS ─────────────────────────────────────────── */
+#toastContainer {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.wt-toast {
+  min-width: 280px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: auto;
+  
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wt-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-info { border-left: 4px solid var(--accent); }
+.toast-success { border-left: 4px solid var(--green); }
+.toast-warning { border-left: 4px solid var(--amber); }
+.toast-error { border-left: 4px solid var(--red); }
+
+.wt-toast i { flex-shrink: 0; }
+
+/* ── BACKLOG / AGENDA REFACTOR STYLES ────────────────────────────── */
+.backlog-agenda-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.2rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s var(--ease);
+}
+
+.backlog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.backlog-title-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  padding: 2px 0;
+  outline: none;
+  transition: border-bottom 0.2s;
+}
+
+.backlog-title-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.backlog-task-list {
+  padding-left: 1rem;
+  border-left: 1px dashed var(--border);
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backlog-task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.backlog-task-item:hover {
+  border-color: var(--border);
+  background: var(--surface-hover);
+}
+
+.backlog-task-item .task-text {
+  flex: 1;
+  font-size: 13px;
+  outline: none;
+}
+
+.backlog-task-item button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text3);
+  opacity: 0.4;
+  transition: all 0.2s var(--ease);
+}
+
+.backlog-task-item button:hover {
+  opacity: 1;
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.backlog-task-item .task-pull:hover {
+  color: var(--accent);
+}
+
+.backlog-task-item .task-del:hover {
+  color: var(--red);
+}
+
+.backlog-task-item button i {
+  width: 14px;
+  height: 14px;
+}
+
+.backlog-add-task-row {
+  margin-top: 12px;
+  padding-left: 1rem;
+}
+
+.backlog-add-task-input {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-style: italic;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+
+.backlog-add-task-input::placeholder {
+  color: var(--text3);
+  opacity: 0.7;
+}
+

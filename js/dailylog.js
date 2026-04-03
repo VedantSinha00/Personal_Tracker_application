@@ -248,13 +248,11 @@ export function openStartTimerM(di) {
     c.classList.toggle('selected', c.dataset.offset === "0");
   });
   document.getElementById('stManualOffset').value = '';
-  hideModalError('stError');
-  
-  document.getElementById('startTimerModal').classList.add('open');
+  document.getElementById('startStopwatchModal').classList.add('open');
 }
 
 export function closeStartTimerM() {
-  document.getElementById('startTimerModal').classList.remove('open');
+  document.getElementById('startStopwatchModal').classList.remove('open');
 }
 
 function handleTimerStopped() {
@@ -436,6 +434,9 @@ export function initDailyLogListeners() {
     const mvd = e.target.closest('[data-action="tog-mvd"]');
     if (mvd) { togMVD(+mvd.dataset.day); return; }
 
+    const habit = e.target.closest('[data-action="tog-habit"]');
+    if (habit) { togH(+habit.dataset.day, habit.dataset.habit); return; }
+
     const jToggle = e.target.closest('[data-action="toggle-journal"]');
     if (jToggle) {
       const area = document.getElementById(`journal-area-${jToggle.dataset.day}`);
@@ -539,7 +540,7 @@ export function initDailyLogListeners() {
   });
 
   // ── Start Timer Modal ──
-  const startModal = document.getElementById('startTimerModal');
+  const startModal = document.getElementById('startStopwatchModal');
   startModal.addEventListener('click', e => {
     if (e.target === e.currentTarget) { closeStartTimerM(); return; }
     

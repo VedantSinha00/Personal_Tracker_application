@@ -349,10 +349,9 @@ async function _syncWeek(offset, d) {
   }
 }
 
-// Called when only focus or order changes (not the full day data)
 async function _syncWeekFocusOrder(offset) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === 'dev-user-local') return;
   try {
     const focus     = loadFocusForOffset(offset);
     const itemOrder = loadOrderForOffset(offset);
@@ -384,7 +383,7 @@ async function _syncWeekFocusOrder(offset) {
 
 async function _syncCategories(cats) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === 'dev-user-local') return;
   try {
     // Delete all existing categories for this user and re-insert.
     // Simpler than diffing — category lists are short.
@@ -406,7 +405,7 @@ async function _syncCategories(cats) {
 
 async function _syncHabits(habits) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === 'dev-user-local') return;
   try {
     await sb.from('habits').delete().eq('user_id', user.id);
     if (habits.length > 0) {
@@ -427,7 +426,7 @@ async function _syncHabits(habits) {
 
 async function _syncCatArchive(arch) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === 'dev-user-local') return;
   try {
     await sb.from('cat_archive').upsert({
       user_id:    user.id,
