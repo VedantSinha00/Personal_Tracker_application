@@ -194,6 +194,8 @@ function initListeners() {
     _renderDG(d);
     _renderOv(d);
     _updM(d);
+    renderSt(d);
+    renderBacklog();
   });
 
   // Toggling a built-in habit from the Overview panel

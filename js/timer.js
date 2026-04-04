@@ -30,8 +30,8 @@ export function stopTimer() {
   
   const today = new Date().getDay();
   const ti = today === 0 ? 6 : today - 1;
-  const dayTimer = document.getElementById(`dayTimer-${ti}`);
-  if (dayTimer) { dayTimer.innerHTML = ''; dayTimer.dataset.cat = ''; }
+  const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
+  dayTimers.forEach(dt => { dt.innerHTML = ''; dt.dataset.cat = ''; });
   
   return { ...t, minutes };
 }
@@ -89,16 +89,16 @@ function updateOtherTimerDisplays(t, timeStr) {
   // 2. Weekly Log (Today's Card)
   const today = new Date().getDay();
   const ti = today === 0 ? 6 : today - 1;
-  const dayTimer = document.getElementById(`dayTimer-${ti}`);
-  if (dayTimer) {
-    if (!dayTimer.innerHTML || dayTimer.dataset.cat !== t.cat) {
-      dayTimer.dataset.cat = t.cat;
-      dayTimer.innerHTML = renderActiveTimerCard(t, timeStr, true);
+  const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
+  dayTimers.forEach(dt => {
+    if (!dt.innerHTML || dt.dataset.cat !== t.cat) {
+      dt.dataset.cat = t.cat;
+      dt.innerHTML = renderActiveTimerCard(t, timeStr, true);
     } else {
-      const clock = dayTimer.querySelector('.active-timer-clock');
+      const clock = dt.querySelector('.active-timer-clock');
       if (clock) clock.textContent = timeStr;
     }
-  }
+  });
 }
 
 function renderActiveTimerCard(t, timeStr, compact = false) {
