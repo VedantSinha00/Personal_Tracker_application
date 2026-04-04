@@ -40,7 +40,7 @@ import { openHabitsModal, closeHabitsModal, initHabitsListeners } from './habits
 import { initInsights, renderInsights } from './insights.js';
 import { initBacklog, renderBacklog } from './backlog.js';
 
-import { initTimerTick } from './timer.js';
+import { initTimerTick, togglePauseTimer } from './timer.js';
 
 // ── Week label ────────────────────────────────────────────────────────────────
 function wkLabel() {
@@ -169,7 +169,8 @@ function initListeners() {
   // Intention input (Stack tab)
   document.getElementById('intention').addEventListener('input', saveIntention);
 
-  // Timer Stop button
+  // Timer Navbar Actions
+  document.getElementById('navPauseResumeBtn').addEventListener('click', togglePauseTimer);
   document.getElementById('stopwatchStopBtn').addEventListener('click', () => {
     // Import stopTimer logic from dailylog instead of app itself to avoid circulars
     // though here we are in app.js. The plan says dailylog manages the save modal.
