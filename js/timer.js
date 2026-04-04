@@ -115,8 +115,10 @@ function updateOtherTimerDisplays(t, timeStr) {
   // 1. Overview Tab
   const ovContainer = document.getElementById('ovTimerContainer');
   if (ovContainer) {
-    if (!ovContainer.innerHTML || ovContainer.dataset.cat !== t.cat) {
+    const stateMatch = ovContainer.dataset.cat === t.cat && ovContainer.dataset.paused === t.isPaused.toString();
+    if (!ovContainer.innerHTML || !stateMatch) {
       ovContainer.dataset.cat = t.cat;
+      ovContainer.dataset.paused = t.isPaused.toString();
       ovContainer.innerHTML = renderActiveTimerCard(t, timeStr);
     } else {
       const clock = ovContainer.querySelector('.active-timer-clock');
@@ -129,8 +131,10 @@ function updateOtherTimerDisplays(t, timeStr) {
   const ti = today === 0 ? 6 : today - 1;
   const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
   dayTimers.forEach(dt => {
-    if (!dt.innerHTML || dt.dataset.cat !== t.cat) {
+    const stateMatch = dt.dataset.cat === t.cat && dt.dataset.paused === t.isPaused.toString();
+    if (!dt.innerHTML || !stateMatch) {
       dt.dataset.cat = t.cat;
+      dt.dataset.paused = t.isPaused.toString();
       dt.innerHTML = renderActiveTimerCard(t, timeStr, true);
     } else {
       const clock = dt.querySelector('.active-timer-clock');
