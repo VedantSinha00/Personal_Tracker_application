@@ -147,7 +147,7 @@ function renderActiveTimerCard(t, timeStr, compact = false) {
           <div style="font-weight:600;">${t.cat}${t.intent ? ' · ' + t.intent : ''}</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <strong style="font-family:monospace; font-size:14px;">${timeStr}</strong>
+          <strong class="active-timer-clock" style="font-family:monospace; font-size:14px;">${timeStr}</strong>
           <button class="btn-s" data-action="timer-action" data-type="pause"
             style="padding:2px 6px; font-size:10px; border-radius:4px;">${btnTxt}</button>
           <button class="btn-s" data-action="timer-action" data-type="stop"
