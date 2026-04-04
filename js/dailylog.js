@@ -74,7 +74,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
       ? `<div class="block-intent">${b.intent.length > 40 ? b.intent.slice(0, 40) + '…' : b.intent}</div>`
       : '';
 
-    return `<div class="block-pill" style="${catC(b.category)}"
+    return `<div class="block-pill" style="${catC(b.category)}" draggable="true"
       data-action="open-block" data-day="${dayOffset}" data-block="${bi}">
       <div class="block-pill-top">
         <span>${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}</span>
@@ -185,7 +185,7 @@ export function openM(di, bi) {
 
   document.getElementById('fCat').value    = '';
   document.getElementById('fIntent').value = '';
-  document.getElementById('fIntentCount').textContent = '0 / 120';
+  document.getElementById('fIntentCount').textContent = '0 / 300';
   document.getElementById('fDur').value    = '';
   document.getElementById('fNotes').value  = '';
   document.getElementById('durValidation').textContent = '';
@@ -204,7 +204,7 @@ export function openM(di, bi) {
     const b = d.days[editDay].blocks[editIdx];
     document.getElementById('fCat').value    = b.category || '';
     document.getElementById('fIntent').value = b.intent || '';
-    document.getElementById('fIntentCount').textContent = (b.intent ? b.intent.length : 0) + ' / 120';
+    document.getElementById('fIntentCount').textContent = (b.intent ? b.intent.length : 0) + ' / 300';
     document.getElementById('fDur').value    = b.duration || '';
     document.getElementById('fNotes').value  = b.notes    || '';
     
@@ -239,7 +239,7 @@ export function openStartTimerM(di) {
     cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   
   document.getElementById('stIntent').value = '';
-  document.getElementById('stIntentCount').textContent = '0 / 120';
+  document.getElementById('stIntentCount').textContent = '0 / 300';
   document.getElementById('stLinkedTasks').innerHTML = '';
   document.getElementById('stTasksRow').style.display = 'none';
 
@@ -266,7 +266,7 @@ function handleTimerStopped() {
   // Override fields with timer data
   document.getElementById('fCat').value = result.cat;
   document.getElementById('fIntent').value = result.intent;
-  document.getElementById('fIntentCount').textContent = (result.intent ? result.intent.length : 0) + ' / 120';
+  document.getElementById('fIntentCount').textContent = (result.intent ? result.intent.length : 0) + ' / 300';
   document.getElementById('fNotes').value = result.notes || '';
   
   // Convert minutes to "1h 30m" format
@@ -350,7 +350,7 @@ export function saveBlock() {
   let cat = document.getElementById('fCat').value;
   if (!cat) cat = 'Others';
 
-  const intentVal = document.getElementById('fIntent').value.trim().slice(0, 120);
+  const intentVal = document.getElementById('fIntent').value.trim().slice(0, 300);
 
   // Collect linked tasks
   const linkedTasks = [];
@@ -370,11 +370,15 @@ export function saveBlock() {
   };
 
   const d = load();
+  const dayBlocks = d.days[editDay].blocks;
   if (editIdx !== null) {
-    d.days[editDay].blocks[editIdx] = block;
+    dayBlocks[editIdx] = block;
   } else {
-    d.days[editDay].blocks.push(block);
+    dayBlocks.push(block);
   }
+
+  const SLOT_VALS = { 'early-morning': 1, 'morning': 2, 'afternoon': 3, 'evening': 4, 'night': 5, 'late-night': 6 };
+  dayBlocks.sort((a, b) => (SLOT_VALS[a.slot] || 99) - (SLOT_VALS[b.slot] || 99));
 
   // Auto-check linked tasks (Assumed DONE if block was logged)
   if (!d.todos) d.todos = {};
@@ -415,6 +419,60 @@ export function initDailyLogListeners() {
   // Listening on #appShell allows day-card interactions to work 
   // uniformly whether the card is in the Daily Log tab or the Overview tab.
   const appShell = document.getElementById('appShell');
+
+  // --- DRAG AND DROP FOR BLOCKS ---
+  let draggedBlock = null;
+
+  appShell.addEventListener('dragstart', e => {
+    const pill = e.target.closest('.block-pill');
+    if (!pill) return;
+    draggedBlock = { day: +pill.dataset.day, idx: +pill.dataset.block, el: pill };
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => { pill.style.opacity = '0.5'; }, 0);
+  });
+
+  appShell.addEventListener('dragover', e => {
+    const pill = e.target.closest('.block-pill');
+    if (!pill || !draggedBlock) return;
+    if (draggedBlock.day !== +pill.dataset.day) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
+    pill.style.borderTop = '2px solid var(--text)';
+  });
+
+  appShell.addEventListener('dragleave', e => {
+    const pill = e.target.closest('.block-pill');
+    if (pill) pill.style.borderTop = '';
+  });
+
+  appShell.addEventListener('dragend', e => {
+    if (draggedBlock && draggedBlock.el) draggedBlock.el.style.opacity = '1';
+    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
+    draggedBlock = null;
+  });
+
+  appShell.addEventListener('drop', e => {
+    const pill = e.target.closest('.block-pill');
+    if (!pill || !draggedBlock) return;
+    if (draggedBlock.day !== +pill.dataset.day) return; 
+    e.preventDefault();
+    
+    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
+    
+    const d = load();
+    const blocks = d.days[draggedBlock.day].blocks;
+    const fromIdx = draggedBlock.idx;
+    const toIdx = +pill.dataset.block;
+    
+    if (fromIdx === toIdx) return;
+    
+    const [movedBlock] = blocks.splice(fromIdx, 1);
+    blocks.splice(toIdx, 0, movedBlock);
+    
+    save(d);
+    document.dispatchEvent(new CustomEvent('wt:day-changed'));
+  });
 
   appShell.addEventListener('change', e => {
     const tog = e.target.closest('[data-action="tog-habit"]');
@@ -586,7 +644,7 @@ export function initDailyLogListeners() {
   });
 
   document.getElementById('stIntent').addEventListener('input', e => {
-    document.getElementById('stIntentCount').textContent = e.target.value.length + ' / 120';
+    document.getElementById('stIntentCount').textContent = e.target.value.length + ' / 300';
   });
 
   document.addEventListener('wt:timer-stopped', handleTimerStopped);
@@ -598,7 +656,7 @@ export function initDailyLogListeners() {
 
   // Intent char counter
   document.getElementById('fIntent').addEventListener('input', e => {
-    document.getElementById('fIntentCount').textContent = e.target.value.length + ' / 120';
+    document.getElementById('fIntentCount').textContent = e.target.value.length + ' / 300';
   });
 
   // Inline task addition
