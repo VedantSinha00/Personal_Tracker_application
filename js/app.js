@@ -74,6 +74,11 @@ function swTab(id) {
     if (!_insightsInited) { initInsights(); _insightsInited = true; }
     else renderInsights();
   }
+
+  const indicator = document.getElementById('stopwatchIndicator');
+  if (indicator && indicator.dataset.active === 'true') {
+    indicator.style.display = (id === 'ov') ? 'none' : 'flex';
+  }
 }
 
 // ── Full re-render ────────────────────────────────────────────────────────────
