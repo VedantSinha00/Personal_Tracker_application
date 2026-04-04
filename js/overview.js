@@ -117,17 +117,9 @@ export function renderOv(d) {
     </div>`;
 
   const splitHTML = `
-    <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; margin-bottom: 1.5rem; align-items: flex-start;">
-      ${intentionHTML}
-      <div style="padding-top: 10px;">
-        <div style="font-size:12px; color:var(--text3); font-family:var(--font-heading); letter-spacing:0.5px; margin-bottom:4px; font-weight:600;">TODAY</div>
-        <div style="font-size:24px; font-weight:600; color:var(--text); letter-spacing:-0.5px; white-space:nowrap;">
-          ${FULL[ti].toUpperCase()}, ${todayDate.toUpperCase()}
-        </div>
-      </div>
-    </div>
     <div style="display:grid; grid-template-columns: minmax(320px, 1fr) 340px; gap: 3rem; align-items:flex-start;">
       <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        ${intentionHTML}
         ${dayCardHTML}
         ${streaksHTML}
       </div>
