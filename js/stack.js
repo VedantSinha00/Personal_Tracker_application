@@ -310,8 +310,9 @@ function attachStackListeners() {
         if (!d.todos) d.todos = {};
         if (!d.todos[cat]) d.todos[cat] = [];
 
-        // LIMIT CHECK: 5 per category in the active stack
-        if (d.todos[cat].length >= 5) {
+        // LIMIT CHECK: 5 pending per category in the active stack
+        const pendingCount = d.todos[cat].filter(t => !t.done).length;
+        if (pendingCount >= 5) {
           showToast(`Full capacity for ${cat}! Complete or remove missions before adding more.`, 'warning');
           return;
         }

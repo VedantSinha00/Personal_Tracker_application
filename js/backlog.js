@@ -211,12 +211,13 @@ function pullTaskToWeek(idx, ti) {
   // Ensure category exists in the main system
   const targetCat = ensureCatExists(item.category);
 
-  // LIMIT CHECK: 5 per category
+  // LIMIT CHECK: 5 pending per category
   if (!d.todos) d.todos = {};
   if (!d.todos[targetCat]) d.todos[targetCat] = [];
   
-  if (d.todos[targetCat].length >= 5) {
-    showToast(`Stack full for ${targetCat} (5 item limit reach). Complete or remove tasks first.`, 'warning');
+  const pendingCount = d.todos[targetCat].filter(t => !t.done).length;
+  if (pendingCount >= 5) {
+    showToast(`Stack full for ${targetCat} (max 5 pending items). Complete or remove tasks first.`, 'warning');
     return;
   }
   
