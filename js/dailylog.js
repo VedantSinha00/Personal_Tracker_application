@@ -332,13 +332,18 @@ function _renderLinkedTasks(cat, linked = [], targetId = 'fLinkedTasks', rowId =
   }
 
   if (row) row.style.display = 'block';
-  container.innerHTML = tasks.map((t, i) => {
-    const isChecked = t.done || linked.some(lt => lt.cat === cat && lt.idx === i);
+  const html = tasks.map((t, i) => {
+    const isLinked = linked.some(lt => lt.cat === cat && lt.idx === i);
+    if (t.done && !isLinked) return '';
+    
+    const isChecked = t.done || isLinked;
     return `<label class="linked-task-item">
       <input type="checkbox" data-cat="${cat}" data-idx="${i}" ${isChecked ? 'checked' : ''}>
       <span ${t.done ? 'style="text-decoration:line-through;color:var(--text3);"' : ''}>${t.text}</span>
     </label>`;
-  }).join('');
+  }).filter(Boolean).join('');
+
+  container.innerHTML = html || '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">No pending tasks in this area.</div>';
 }
 
 export function saveBlock() {
