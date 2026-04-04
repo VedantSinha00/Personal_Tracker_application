@@ -158,9 +158,9 @@
 
     <!-- ── Header ─────────────────────────────────────────────────────── -->
     <div class="header">
-      <div>
-        <h1>Personal tracker</h1>
-        <p id="wkSub">current week</p>
+      <div style="display: flex; flex-direction: column;">
+        <h1 id="wkCurrentDay" style="font-size: 28px; line-height: 1.1; margin-bottom: 2px;"></h1>
+        <p id="wkLbl" title="Click to reset to current week" style="cursor:pointer; font-size: 14px; color: var(--text2); font-weight: 500; margin: 0;">—</p>
       </div>
       <div class="header-actions">
         <button class="btn icon-btn" data-action="open-help" title="How to use this tracker">?</button>
@@ -173,10 +173,9 @@
         <button id="signOutBtn" class="btn header-btn" title="Sign out">
           <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sign out
         </button>
-        <div class="week-nav">
-          <button class="nav-btn" data-dir="-1">←</button>
-          <span class="week-lbl" id="wkLbl" title="Click to reset to current week" style="cursor:pointer;">—</span>
-          <button class="nav-btn" data-dir="1">→</button>
+        <div class="week-nav" style="border:none; padding:0; background:transparent; margin-right:8px; gap:4px;">
+          <button class="nav-btn" data-dir="-1" style="background:var(--surface); border:1px solid var(--border);">←</button>
+          <button class="nav-btn" data-dir="1" style="background:var(--surface); border:1px solid var(--border);">→</button>
         </div>
         <!-- ── Phase 2: Stopwatch Indicator ── -->
         <div id="stopwatchIndicator" style="display:none;" class="timer-banner">
@@ -188,19 +187,19 @@
       </div>
     </div>
 
-    <!-- ── Toolbar ────────────────────────────────────────────────────── -->
-    <div class="toolbar" style="justify-content:flex-end;">
-      <button class="btn" data-action="open-habits"  title="Manage custom habits" style="display:flex;align-items:center;gap:5px;"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
-      <button class="btn" data-action="open-cats"    title="Manage categories" style="display:flex;align-items:center;gap:5px;"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
-    </div>
-
-    <!-- ── Tabs ───────────────────────────────────────────────────────── -->
-    <div class="tabs">
-      <button class="tab active" data-tab="ov">Overview</button>
-      <button class="tab"        data-tab="days">Weekly log</button>
-      <button class="tab"        data-tab="stack">Stack</button>
-      <button class="tab"        data-tab="review">Review</button>
-      <button class="tab"        data-tab="insights">Insights</button>
+    <!-- ── Tabs & Global Tools ────────────────────────────────────────── -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+      <div class="tabs" style="margin-bottom: 0;">
+        <button class="tab active" data-tab="ov">Overview</button>
+        <button class="tab"        data-tab="days">Weekly log</button>
+        <button class="tab"        data-tab="stack">Stack</button>
+        <button class="tab"        data-tab="review">Review</button>
+        <button class="tab"        data-tab="insights">Insights</button>
+      </div>
+      <div class="global-tools" style="display: flex; gap: 8px;">
+        <button class="btn" data-action="open-habits" title="Manage custom habits" style="display:flex;align-items:center;gap:5px; padding: 6px 12px; font-size: 13px;"><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Habits</button>
+        <button class="btn" data-action="open-cats" title="Manage categories" style="display:flex;align-items:center;gap:5px; padding: 6px 12px; font-size: 13px;"><i data-lucide="tag" style="width:14px;height:14px;"></i> Categories</button>
+      </div>
     </div>
 
     <!-- ── Tab panels ─────────────────────────────────────────────────── -->

@@ -53,10 +53,14 @@ function wkLabel() {
 
 function updateWkLabel() {
   document.getElementById('wkLbl').textContent = wkLabel();
-  document.getElementById('wkSub').textContent =
-    wk === 0 ? 'current week' :
-    wk < 0   ? Math.abs(wk) + ' week' + (Math.abs(wk) > 1 ? 's' : '') + ' ago' :
-               wk + ' week' + (wk > 1 ? 's' : '') + ' ahead';
+  
+  // Format current date (Today always)
+  const now = new Date();
+  const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
+  const dayStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  
+  const h1Day = document.getElementById('wkCurrentDay');
+  if (h1Day) h1Day.textContent = `${dayName}, ${dayStr}`;
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
