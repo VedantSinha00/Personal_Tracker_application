@@ -111,7 +111,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
           ${day.journal && day.journal.trim() ? '<span class="journal-dot"></span>' : ''}
           Journal
         </button>
-        <div class="journal-area" id="journal-area-${dayOffset}" style="display:none;">
+        <div class="journal-area" style="display:none;">
           <textarea class="journal-ta"
             data-action="save-journal" data-day="${dayOffset}"
             placeholder="How did the day go? What worked, what didn&#39;t?" rows="3"
@@ -127,7 +127,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
         </button>
       </div>
       <!-- Placeholder for active timer in Daily Log -->
-      <div id="dayTimer-${dayOffset}" class="day-timer-container"></div>
+      <div id="dayTimer-${dayOffset}" class="day-timer-container day-timer-target" data-day="${dayOffset}"></div>
     </div>`;
 }
 
@@ -333,10 +333,10 @@ function _renderLinkedTasks(cat, linked = [], targetId = 'fLinkedTasks', rowId =
 
   if (row) row.style.display = 'block';
   container.innerHTML = tasks.map((t, i) => {
-    const isChecked = linked.some(lt => lt.cat === cat && lt.idx === i);
+    const isChecked = t.done || linked.some(lt => lt.cat === cat && lt.idx === i);
     return `<label class="linked-task-item">
       <input type="checkbox" data-cat="${cat}" data-idx="${i}" ${isChecked ? 'checked' : ''}>
-      <span>${t.text}</span>
+      <span ${t.done ? 'style="text-decoration:line-through;color:var(--text3);"' : ''}>${t.text}</span>
     </label>`;
   }).join('');
 }
@@ -439,7 +439,7 @@ export function initDailyLogListeners() {
 
     const jToggle = e.target.closest('[data-action="toggle-journal"]');
     if (jToggle) {
-      const area = document.getElementById(`journal-area-${jToggle.dataset.day}`);
+      const area = jToggle.parentElement.querySelector('.journal-area');
       if (!area) return;
       const isOpen = area.style.display !== 'none';
       area.style.display = isOpen ? 'none' : 'block';
@@ -459,12 +459,9 @@ export function initDailyLogListeners() {
 
     // Keep the toggle button's green-dot indicator in sync with actual content
     const hasText = !!ta.value.trim();
-    const toggle  = document.querySelector(
-      `.journal-toggle[data-day="${dayIdx}"]`
-    );
-    if (toggle) {
+    const toggles = document.querySelectorAll(`.journal-toggle[data-day="${dayIdx}"]`);
+    toggles.forEach(toggle => {
       toggle.classList.toggle('has-entry', hasText);
-      // Re-render just the dot span inside the button
       const existing = toggle.querySelector('.journal-dot');
       if (hasText && !existing) {
         const dot = document.createElement('span');
@@ -473,7 +470,7 @@ export function initDailyLogListeners() {
       } else if (!hasText && existing) {
         existing.remove();
       }
-    }
+    });
   });
 
   // Journal — Enter collapses (already saved); Shift+Enter = line break
@@ -488,13 +485,15 @@ export function initDailyLogListeners() {
   appShell.addEventListener('focusout', e => {
     const ta = e.target.closest('[data-action="save-journal"]');
     if (!ta) return;
+    
+    const row = ta.closest('.journal-toggle-row');
+    const toggle = row ? row.querySelector('.journal-toggle') : null;
+    
     // If focus is moving to the toggle button for this same day, let the click
     // handler deal with it (it will toggle open→closed).
-    const toggle = document.querySelector(
-      `.journal-toggle[data-day="${ta.dataset.day}"]`
-    );
     if (e.relatedTarget && e.relatedTarget === toggle) return;
-    const area = document.getElementById(`journal-area-${ta.dataset.day}`);
+    
+    const area = ta.closest('.journal-area');
     if (area) area.style.display = 'none';
   });
 
