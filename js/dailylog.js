@@ -8,7 +8,7 @@ import {
 } from './storage.js';
 import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
-import { startTimer, stopTimer } from './timer.js';
+import { startTimer, stopTimer, togglePauseTimer } from './timer.js';
 
 // ── Modal state ───────────────────────────────────────────────────────────────
 let editDay       = null;
@@ -95,6 +95,8 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
       <div class="blocks-stack">
         ${blockPills}
         ${noBlocks && isPast ? `<div class="missed-msg">Nothing logged</div>` : ''}
+        <!-- Placeholder for active timer in Daily Log -->
+        <div id="dayTimer-${dayOffset}" class="day-timer-container day-timer-target" data-day="${dayOffset}"></div>
       </div>
       ${day.fullRest ? '' : `
         <div class="day-actions">
@@ -126,8 +128,6 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
           ${day.fullRest ? 'Full rest ✓' : 'Full rest'}
         </button>
       </div>
-      <!-- Placeholder for active timer in Daily Log -->
-      <div id="dayTimer-${dayOffset}" class="day-timer-container day-timer-target" data-day="${dayOffset}"></div>
     </div>`;
 }
 
@@ -256,11 +256,14 @@ export function closeStartTimerM() {
 }
 
 function handleTimerStopped() {
-  const result = stopTimer();
+  const result = stopTimer(true);
   if (!result) return;
   
+  const today = new Date().getDay();
+  const ti = today === 0 ? 6 : today - 1;
+
   // Open the standard log modal pre-filled with the timer result
-  openM(result.dayIdx, 'new');
+  openM(ti, 'new');
   isLogFromTimer = true; // Mark as timer result to prevent easy closing
   
   // Override fields with timer data
@@ -380,6 +383,11 @@ export function saveBlock() {
   const SLOT_VALS = { 'early-morning': 1, 'morning': 2, 'afternoon': 3, 'evening': 4, 'night': 5, 'late-night': 6 };
   dayBlocks.sort((a, b) => (SLOT_VALS[a.slot] || 99) - (SLOT_VALS[b.slot] || 99));
 
+  if (isLogFromTimer) {
+    stopTimer(false);
+    isLogFromTimer = false;
+  }
+
   // Auto-check linked tasks (Assumed DONE if block was logged)
   if (!d.todos) d.todos = {};
   linkedTasks.forEach(lt => {
@@ -494,6 +502,19 @@ export function initDailyLogListeners() {
       openStartTimerM(+startT.dataset.day);
       return;
     }
+
+    const tAction = e.target.closest('[data-action="timer-action"]');
+    if (tAction) {
+      // Prevent bubbling to open-block if clicked directly inside a card
+      e.stopPropagation();
+      if (tAction.dataset.type === 'pause') {
+        togglePauseTimer();
+      } else if (tAction.dataset.type === 'stop') {
+        document.dispatchEvent(new CustomEvent('wt:timer-stopped'));
+      }
+      return;
+    }
+
     const mvd = e.target.closest('[data-action="tog-mvd"]');
     if (mvd) { togMVD(+mvd.dataset.day); return; }
 

@@ -6,32 +6,51 @@ let _timerInterval = null;
 
 export function startTimer(cat, intent, offsetMinutes = 0, notes = '', linkedTasks = []) {
   const startTime = Date.now() - (offsetMinutes * 60 * 1000);
-  const t = { cat, intent, startTime, notes, linkedTasks };
+  const t = { cat, intent, startTime, notes, linkedTasks, accumulatedMs: 0, isPaused: false };
   saveTimer(t);
   initTimerTick();
 }
 
-export function stopTimer() {
+export function togglePauseTimer() {
+  const t = loadTimer();
+  if (!t) return;
+  t.accumulatedMs = t.accumulatedMs || 0;
+  if (t.isPaused) {
+    t.isPaused = false;
+    t.startTime = Date.now();
+  } else {
+    t.isPaused = true;
+    t.accumulatedMs += Date.now() - t.startTime;
+  }
+  saveTimer(t);
+  initTimerTick();
+}
+
+export function stopTimer(preserve = false) {
   const t = loadTimer();
   if (!t) return null;
-  const elapsedMs = Date.now() - t.startTime;
+  t.accumulatedMs = t.accumulatedMs || 0;
+  const currentSessionElapsed = t.isPaused ? 0 : Date.now() - t.startTime;
+  const elapsedMs = t.accumulatedMs + currentSessionElapsed;
   const minutes = Math.floor(elapsedMs / 60000);
   
-  if (_timerInterval) clearInterval(_timerInterval);
-  _timerInterval = null;
-  saveTimer(null);
-  
-  const indicator = document.getElementById('stopwatchIndicator');
-  if (indicator) indicator.style.display = 'none';
+  if (!preserve) {
+    if (_timerInterval) clearInterval(_timerInterval);
+    _timerInterval = null;
+    saveTimer(null);
+    
+    const indicator = document.getElementById('stopwatchIndicator');
+    if (indicator) indicator.style.display = 'none';
 
-  // Clear other displays
-  const ovContainer = document.getElementById('ovTimerContainer');
-  if (ovContainer) { ovContainer.innerHTML = ''; ovContainer.dataset.cat = ''; }
-  
-  const today = new Date().getDay();
-  const ti = today === 0 ? 6 : today - 1;
-  const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
-  dayTimers.forEach(dt => { dt.innerHTML = ''; dt.dataset.cat = ''; });
+    // Clear other displays
+    const ovContainer = document.getElementById('ovTimerContainer');
+    if (ovContainer) { ovContainer.innerHTML = ''; ovContainer.dataset.cat = ''; }
+    
+    const today = new Date().getDay();
+    const ti = today === 0 ? 6 : today - 1;
+    const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
+    dayTimers.forEach(dt => { dt.innerHTML = ''; dt.dataset.cat = ''; });
+  }
   
   return { ...t, minutes };
 }
@@ -49,8 +68,12 @@ export function initTimerTick() {
   
   if (_timerInterval) clearInterval(_timerInterval);
   
-  _timerInterval = setInterval(() => {
-    const elapsedMs = Date.now() - t.startTime;
+  // Define update tick logic so it can be called immediately
+  const tick = () => {
+    t.accumulatedMs = t.accumulatedMs || 0;
+    const currentSessionElapsed = t.isPaused ? 0 : Date.now() - t.startTime;
+    const elapsedMs = t.accumulatedMs + currentSessionElapsed;
+    
     const totalSecs = Math.floor(elapsedMs / 1000);
     const h = Math.floor(totalSecs / 3600);
     const m = Math.floor((totalSecs % 3600) / 60);
@@ -65,12 +88,20 @@ export function initTimerTick() {
     const timeStr = (h > 0 ? h + ':' : '') + (m < 10 && h > 0 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     updateOtherTimerDisplays(t, timeStr);
 
+    // Update global navbar button
+    const toggleBtn = document.getElementById('navPauseResumeBtn');
+    if (toggleBtn) {
+      toggleBtn.textContent = t.isPaused ? 'Resume' : 'Pause';
+    }
+
     // 6-hour limit check
-    if (totalSecs === 6 * 3600) {
-      // In-app notification placeholder instead of alert
+    if (totalSecs === 6 * 3600 && !t.isPaused) {
       console.warn("6-hour timer limit reached.");
     }
-  }, 1000);
+  };
+
+  tick(); // Run immediately
+  _timerInterval = setInterval(tick, 1000);
 }
 
 function updateOtherTimerDisplays(t, timeStr) {
@@ -102,24 +133,40 @@ function updateOtherTimerDisplays(t, timeStr) {
 }
 
 function renderActiveTimerCard(t, timeStr, compact = false) {
+  const isPaused = t.isPaused;
+  const pulseAnim = isPaused ? '' : 'animation: gentle-pulse 2s infinite;';
+  const pauseBg = isPaused ? 'background:var(--amber-bg); color:var(--amber); border-color:var(--amber);' : '';
+  const btnTxt = isPaused ? 'Resume' : 'Pause';
+
   if (compact) {
     return `
-      <div class="active-timer-card" style="margin-top:10px; padding:8px 12px; gap:8px;">
-        <div class="active-timer-info">
-          <div class="active-timer-cat" style="font-size:9px;">WORKING ON</div>
-          <div class="active-timer-intent" style="font-size:12px;">${t.cat}${t.intent ? ': ' + t.intent : ''}</div>
+      <div class="block-pill ${isPaused ? 'paused' : 'running'}" style="${pulseAnim}${pauseBg} cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
+        data-action="timer-action" data-type="stop">
+        <div>
+          <span style="font-size:10px; opacity:0.8;">WORKING ROUND</span>
+          <div style="font-weight:600;">${t.cat}${t.intent ? ' · ' + t.intent : ''}</div>
         </div>
-        <div class="active-timer-clock" style="font-size:16px;">${timeStr}</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong style="font-family:monospace; font-size:14px;">${timeStr}</strong>
+          <button class="btn-s" data-action="timer-action" data-type="pause"
+            style="padding:2px 6px; font-size:10px; border-radius:4px;">${btnTxt}</button>
+          <button class="btn-s" data-action="timer-action" data-type="stop"
+            style="padding:2px 6px; font-size:10px; border-radius:4px; background:var(--red-bg); color:var(--red);">Stop</button>
+        </div>
       </div>
     `;
   }
   return `
-    <div class="active-timer-card">
+    <div class="active-timer-card" style="${pulseAnim}">
       <div class="active-timer-info">
-        <div class="active-timer-cat">Currently Working</div>
+        <div class="active-timer-cat">Currently Working ${isPaused ? '(Paused)' : ''}</div>
         <div class="active-timer-intent">${t.cat}${t.intent ? ' — ' + t.intent : ''}</div>
       </div>
-      <div class="active-timer-clock">${timeStr}</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="active-timer-clock">${timeStr}</div>
+        <button class="btn" style="padding:4px 10px; font-size:12px;" data-action="timer-action" data-type="pause">${btnTxt}</button>
+        <button class="btn" style="padding:4px 10px; font-size:12px; background:var(--red-bg); color:var(--red); border-color:transparent;" data-action="timer-action" data-type="stop">Stop</button>
+      </div>
     </div>
   `;
 }
