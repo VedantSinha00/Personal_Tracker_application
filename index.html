@@ -158,12 +158,12 @@
 
     <!-- ── Header ─────────────────────────────────────────────────────── -->
     <div class="header">
-      <div style="display: flex; flex-direction: column; gap: 4px;">
-        <h1 id="wkCurrentDay" style="font-size: 28px; line-height: 1.1; margin: 0;"></h1>
-        <div class="week-nav" style="border:none; padding:0; background:transparent; justify-content: flex-start; gap: 12px; align-items: center;">
-          <button class="nav-btn" data-dir="-1" style="background:var(--surface); border:1px solid var(--border); height:24px; width:24px; font-size: 12px;">←</button>
-          <p id="wkLbl" title="Click to reset to current week" style="cursor:pointer; font-size: 14px; color: var(--text2); font-weight: 500; margin: 0;">—</p>
-          <button class="nav-btn" data-dir="1" style="background:var(--surface); border:1px solid var(--border); height:24px; width:24px; font-size: 12px;">→</button>
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <h1 id="wkCurrentDay" style="font-size: 24px; line-height: 1.1; margin: 0; font-weight: 600; color: var(--text);"></h1>
+        <div class="week-nav" style="border:none; padding:0; background:transparent; justify-content: flex-start; gap: 6px; align-items: center;">
+          <button class="nav-btn" data-dir="-1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">←</button>
+          <p id="wkLbl" title="Click to reset to current week" style="cursor:pointer; font-size: 13px; color: var(--text3); font-weight: 500; margin: 0; letter-spacing: 0.2px;">—</p>
+          <button class="nav-btn" data-dir="1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">→</button>
         </div>
       </div>
       <div class="header-actions">
@@ -188,7 +188,7 @@
     </div>
 
     <!-- ── Tabs & Global Tools ────────────────────────────────────────── -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.05));">
       <div class="tabs" style="margin-bottom: 0;">
         <button class="tab active" data-tab="ov">Overview</button>
         <button class="tab"        data-tab="days">Weekly log</button>
@@ -197,8 +197,8 @@
         <button class="tab"        data-tab="insights">Insights</button>
       </div>
       <div class="global-tools" style="display: flex; gap: 8px;">
-        <button class="btn" data-action="open-habits" title="Manage custom habits" style="display:flex;align-items:center;gap:5px; padding: 6px 12px; font-size: 13px;"><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Habits</button>
-        <button class="btn" data-action="open-cats" title="Manage categories" style="display:flex;align-items:center;gap:5px; padding: 6px 12px; font-size: 13px;"><i data-lucide="tag" style="width:14px;height:14px;"></i> Categories</button>
+        <button class="btn" data-action="open-habits" title="Manage custom habits" style="display:flex;align-items:center;gap:5px; padding: 5px 12px; font-size: 12px; background:transparent; border:1px solid var(--border); color:var(--text3);"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
+        <button class="btn" data-action="open-cats" title="Manage categories" style="display:flex;align-items:center;gap:5px; padding: 5px 12px; font-size: 12px; background:transparent; border:1px solid var(--border); color:var(--text3);"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
       </div>
     </div>
 
