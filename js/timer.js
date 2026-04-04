@@ -40,7 +40,10 @@ export function stopTimer(preserve = false) {
     saveTimer(null);
     
     const indicator = document.getElementById('stopwatchIndicator');
-    if (indicator) indicator.style.display = 'none';
+    if (indicator) {
+      indicator.style.display = 'none';
+      indicator.dataset.active = 'false';
+    }
 
     // Clear other displays
     const ovContainer = document.getElementById('ovTimerContainer');
@@ -63,7 +66,11 @@ export function initTimerTick() {
   const badge = document.getElementById('stopwatchCategoryBadge');
   const display = document.getElementById('stopwatchDisplay');
   
-  if (indicator) indicator.style.display = 'flex';
+  if (indicator) {
+    indicator.dataset.active = 'true';
+    const activeTab = localStorage.getItem('wt_active_tab') || 'ov';
+    indicator.style.display = (activeTab === 'ov') ? 'none' : 'flex';
+  }
   if (badge) badge.textContent = t.cat;
   
   if (_timerInterval) clearInterval(_timerInterval);
