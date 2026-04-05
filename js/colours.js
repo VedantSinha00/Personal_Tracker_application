@@ -53,11 +53,27 @@ export function catStyle(colorKey) {
   return `--badge-hex:${hex};--badge-text:${text};background:color-mix(in srgb,${hex} 5%,transparent);border-left-color:${hex};color:var(--text);`;
 }
 
+function findCat(cats, name) {
+  if (!name) return null;
+  const n = name.trim().toLowerCase();
+  // 1. Exact case-insensitive match
+  const exact = cats.find(c => c.name.toLowerCase() === n);
+  if (exact) return exact;
+  // 2. Dash match (e.g. "Project - Tasks" matches "Project")
+  if (n.includes('-')) {
+    const prefix = n.split('-')[0].trim();
+    const foundPrefix = cats.find(c => c.name.toLowerCase() === prefix);
+    if (foundPrefix) return foundPrefix;
+  }
+  // 3. Fallback: log name "Intern" matches category "Intern Prep"
+  return cats.find(c => c.name.toLowerCase().startsWith(n) || n.startsWith(c.name.toLowerCase()));
+}
+
 // Resolves a category name → its hex colour string.
 // Falls back to the archive for deleted categories so old blocks still render.
 export function resolveCatColor(name) {
   const cats = loadCats();
-  const found = cats.find(c => c.name === name);
+  const found = findCat(cats, name);
   if (found) return catPalette(found.color).css;
   const arch = loadCatArchive();
   if (arch[name]) return catPalette(arch[name]).css;
@@ -67,7 +83,7 @@ export function resolveCatColor(name) {
 // Returns the full inline style string for a block pill by category name.
 export function catC(name) {
   const cats = loadCats();
-  const found = cats.find(c => c.name === name);
+  const found = findCat(cats, name);
   if (found) return catStyle(found.color);
   const arch = loadCatArchive();
   if (arch[name]) return catStyle(arch[name]);
