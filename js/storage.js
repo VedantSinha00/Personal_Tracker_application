@@ -96,7 +96,7 @@ const _syncQueue = {};
 export function save(d) {
   // If no data passed (e.g. from a manual console sync), load the current week's local data
   if (!d) {
-    d = loadWeek();
+    d = load();
     if (!d) {
       console.warn('[save] No data found to save.');
       return;
