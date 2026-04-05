@@ -341,6 +341,9 @@ function initUpdateListeners() {
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
+if (window.electronAPI) {
+  document.body.classList.add('is-electron');
+}
 applyTheme();
 
 // ── Auth-ready handler ────────────────────────────────────────────────────────

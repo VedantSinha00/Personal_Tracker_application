@@ -15,6 +15,22 @@ export function resolveHex(colorKey) {
   return LEGACY_MAP[colorKey] || '#6b6760';
 }
 
+// Deterministic fallback: picks a consistent color from PRESET_COLOURS
+// for any string, ensuring ad-hoc categories aren't just gray.
+function getDeterministicColor(name) {
+  if (!name) return PRESET_COLOURS[0];
+  let hash = 0;
+  const s = name.toLowerCase().trim();
+  for (let i = 0; i < s.length; i++) {
+    hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // Exclude the Neutral colors (last 6 items in PRESET_COLOURS usually)
+  // to keep the "vibrant" feel the user requested.
+  const vibrantCount = PRESET_COLOURS.length - 6;
+  const index = Math.abs(hash) % vibrantCount;
+  return PRESET_COLOURS[index];
+}
+
 // Given a hex background colour, returns the text colour.
 // Because badges/pills are heavily mixed with the theme's base colour (40% opacity),
 // the standard body text colour (var(--text)) always provides optimal readable contrast.
@@ -77,7 +93,7 @@ export function resolveCatColor(name) {
   if (found) return catPalette(found.color).css;
   const arch = loadCatArchive();
   if (arch[name]) return catPalette(arch[name]).css;
-  return 'var(--text3)';
+  return getDeterministicColor(name);
 }
 
 // Returns the full inline style string for a block pill by category name.
@@ -87,7 +103,7 @@ export function catC(name) {
   if (found) return catStyle(found.color);
   const arch = loadCatArchive();
   if (arch[name]) return catStyle(arch[name]);
-  return 'background:var(--surface2);color:var(--text2);';
+  return catStyle(getDeterministicColor(name));
 }
 
 // ── Shared colour picker ─────────────────────────────────────────────────────

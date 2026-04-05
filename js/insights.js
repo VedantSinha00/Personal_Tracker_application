@@ -116,6 +116,8 @@ export function renderInsights() {
   weeks.forEach(w => {
     const days = w.data.days || [];
     let wHours = 0, wBlocks = 0;
+    const wCatHours = {}; // Track per-week category hours
+    
     days.forEach(day => {
       if (day.habits?.run) totalRuns++;
       if (day.fullRest)    totalFR++;
@@ -129,22 +131,35 @@ export function renderInsights() {
 
       day.blocks.forEach(b => {
         const cat = b.category || 'Other';
-        if (hiddenCats.has(cat)) return; // Exclude hidden agendas
+        if (hiddenCats.has(cat)) return; 
 
         const h = parseDuration(b.duration);
         wHours += h; totalHours += h;
         wBlocks++; totalBlocks++;
+        
+        // Track per-week category hours
+        wCatHours[cat] = (wCatHours[cat] || 0) + h;
+        
         const fq = b.focusQuality || b.energy || 'none';
         focusCounts[fq] = (focusCounts[fq] || 0) + 1;
         areaHours[cat] = (areaHours[cat] || 0) + h;
         if (b.slot) slotHours[b.slot] = (slotHours[b.slot] || 0) + h;
       });
     });
+
+    // Find dominant category for this week
+    let domCat = 'Others';
+    let maxCH = -1;
+    Object.entries(wCatHours).forEach(([c, hrs]) => {
+      if (hrs > maxCH) { maxCH = hrs; domCat = c; }
+    });
+
     const mon = getMonFromAbs(w.offset);
     weekStats.push({
       label:  mon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       hours:  wHours,
       blocks: wBlocks,
+      domCat: domCat
     });
   });
 
@@ -156,11 +171,14 @@ export function renderInsights() {
   // ── Weekly hours bar chart ──
   const maxWkHrs = Math.max(...weekStats.map(w => w.hours), 0.5);
   const barHTML  = weekStats.map(w => {
-    const h   = Math.max(6, Math.round((w.hours / maxWkHrs) * 120));
-    const cls = w.hours >= 5 ? 'strong' : w.hours >= 2 ? 'partial' : 'light';
-    return `<div class="wk-bar-wrap" title="${w.label}: ${fmtHrs(w.hours)}">
+    const h     = Math.max(8, Math.round((w.hours / maxWkHrs) * 120));
+    const catCol = resolveCatColor(w.domCat);
+    // Use the resolved color for a vibrant gradient/solid fill
+    const barStyle = `height:${h}px; background:${catCol}; border-color: ${catCol}; opacity:${w.hours >= 2 ? 1 : 0.6};`;
+    
+    return `<div class="wk-bar-wrap" title="${w.label}: ${fmtHrs(w.hours)} (${w.domCat})">
       <div class="wk-bar-val">${fmtHrs(w.hours)}</div>
-      <div class="wk-bar-col ${cls}" style="height:${h}px"></div>
+      <div class="wk-bar-col" style="${barStyle}"></div>
       <div class="wk-bar-lbl">${w.label.split(' ')[0]}</div>
     </div>`;
   }).join('');
@@ -323,7 +341,7 @@ export function renderInsights() {
     </div>
     <div class="ins-grid">
       <div class="ins-sec">
-        <div class="ins-lbl">Aereas of Focus</div>
+        <div class="ins-lbl">Areas of Focus</div>
         <div style="padding:24px 20px;"><div class="area-dist">${areaHTML}</div></div>
       </div>
       <div class="ins-sec">

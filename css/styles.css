@@ -19,8 +19,8 @@ body.is-electron {
   pointer-events: none;
 }
 
-/* Ensure interactive elements aren't draggable */
-button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .clickable {
+/* Ensure interactive elements aren't draggable (Electron) */
+button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .clickable, .week-nav {
   -webkit-app-region: no-drag;
 }
 

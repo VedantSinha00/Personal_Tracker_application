@@ -1,26 +1,10 @@
-// Step 1: Force-clear any stray flags that force Electron into "Node Mode"
-delete process.env.ELECTRON_RUN_AS_NODE;
-
-// Step 2: Resilient import of Electron APIs
-const electron = require('electron');
+// Extract APIs
+const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
-
-// Extract APIs (handle case where require('electron') might return a string in Node mode)
-const { app, BrowserWindow, shell, ipcMain } = typeof electron === 'object' ? electron : require('electron');
-const { autoUpdater } = require('electron-updater');
-// Configure auto-updater logging (optional but helpful)
-autoUpdater.logger = console;
-autoUpdater.autoDownload = true; 
-
-if (!app) {
-  // If app is still missing, we are in a fatal environment state.
-  // We'll try one last-ditch effort to alert the user if possible.
-  console.error("FATAL: Electron failed to initialize its core 'app' module.");
-  process.exit(1);
-}
 
 // ── Application State ──────────────────────────────────────────────────────
 let mainWindow;
+let autoUpdater;
 const protocolScheme = 'weekly-tracker';
 let authUrlOnColdStart = null;
 
