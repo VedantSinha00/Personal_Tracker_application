@@ -59,24 +59,27 @@ export function stopTimer(preserve = false) {
 }
 
 export function initTimerTick() {
-  const t = loadTimer();
-  if (!t) return;
-
-  const indicator = document.getElementById('stopwatchIndicator');
-  const badge = document.getElementById('stopwatchCategoryBadge');
-  const display = document.getElementById('stopwatchDisplay');
-  
-  if (indicator) {
-    indicator.dataset.active = 'true';
-    const activeTab = localStorage.getItem('wt_active_tab') || 'ov';
-    indicator.style.display = (activeTab === 'ov') ? 'none' : 'flex';
-  }
-  if (badge) badge.textContent = t.cat;
-  
   if (_timerInterval) clearInterval(_timerInterval);
   
-  // Define update tick logic so it can be called immediately
   const tick = () => {
+    const t = loadTimer();
+    if (!t) {
+      if (_timerInterval) clearInterval(_timerInterval);
+      _timerInterval = null;
+      return;
+    }
+
+    const indicator = document.getElementById('stopwatchIndicator');
+    const badge = document.getElementById('stopwatchCategoryBadge');
+    const display = document.getElementById('stopwatchDisplay');
+    
+    if (indicator) {
+      indicator.dataset.active = 'true';
+      const activeTab = localStorage.getItem('wt_active_tab') || 'ov';
+      indicator.style.display = (activeTab === 'ov') ? 'none' : 'flex';
+    }
+    if (badge) badge.textContent = t.cat;
+
     t.accumulatedMs = t.accumulatedMs || 0;
     const currentSessionElapsed = t.isPaused ? 0 : Date.now() - t.startTime;
     const elapsedMs = t.accumulatedMs + currentSessionElapsed;
@@ -86,13 +89,14 @@ export function initTimerTick() {
     const m = Math.floor((totalSecs % 3600) / 60);
     const s = totalSecs % 60;
     
+    const timeStr = (h > 0 ? h + ':' : '') + 
+                    (m < 10 && h > 0 ? '0' : '') + m + ':' + 
+                    (s < 10 ? '0' : '') + s;
+
     if (display) {
-      display.textContent = (h > 0 ? h + ':' : '') + 
-                            (m < 10 && h > 0 ? '0' : '') + m + ':' + 
-                            (s < 10 ? '0' : '') + s;
+      display.textContent = timeStr;
     }
 
-    const timeStr = (h > 0 ? h + ':' : '') + (m < 10 && h > 0 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     updateOtherTimerDisplays(t, timeStr);
 
     // Update global navbar button
