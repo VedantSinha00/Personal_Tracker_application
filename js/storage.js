@@ -598,13 +598,15 @@ export async function loadFromSupabase() {
       const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
       const hiddenMap = {};
       localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
-
       const mapped = cats.map(c => ({ 
         name: c.name, 
         color: c.color,
         hidden: !!hiddenMap[c.name]
       }));
-      localStorage.setItem('wt_categories', JSON.stringify(mapped));
+      if (mapped.length > 0) {
+        localStorage.setItem('wt_categories', JSON.stringify(mapped));
+        document.dispatchEvent(new CustomEvent('wt:cats-changed'));
+      }
     }
 
     // Habits
