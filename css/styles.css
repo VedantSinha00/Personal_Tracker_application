@@ -950,6 +950,88 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
       box-shadow: inset 0 0 0 1px var(--accent);
     }
 
+    /* ── Custom Select (Premium Dropdown) ─────────────────────────────────── */
+    .custom-select-container {
+      position: relative;
+      width: 100%;
+      font-family: var(--font-body);
+    }
+    .custom-select-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--surface-hover);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .custom-select-container.open .custom-select-trigger,
+    .custom-select-trigger:focus {
+      background: var(--surface-elevated);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+      outline: none;
+    }
+    .custom-select-arrow {
+      font-size: 10px;
+      opacity: 0.6;
+      transition: transform 0.2s ease;
+    }
+    .custom-select-container.open .custom-select-arrow {
+      transform: rotate(180deg);
+    }
+    .custom-select-options {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 100%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--elevation-modal);
+      z-index: 1000;
+      max-height: 240px;
+      overflow-y: auto;
+      display: none;
+      animation: selectPop 0.2s var(--ease) forwards;
+    }
+    .custom-select-container.open .custom-select-options {
+      display: block;
+    }
+    @keyframes selectPop {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .custom-select-option {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .custom-select-option:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      padding-left: 16px;
+    }
+    .custom-select-option.selected {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .custom-select-option.disabled {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+    }
+
+
     .frow textarea {
       width: 100%;
       padding: 9px 11px;
