@@ -42,6 +42,7 @@ import { initInsights, renderInsights } from './insights.js';
 import { initBacklog, renderBacklog } from './backlog.js';
 
 import { initTimerTick, togglePauseTimer } from './timer.js';
+import { showToast } from './toast.js';
 
 // ── Week label ────────────────────────────────────────────────────────────────
 function wkLabel() {
@@ -297,6 +298,48 @@ function initListeners() {
   console.log('[initListeners] complete');
 }
 
+// ── Auto Update UI ────────────────────────────────────────────────────────────
+let _updaterInitialized = false;
+
+function initUpdateListeners() {
+  if (!window.electronAPI || _updaterInitialized) return;
+  _updaterInitialized = true;
+
+  window.electronAPI.onUpdateAvailable((info) => {
+    showToast(`Update v${info.version} is available. Downloading...`, 'info', 6000);
+  });
+
+  window.electronAPI.onUpdateDownloaded((info) => {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'wt-toast toast-success visible';
+    toast.style.pointerEvents = 'auto'; // Ensure clicks work
+    toast.innerHTML = `
+      <i data-lucide="download" style="width:16px;height:16px;"></i>
+      <div style="flex:1;">
+        <div style="font-weight:600;">Update Ready</div>
+        <div style="font-size:11px; opacity:0.8;">v${info.version} is ready to install.</div>
+      </div>
+      <button id="updateRestartBtn" class="btn btn-p" style="padding:4px 10px; font-size:11px;">Restart</button>
+    `;
+
+    container.appendChild(toast);
+    if (window.lucide) window.lucide.createIcons({ root: toast });
+
+    const btn = toast.querySelector('#updateRestartBtn');
+    btn.addEventListener('click', () => {
+      window.electronAPI.restartAndInstall();
+    });
+  });
+
+  window.electronAPI.onUpdateError((err) => {
+    console.warn('[updater] Error:', err);
+    // Don't toast errors to users unless they are fatal
+  });
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 applyTheme();
 
@@ -311,6 +354,7 @@ async function handleAuthReady() {
   updateWkLabel();
   updateExportLbl();
   initListeners();
+  initUpdateListeners(); // Start listening for app updates
   initTimerTick(); // Resume timer if running
   renderAll();
 

@@ -7,6 +7,10 @@ const path = require('path');
 
 // Extract APIs (handle case where require('electron') might return a string in Node mode)
 const { app, BrowserWindow, shell, ipcMain } = typeof electron === 'object' ? electron : require('electron');
+const { autoUpdater } = require('electron-updater');
+// Configure auto-updater logging (optional but helpful)
+autoUpdater.logger = console;
+autoUpdater.autoDownload = true; 
 
 if (!app) {
   // If app is still missing, we are in a fatal environment state.
@@ -30,7 +34,42 @@ function registerIpcHandlers() {
       }
       return false;
     });
+
+    // Auto-update IPC
+    ipcMain.handle('restart-app', () => {
+      autoUpdater.quitAndInstall();
+    });
   }
+}
+
+// ── Auto Update Handling ───────────────────────────────────────────────────
+function setupAutoUpdater() {
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[updater] Checking for update...');
+  });
+  autoUpdater.on('update-available', (info) => {
+    console.log('[updater] Update available:', info.version);
+    if (mainWindow) mainWindow.webContents.send('update-available', info);
+  });
+  autoUpdater.on('update-not-available', () => {
+    console.log('[updater] Update not available.');
+  });
+  autoUpdater.on('error', (err) => {
+    console.warn('[updater] Error in auto-updater:', err);
+    if (mainWindow) mainWindow.webContents.send('update-error', err.message);
+  });
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log(`[updater] Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`);
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[updater] Update downloaded');
+    if (mainWindow) mainWindow.webContents.send('update-downloaded', info);
+  });
+
+  // Check for updates every hour
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 60 * 60 * 1000);
 }
 
 // ── Window Creation ────────────────────────────────────────────────────────
@@ -104,6 +143,10 @@ async function initializeApp() {
   
   registerIpcHandlers();
   createWindow();
+  setupAutoUpdater();
+
+  // Trigger initial check
+  autoUpdater.checkForUpdatesAndNotify();
 
   // 5. Post-Load Logic
   mainWindow.webContents.on('did-finish-load', () => {

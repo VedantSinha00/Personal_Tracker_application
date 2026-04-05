@@ -1,11 +1,17 @@
 {
   "name": "weekly-tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Weekly Tracker Application",
+  "author": "Vedant Sinha",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VedantSinha00/Personal_Tracker_application.git"
+  },
   "main": "main.js",
   "scripts": {
     "start": "npx electron .",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win",
+    "publish": "electron-builder --win --publish always"
   },
   "build": {
     "appId": "com.vedant.weeklytracker",
@@ -19,8 +25,15 @@
       "!dist/*"
     ],
     "win": {
-      "target": "portable"
+      "target": "nsis"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "VedantSinha00",
+        "repo": "Personal_Tracker_application"
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -40,5 +53,8 @@
     "electron-builder": "^26.8.1",
     "electron-packager": "^17.1.2",
     "jimp": "^0.22.12"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
   }
 }
