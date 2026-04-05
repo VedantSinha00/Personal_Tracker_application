@@ -139,6 +139,25 @@ export function saveHabits(h) {
   _syncQueue['habits'] = setTimeout(() => _syncHabits(h), 1500);
 }
 
+export function flushPendingSyncs() {
+  Object.keys(_syncQueue).forEach(key => {
+    if (_syncQueue[key]) {
+      clearTimeout(_syncQueue[key]);
+      // We can't easily await these as they are fired internally,
+      // but clearing the timeout and calling the sync functions immediately
+      // is better than losing the data entirely on exit.
+    }
+  });
+  
+  // Re-run the critical syncs immediately
+  const absWk = getAbsWk(wk);
+  const d = load(); 
+  _syncWeek(absWk, d);
+  _syncCategories(loadCats());
+  _syncHabits(loadHabits());
+  _syncBacklog(loadBacklog());
+}
+
 export function allHabits() {
   return loadHabits();
 }
@@ -623,5 +642,117 @@ export async function loadFromSupabase() {
   } catch(err) {
     console.warn('[loadFromSupabase] failed:', err.message);
     // Graceful degradation — localStorage data (if any) is used as fallback
+  }
+}
+
+// ── Realtime Synchronization ───────────────────────────────────────────────────
+let _realtimeChannel = null;
+
+export function initRealtimeSync() {
+  const user = getCurrentUser();
+  if (!user || _realtimeChannel) return;
+
+  _realtimeChannel = sb.channel('db-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_data', filter: `user_id=eq.${user.id}` }, payload => {
+      handleRemoteWeekChange(payload.new);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories', filter: `user_id=eq.${user.id}` }, () => {
+      handleRemoteCatsChange();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'habits', filter: `user_id=eq.${user.id}` }, () => {
+      handleRemoteHabitsChange();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'backlog', filter: `user_id=eq.${user.id}` }, payload => {
+      handleRemoteBacklogChange(payload.new);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'cat_archive', filter: `user_id=eq.${user.id}` }, payload => {
+      handleRemoteArchiveChange(payload.new);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+      handleRemoteProfileChange(payload.new);
+    })
+    .subscribe();
+
+  console.log('[sync] Realtime subscription active');
+}
+
+function handleRemoteWeekChange(row) {
+  if (!row) return;
+  const key = 'wt_wk_' + row.week_offset;
+  const local = localStorage.getItem(key);
+  const localD = local ? JSON.parse(local) : null;
+  const localTs = localD ? (localD.__updated_at || 0) : 0;
+
+  // Only apply if the remote change is newer than our local cache
+  if (!localTs || new Date(row.updated_at) > new Date(localTs)) {
+    const d = {
+      intention:   row.intention  || '',
+      stack:       row.stack      || {},
+      todos:       row.todos      !== undefined ? row.todos : (localD?.todos || {}),
+      days:        row.days       || [],
+      review:      row.review     || {},
+      __updated_at: row.updated_at,
+    };
+    localStorage.setItem(key, JSON.stringify(d));
+    if (row.focus) localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
+    if (row.item_order) localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
+    
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'week', offset: row.week_offset } }));
+  }
+}
+
+async function handleRemoteCatsChange() {
+  const user = getCurrentUser();
+  const { data: cats } = await sb.from('categories').select('*').eq('user_id', user.id).order('position');
+  if (cats) {
+    const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
+    const hiddenMap = {};
+    localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
+
+    const mapped = cats.map(c => ({ 
+      name: c.name, 
+      color: c.color,
+      hidden: !!hiddenMap[c.name]
+    }));
+    localStorage.setItem('wt_categories', JSON.stringify(mapped));
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'categories' } }));
+  }
+}
+
+async function handleRemoteHabitsChange() {
+  const user = getCurrentUser();
+  const { data: habits } = await sb.from('habits').select('*').eq('user_id', user.id);
+  if (habits) {
+    const mapped = habits.map(h => ({
+      id: h.habit_id, name: h.name, color: h.color, target: h.target
+    }));
+    localStorage.setItem('wt_habits', JSON.stringify(mapped));
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'habits' } }));
+  }
+}
+
+function handleRemoteBacklogChange(row) {
+  if (row && row.items) {
+    localStorage.setItem('wt_backlog', JSON.stringify({ items: row.items }));
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'backlog' } }));
+  }
+}
+
+function handleRemoteArchiveChange(row) {
+  if (row && row.archive) {
+    localStorage.setItem('wt_cat_archive', JSON.stringify(row.archive));
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'archive' } }));
+  }
+}
+
+function handleRemoteProfileChange(row) {
+  if (row && row.active_timer) {
+    const localT = loadTimer();
+    if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
+      const remoteT = row.active_timer;
+      remoteT.__synced_at = row.updated_at;
+      localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+      document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
+    }
   }
 }

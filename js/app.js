@@ -24,8 +24,9 @@ import { loadFromSupabase } from './storage.js';
 import { getCurrentUser } from './sb.js';
 
 import {
-  load, save, wk, setWk,
+  load, save, wk, setWk, getAbsWk,
   loadCats, exportD, importD, updateExportLbl,
+  initRealtimeSync, flushPendingSyncs
 } from './storage.js';
 
 import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
@@ -269,6 +270,30 @@ function initListeners() {
     _renderOv(d); // Refresh overview to reflect the new stack items
   });
 
+  // Remote data changed via Supabase Realtime
+  document.addEventListener('wt:remote-change', (e) => {
+    console.log('[sync] Remote change detected:', e.detail.type);
+    
+    // If the change was for the current week, or was a global change (cats, habits),
+    // we should re-render the whole app.
+    if (e.detail.type === 'week' && e.detail.offset !== getAbsWk(wk)) {
+       // Change is for a different week, no need to re-render current view
+       return;
+    }
+    
+    renderAll();
+    
+    // Special case: if timer changed, we might need to restart/stop the timer tick
+    if (e.detail.type === 'timer') {
+      initTimerTick();
+    }
+  });
+
+  // Durable sync on exit (especially for Electron)
+  window.addEventListener('beforeunload', () => {
+    flushPendingSyncs();
+  });
+
   console.log('[initListeners] complete');
 }
 
@@ -292,6 +317,7 @@ async function handleAuthReady() {
   // Pull latest data from Supabase in the background, then re-render.
   try {
     await loadFromSupabase();
+    initRealtimeSync(); // Start listening for future changes
     renderAll();
   } catch (err) {
     console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
