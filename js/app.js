@@ -26,7 +26,7 @@ import { getCurrentUser } from './sb.js';
 import {
   load, save, wk, setWk, getAbsWk,
   loadCats, exportD, importD, updateExportLbl,
-  initRealtimeSync, flushPendingSyncs
+  initRealtimeSync, flushPendingSyncs, repairCategories
 } from './storage.js';
 
 import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
@@ -359,12 +359,16 @@ async function handleAuthReady() {
   initListeners();
   initUpdateListeners(); // Start listening for app updates
   initTimerTick(); // Resume timer if running
+  const recovered = repairCategories(); // Ensure all historical categories/missions are visible
+  if (recovered > 0) showToast(`Recovered ${recovered} areas from history.`, 'success');
   renderAll();
 
   // Pull latest data from Supabase in the background, then re-render.
   try {
     await loadFromSupabase();
-    initRealtimeSync(); // Start listening for future changes
+    initRealtimeSync(); 
+    const cloudRecovered = repairCategories();
+    if (cloudRecovered > 0) showToast(`Recovered ${cloudRecovered} areas from cloud.`, 'success');
     renderAll();
   } catch (err) {
     console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
