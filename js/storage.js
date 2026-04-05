@@ -575,7 +575,7 @@ export async function loadFromSupabase() {
 
     // Also check profiles for the absolute latest global timer
     try {
-      const { data: prof } = await sb.from('profiles').select('active_timer, updated_at').eq('id', user.id).single();
+      const { data: prof } = await sb.from('profiles').select('active_timer, updated_at').eq('id', user.id).maybeSingle();
       if (prof && prof.active_timer) {
         const localT = loadTimer();
         if (!localT || (prof.updated_at && new Date(prof.updated_at) > new Date(localT.__synced_at || 0))) {
@@ -629,7 +629,7 @@ export async function loadFromSupabase() {
         .from('cat_archive')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       if (arch && arch.archive) {
         localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
       }
