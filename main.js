@@ -1,6 +1,12 @@
-// Extract APIs
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+// Force-clear any stray flags that force Electron into "Node Mode"
+delete process.env.ELECTRON_RUN_AS_NODE;
+
+// Resilient import of Electron APIs
+const electron = require('electron');
 const path = require('path');
+
+// Extract APIs (handle case where require('electron') might return a string in Node mode)
+const { app, BrowserWindow, shell, ipcMain } = typeof electron === 'object' ? electron : require('electron');
 
 // ── Application State ──────────────────────────────────────────────────────
 let mainWindow;
@@ -21,7 +27,7 @@ function registerIpcHandlers() {
 
     // Auto-update IPC
     ipcMain.handle('restart-app', () => {
-      autoUpdater.quitAndInstall();
+      if (autoUpdater) autoUpdater.quitAndInstall();
     });
   }
 }
@@ -126,11 +132,22 @@ async function initializeApp() {
   await app.whenReady();
   
   registerIpcHandlers();
-  createWindow();
-  setupAutoUpdater();
 
-  // Trigger initial check
-  autoUpdater.checkForUpdatesAndNotify();
+  // Initialize auto-updater only if packaged
+  if (app.isPackaged) {
+    try {
+      const { autoUpdater: updater } = require('electron-updater');
+      autoUpdater = updater;
+      autoUpdater.logger = console;
+      autoUpdater.autoDownload = true;
+      setupAutoUpdater();
+      autoUpdater.checkForUpdatesAndNotify();
+    } catch (e) {
+      console.warn('[updater] Failed to initialize:', e.message);
+    }
+  }
+
+  createWindow();
 
   // 5. Post-Load Logic
   mainWindow.webContents.on('did-finish-load', () => {
