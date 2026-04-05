@@ -10,6 +10,8 @@ import {
   loadCatArchive, saveCatArchive,
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
+import { syncCustomSelect } from './custom-select.js';
+
 
 // Currently selected colour for new categories
 let selCatColor = '#2563a8';
@@ -166,7 +168,14 @@ export function populateCatSelect() {
     sel.innerHTML = options;
     if (oldVal && cats.find(c => c.name === oldVal)) sel.value = oldVal;
   });
+
+  // Sync custom dropdowns
+  if (fCat) syncCustomSelect(fCat);
+  if (stCat) syncCustomSelect(stCat);
+  backlogSelects.forEach(sel => syncCustomSelect(sel));
 }
+
+
 
 // ── Inline colour picker popover ─────────────────────────────────────────────
 let _catColorPopover = null;

@@ -43,6 +43,7 @@ import { initBacklog, renderBacklog } from './backlog.js';
 
 import { initTimerTick, togglePauseTimer } from './timer.js';
 import { showToast } from './toast.js';
+import { initAllCustomSelects } from './custom-select.js';
 
 // ── Week label ────────────────────────────────────────────────────────────────
 function wkLabel() {
@@ -361,6 +362,7 @@ async function handleAuthReady() {
   initTimerTick(); // Resume timer if running
   const recovered = repairCategories(); // Ensure all historical categories/missions are visible
   if (recovered > 0) showToast(`Recovered ${recovered} areas from history.`, 'success');
+  initAllCustomSelects(); // Transform native selects into premium dropdowns
   renderAll();
 
   // Pull latest data from Supabase in the background, then re-render.
