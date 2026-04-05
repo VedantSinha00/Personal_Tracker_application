@@ -119,10 +119,11 @@ function updateOtherTimerDisplays(t, timeStr) {
   // 1. Overview Tab
   const ovContainer = document.getElementById('ovTimerContainer');
   if (ovContainer) {
-    const stateMatch = ovContainer.dataset.cat === t.cat && ovContainer.dataset.paused === t.isPaused.toString();
+    const isPausedStr = (t.isPaused ?? false).toString();
+    const stateMatch = ovContainer.dataset.cat === t.cat && ovContainer.dataset.paused === isPausedStr;
     if (!ovContainer.innerHTML || !stateMatch) {
       ovContainer.dataset.cat = t.cat;
-      ovContainer.dataset.paused = t.isPaused.toString();
+      ovContainer.dataset.paused = isPausedStr;
       ovContainer.innerHTML = renderActiveTimerCard(t, timeStr);
     } else {
       const clock = ovContainer.querySelector('.active-timer-clock');
@@ -135,10 +136,11 @@ function updateOtherTimerDisplays(t, timeStr) {
   const ti = today === 0 ? 6 : today - 1;
   const dayTimers = document.querySelectorAll(`.day-timer-target[data-day="${ti}"]`);
   dayTimers.forEach(dt => {
-    const stateMatch = dt.dataset.cat === t.cat && dt.dataset.paused === t.isPaused.toString();
+    const isPausedStr = (t.isPaused ?? false).toString();
+    const stateMatch = dt.dataset.cat === t.cat && dt.dataset.paused === isPausedStr;
     if (!dt.innerHTML || !stateMatch) {
       dt.dataset.cat = t.cat;
-      dt.dataset.paused = t.isPaused.toString();
+      dt.dataset.paused = isPausedStr;
       dt.innerHTML = renderActiveTimerCard(t, timeStr, true);
     } else {
       const clock = dt.querySelector('.active-timer-clock');
