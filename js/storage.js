@@ -392,12 +392,11 @@ async function _perfSyncWeek(offset, d) {
       updated_at:  now,
     };
     const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
-    if (error && error.message && error.message.includes('todos')) {
-      delete payload.todos;
-      await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
-      console.warn('[sync] Missing todos column. Tasks saved locally.');
-    } else if (error) {
+    if (error) {
       console.warn('[sync] weekly_data failed:', error.message);
+      // If the error is about a missing 'todos' column, we don't 'delete' 
+      // and re-try because that creates a cloud record with empty tasks, 
+      // which could later overwrite local data.
     }
   } catch(err) {
     console.warn('[sync] weekly_data failed:', err.message);
@@ -424,11 +423,7 @@ async function _syncWeekFocusOrder(offset) {
       updated_at:  new Date().toISOString(),
     };
     const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id,week_offset' });
-    if (error && error.message && error.message.includes('todos')) {
-      delete payload.todos;
-      await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id,week_offset' });
-      console.warn('[sync] Missing todos column. Tasks saved locally.');
-    } else if (error) {
+    if (error) {
       console.warn('[sync] weekly_data (focus/order) failed:', error.message);
     }
   } catch(err) {
@@ -547,7 +542,8 @@ export async function loadFromSupabase() {
           const d = {
             intention:   row.intention  || '',
             stack:       row.stack      || {},
-            todos:       row.todos      !== undefined ? row.todos : (oldD.todos || {}),
+            // DEFENSIVE: Never overwrite local tasks with null/undefined from cloud
+            todos:       (row.todos && Object.keys(row.todos).length > 0) ? row.todos : (oldD.todos || {}),
             days:        row.days       || [],
             review:      row.review     || {},
             __updated_at: row.updated_at,
@@ -698,7 +694,8 @@ function handleRemoteWeekChange(row) {
     const d = {
       intention:   row.intention  || '',
       stack:       row.stack      || {},
-      todos:       row.todos      !== undefined ? row.todos : (localD?.todos || {}),
+      // DEFENSIVE: Preserve local tasks on realtime update if remote is empty
+      todos:       (row.todos && Object.keys(row.todos).length > 0) ? row.todos : (localD?.todos || {}),
       days:        row.days       || [],
       review:      row.review     || {},
       __updated_at: row.updated_at,
