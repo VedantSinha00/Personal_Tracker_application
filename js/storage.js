@@ -561,10 +561,9 @@ export async function loadFromSupabase() {
           // Restore timer if found and more recent
           if (row.active_timer) {
             const localT = loadTimer();
-            // Simple heuristic: if row is newer than local timer synced_at (if any)
             if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
               const remoteT = row.active_timer;
-              if (remoteT) {
+              if (remoteT && remoteT.cat) { // Ensure it's a real timer
                 remoteT.__synced_at = row.updated_at;
                 localStorage.setItem('wt_timer', JSON.stringify(remoteT));
               }
