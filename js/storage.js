@@ -237,13 +237,38 @@ export function loadTimer() {
 export function saveTimer(t) {
   if (t === null) localStorage.removeItem('wt_timer');
   else localStorage.setItem('wt_timer', JSON.stringify(t));
+  
+  // Sync to Supabase in background
+  const user = getCurrentUser();
+  if (user && user.id !== 'dev-user-local') {
+    if (_syncQueue['timer']) clearTimeout(_syncQueue['timer']);
+    _syncQueue['timer'] = setTimeout(() => _syncTimer(t), 1000);
+  }
 }
 
-// ── User cache helpers ───────────────────────────────────────────────────────
+async function _syncTimer(t) {
+  const user = getCurrentUser();
+  if (!user) return;
+  try {
+    // Attempt to store in profiles table first (global user metadata)
+    const { error } = await sb.from('profiles').upsert({
+      id: user.id,
+      active_timer: t,
+      updated_at: new Date().toISOString()
+    });
+    // If it fails (e.g. column missing), fallback will happen via _syncWeek naturally 
+    // because _syncWeek now includes the timer in its payload.
+    if (error) console.warn('[sync] timer to profiles failed:', error.message);
+  } catch(err) {
+    console.warn('[sync] timer failed:', err.message);
+  }
+}
+
 // Wipes all app data from localStorage for the current browser, but keeps the
-// theme preference so it survives sign-out / user switching.
+// theme preference and active timer so they survive sign-out / user switching.
 export function clearUserCache() {
   const theme = localStorage.getItem('wt_theme');
+  const timer = localStorage.getItem('wt_timer');
   const keysToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -251,6 +276,7 @@ export function clearUserCache() {
   }
   keysToRemove.forEach(k => localStorage.removeItem(k));
   if (theme) localStorage.setItem('wt_theme', theme);
+  if (timer) localStorage.setItem('wt_timer', timer);
 }
 
 // ── Export / Import ───────────────────────────────────────────────────────────
@@ -334,6 +360,7 @@ async function _syncWeek(offset, d) {
       review:      d.review      || {},
       focus,
       item_order:  itemOrder     || [],
+      active_timer: loadTimer(), // Include timer in every week sync as backup
       updated_at:  now,
     };
     const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
@@ -502,9 +529,35 @@ export async function loadFromSupabase() {
             localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
           if (row.item_order && row.item_order.length > 0)
             localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
+          
+          // Restore timer if found and more recent
+          if (row.active_timer) {
+            const localT = loadTimer();
+            // Simple heuristic: if row is newer than local timer synced_at (if any)
+            if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
+              const remoteT = row.active_timer;
+              if (remoteT) {
+                remoteT.__synced_at = row.updated_at;
+                localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+              }
+            }
+          }
         }
       });
     }
+
+    // Also check profiles for the absolute latest global timer
+    try {
+      const { data: prof } = await sb.from('profiles').select('active_timer, updated_at').eq('id', user.id).single();
+      if (prof && prof.active_timer) {
+        const localT = loadTimer();
+        if (!localT || (prof.updated_at && new Date(prof.updated_at) > new Date(localT.__synced_at || 0))) {
+          const remoteT = prof.active_timer;
+          remoteT.__synced_at = prof.updated_at;
+          localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+        }
+      }
+    } catch(e) { console.warn('[load] global timer skip:', e.message); }
 
     // Categories
     const { data: cats } = await sb

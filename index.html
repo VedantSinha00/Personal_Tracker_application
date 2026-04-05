@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Personal Tracker</title>
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1916'/%3E%3Ccircle cx='8' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='24' cy='13' r='3' fill='%234a9e72'/%3E%3Ccircle cx='8' cy='21' r='3' fill='%234a9e72'/%3E%3Ccircle cx='16' cy='21' r='3' fill='%232b2924'/%3E%3Ccircle cx='24' cy='21' r='3' fill='%232b2924'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
@@ -150,20 +149,20 @@
     </div>
   </div>
 
-    </div>
-  </div>
-
   <div id="dragInsertLine"></div>
   <div class="app" id="appShell" style="display:none;">
 
     <!-- ── Header ─────────────────────────────────────────────────────── -->
-    <div class="header">
-      <div style="display: flex; flex-direction: column; gap: 2px;">
-        <h1 id="wkCurrentDay" style="font-size: 24px; line-height: 1.1; margin: 0; font-weight: 600; color: var(--text);"></h1>
-        <div class="week-nav" style="border:none; padding:0; background:transparent; justify-content: flex-start; gap: 6px; align-items: center;">
-          <button class="nav-btn" data-dir="-1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">←</button>
-          <p id="wkLbl" title="Click to reset to current week" style="cursor:pointer; font-size: 13px; color: var(--text3); font-weight: 500; margin: 0; letter-spacing: 0.2px;">—</p>
-          <button class="nav-btn" data-dir="1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">→</button>
+    <div class="header" id="mainHeader">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <img src="assets/logo.svg" width="20" height="20" alt="logo" style="margin-top: -4px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <h1 id="wkCurrentDay" style="font-size: 24px; line-height: 1.1; margin: 0; font-weight: 600; color: var(--text);"></h1>
+          <div class="week-nav" style="border:none; padding:0; background:transparent; justify-content: flex-start; gap: 6px; align-items: center;">
+            <button class="nav-btn" data-dir="-1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">←</button>
+            <p id="wkLbl" title="Click to reset to current week" style="cursor:pointer; font-size: 13px; color: var(--text3); font-weight: 500; margin: 0; letter-spacing: 0.2px;">—</p>
+            <button class="nav-btn" data-dir="1" style="background:transparent; border:1px solid var(--border); height:22px; width:22px; font-size: 10px; opacity: 0.7;">→</button>
+          </div>
         </div>
       </div>
       <div class="header-actions">
@@ -548,10 +547,10 @@
     </div>
   </div>
 
-  <script type="module" src="js/auth.js?v=phase2_v2"></script>
-  <script type="module" src="js/account.js?v=phase2_v2"></script>
-  <script type="module" src="js/toast.js?v=v2"></script>
-  <script type="module" src="js/app.js?v=phase2_v2"></script>
-  <script type="module" src="js/backlog.js?v=v2"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/account.js"></script>
+  <script type="module" src="js/toast.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/backlog.js"></script>
 </body>
 </html>

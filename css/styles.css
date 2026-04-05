@@ -1,3 +1,29 @@
+/* ── Electron Specific Styles ────────────────────────────────────────── */
+.electron-title-bar {
+  display: none;
+}
+
+body.is-electron {
+  padding-top: 0;
+}
+
+.title-bar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #7b7b7b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Ensure interactive elements aren't draggable */
+button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .clickable {
+  -webkit-app-region: no-drag;
+}
+
 :root {
       /* Base Colors - Light Theme (Soft off-white/warm neutral) */
       --bg: #F7F7F8;
@@ -118,7 +144,11 @@
     .app {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem 1.5rem;
+      padding: 2rem 1.5rem 2rem 1.5rem; /* Restore top padding for regular view */
+    }
+
+    body.is-electron .app {
+      padding-top: 0; /* Remove top padding in Electron (handled by header) */
     }
 
     .header {
@@ -126,6 +156,11 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.5rem;
+      -webkit-app-region: drag;
+    }
+
+    body.is-electron .header {
+      padding: 32px 140px 0px 0; /* Clear controls and top edge */
     }
 
     .header h1 {

@@ -15,12 +15,20 @@ import { sb, getCurrentUser as _getU, setCurrentUser } from './sb.js';
 export { sb };
 export function getCurrentUser() { return _getU(); }
 
+// ── Electron Integration ──────────────────────────────────────────────────────
+const isElectron = !!(window.electronAPI && window.electronAPI.isElectron);
+if (isElectron) {
+  document.body.classList.add('is-electron');
+  console.log('[auth] Running in Electron environment');
+}
+
 // ── Local cache helper ────────────────────────────────────────────────────────
 // Inlined here (not imported from storage.js) to avoid a circular dependency:
 // storage.js already imports from auth.js, so auth.js cannot import storage.js.
 // Behaviour is identical to storage.clearUserCache().
 function _clearUserCache() {
   const theme = localStorage.getItem('wt_theme');
+  const timer = localStorage.getItem('wt_timer');
   const keysToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -28,6 +36,7 @@ function _clearUserCache() {
   }
   keysToRemove.forEach(k => localStorage.removeItem(k));
   if (theme) localStorage.setItem('wt_theme', theme);
+  if (timer) localStorage.setItem('wt_timer', timer);
 }
 
 // ── current user ──────────────────────────────────────────────────────────────
@@ -94,15 +103,27 @@ function hideBanner(id = 'authBanner') {
 
 // ── Google Login ──────────────────────────────────────────────────────────────
 async function handleGoogleLogin() {
-  const { error } = await sb.auth.signInWithOAuth({
+  const redirectTo = isElectron 
+    ? 'weekly-tracker://auth-callback' 
+    : window.location.origin + window.location.pathname;
+
+  const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + window.location.pathname
+      redirectTo: redirectTo,
+      skipBrowserRedirect: isElectron // Use system browser if in Electron
     }
   });
 
   if (error) {
     showBanner(`Login failed: ${error.message}`);
+    return;
+  }
+
+  // If in Electron, we got a URL back instead of redirecting the main window
+  if (isElectron && data?.url) {
+    console.log('[auth] Opening system browser for login...');
+    window.electronAPI.openExternal(data.url);
   }
 }
 
@@ -158,7 +179,50 @@ async function handleSignOut() {
   try {
     if (!sb) return; // Error already handled above
 
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocal = !isElectron && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    // Handle Electron Auth Callback
+    if (isElectron) {
+      window.electronAPI.onAuthCallback(async (urlStr) => {
+        console.log('[auth] Received deep link:', urlStr);
+        try {
+          const url = new URL(urlStr.replace(/^weekly-tracker:\/\/\/?/, 'http://localhost/'));
+          
+          // Fallback checking both hash fragment and query string
+          const hashParams = new URLSearchParams(url.hash.substring(1));
+          const searchParams = new URLSearchParams(url.search);
+          
+          const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+          const authCode = searchParams.get('code') || hashParams.get('code');
+          const errorDesc = hashParams.get('error_description') || searchParams.get('error_description') || hashParams.get('error') || searchParams.get('error');
+
+          if (errorDesc) {
+            showBanner(`Auth Error: ${errorDesc.replace(/\+/g, ' ')}`);
+            return;
+          }
+
+          if (accessToken && refreshToken) {
+            const { error } = await sb.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            if (error) throw error;
+            console.log('[auth] Session resumed from deep link tokens');
+          } else if (authCode) {
+            // Some configurations of Supabase use PKCE flow
+            const { error } = await sb.auth.exchangeCodeForSession(authCode);
+            if (error) throw error;
+            console.log('[auth] Session resumed from deep link code');
+          } else {
+            console.warn('[auth] No auth data found in URL. Parsed URL:', url.toString());
+          }
+        } catch (err) {
+          console.error('[auth] Callback handling failed:', err);
+          showBanner('External login failed to sync. Please try again.');
+        }
+      });
+    }
 
     // Wire up buttons
     document.getElementById('googleLoginBtn').addEventListener('click', () => {
@@ -265,6 +329,9 @@ async function handleSignOut() {
             showApp();
             document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
           }
+        } else {
+          showApp();
+          document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
         }
       }
     });

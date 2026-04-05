@@ -1,0 +1,44 @@
+{
+  "name": "weekly-tracker",
+  "version": "1.0.0",
+  "description": "Weekly Tracker Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "npx electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.vedant.weeklytracker",
+    "productName": "Personal Tracker",
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "assets/logo.ico",
+    "files": [
+      "**/*",
+      "!dist/*"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Personal Tracker"
+    },
+    "protocols": {
+      "name": "weekly-tracker",
+      "schemes": [
+        "weekly-tracker"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.1.1",
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2",
+    "jimp": "^0.22.12"
+  }
+}
