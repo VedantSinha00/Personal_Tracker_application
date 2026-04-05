@@ -228,6 +228,63 @@ export function saveCatArchive(arch) {
   _syncQueue['cat_archive'] = setTimeout(() => _syncCatArchive(arch), 1500);
 }
 
+// ── Repair Categories ─────────────────────────────────────────────────────────
+// Scans historical data and ensures all used categories are in the active list.
+export function repairCategories() {
+  const cats = loadCats();
+  const catNames = new Set(cats.map(c => c.name.toLowerCase()));
+  const discovered = new Set();
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('wt_wk_')) {
+      try {
+        const d = JSON.parse(localStorage.getItem(k));
+        if (d.days) {
+          d.days.forEach(day => {
+            if (day.blocks) day.blocks.forEach(b => { if (b.category) discovered.add(b.category); });
+          });
+        }
+        if (d.todos) Object.keys(d.todos).forEach(cat => discovered.add(cat));
+        if (d.stack) Object.keys(d.stack).forEach(cat => discovered.add(cat));
+      } catch(e) {}
+    }
+  }
+
+  // 3. Scan Backlog
+  try {
+    const bData = JSON.parse(localStorage.getItem('wt_backlog'));
+    if (bData && bData.items) {
+      bData.items.forEach(it => { if (it.category) discovered.add(it.category); });
+    }
+  } catch(e) {}
+
+  let added = 0;
+  discovered.forEach(name => {
+    const clean = name.trim();
+    if (!clean) return;
+    
+    const existing = cats.find(c => c.name.toLowerCase() === clean.toLowerCase());
+    if (existing) {
+      if (existing.hidden) {
+        existing.hidden = false;
+        added++;
+      }
+    } else {
+      cats.push({ name: clean, color: '#2563a8', hidden: false });
+      added++;
+    }
+  });
+
+  if (added > 0) {
+    saveCats(cats);
+    console.log(`[repair] Recovered ${added} categories from historical logs.`);
+    document.dispatchEvent(new CustomEvent('wt:cats-changed'));
+  }
+  return added;
+}
+
+
 // ── Backlog ───────────────────────────────────────────────────────────────────
 export function loadBacklog() {
   try {
@@ -599,11 +656,15 @@ export async function loadFromSupabase() {
         color: c.color,
         hidden: !!hiddenMap[c.name]
       }));
-      if (mapped.length > 0) {
+      
+      // DEFENSIVE: Never overwrite local categories with a significantly smaller list 
+      // from cloud unless the cloud data is explicitly newer or the local list is empty/default.
+      if (mapped.length >= localCats.length || localCats.length <= 6) {
         localStorage.setItem('wt_categories', JSON.stringify(mapped));
         document.dispatchEvent(new CustomEvent('wt:cats-changed'));
       }
     }
+
 
     // Habits
     const { data: habits } = await sb
@@ -704,6 +765,8 @@ function handleRemoteWeekChange(row) {
     if (row.focus) localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
     if (row.item_order) localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
     
+    // Trigger repair after remote week change to ensure categories list stays in sync
+    repairCategories();
     document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'week', offset: row.week_offset } }));
   }
 }
@@ -722,6 +785,9 @@ async function handleRemoteCatsChange() {
       hidden: !!hiddenMap[c.name]
     }));
     localStorage.setItem('wt_categories', JSON.stringify(mapped));
+    
+    // Trigger repair after remote change to catch any orphaned data
+    repairCategories();
     document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'categories' } }));
   }
 }
