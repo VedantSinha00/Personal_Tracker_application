@@ -94,13 +94,22 @@ function migrateData(d) {
 const _syncQueue = {};
 
 export function save(d) {
+  // If no data passed (e.g. from a manual console sync), load the current week's local data
+  if (!d) {
+    d = loadWeek();
+    if (!d) {
+      console.warn('[save] No data found to save.');
+      return;
+    }
+  }
+
   d.__updated_at = new Date().toISOString();
   localStorage.setItem(wkKey(), JSON.stringify(d));
   
   const absWk = getAbsWk(wk);
   if (_syncQueue['week_' + absWk]) clearTimeout(_syncQueue['week_' + absWk]);
   _syncQueue['week_' + absWk] = setTimeout(() => {
-    _syncWeek(absWk, d); // fire-and-forget background sync
+    _perfSyncWeek(absWk, d); 
   }, 1500);
 }
 
@@ -152,7 +161,7 @@ export function flushPendingSyncs() {
   // Re-run the critical syncs immediately
   const absWk = getAbsWk(wk);
   const d = load(); 
-  _syncWeek(absWk, d);
+  _perfSyncWeek(absWk, d);
   _syncCategories(loadCats());
   _syncHabits(loadHabits());
   _syncBacklog(loadBacklog());
@@ -361,7 +370,7 @@ export function loadFocusKey() { return 'wt_focus_'; }
 // All async, all fire-and-forget. Errors are logged but never surface to
 // the user — the localStorage cache is always the source of truth locally.
 
-async function _syncWeek(offset, d) {
+async function _perfSyncWeek(offset, d) {
   const user = getCurrentUser();
   if (!user) return;
   // Use the exact timestamp generated when save() mapped it to localStorage

@@ -17,5 +17,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /**
    * Check if we are running in Electron.
    */
-  isElectron: true
+  isElectron: true,
+
+  /**
+   * Auto-update events and actions
+   */
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (_event, info) => callback(info));
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', (_event, info) => callback(info));
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (_event, message) => callback(message));
+  },
+  restartAndInstall: () => ipcRenderer.invoke('restart-app')
 });
