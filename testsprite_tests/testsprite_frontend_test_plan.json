@@ -1,0 +1,992 @@
+[
+  {
+    "id": "TC001",
+    "title": "Start and stop a focused activity timer and log a time block to today",
+    "description": "This test verifies a user can start a timer from the Weekly Log, stop it, and see a new time block added to today with updated day/weekly totals.",
+    "category": "Weekly Log (Daily Log)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Log view"
+      },
+      {
+        "type": "action",
+        "description": "Start a focused activity timer for a new activity"
+      },
+      {
+        "type": "action",
+        "description": "Wait for elapsed time to increment"
+      },
+      {
+        "type": "action",
+        "description": "Stop the active timer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new time block is displayed in today’s timeline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify today’s total time and the weekly total time are updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Stop a timer and save the stopped session to today's log",
+    "description": "This test verifies a user can stop a running timer and the completed session is saved into today’s log as a time block.",
+    "category": "Timer / Stopwatch",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Start a timer for a current task"
+      },
+      {
+        "type": "action",
+        "description": "Wait for elapsed time to increment"
+      },
+      {
+        "type": "action",
+        "description": "Stop the active timer"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Log view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the stopped session is saved and displayed in today’s timeline"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Timer shows an active session indicator and elapsed time increments while running",
+    "description": "This test verifies starting a timer displays an active-session state and the elapsed duration increases until stopped.",
+    "category": "Timer / Stopwatch",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Start a timer for a current task"
+      },
+      {
+        "type": "action",
+        "description": "Wait for elapsed time to increment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an active-session indicator is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify elapsed time is increasing while the timer runs"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Cloud Sync can pull a newer cloud week onto a second device",
+    "description": "Verifies that after updating the week on one device, opening the app on a second device updates its local week to match the newer cloud state and shows synced.",
+    "category": "Cloud Sync",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app on the first device"
+      },
+      {
+        "type": "action",
+        "description": "Make a change to weekly data via the UI"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the sync status indicator to show the week is synced"
+      },
+      {
+        "type": "action",
+        "description": "Open the app on the second device"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the app to finish initial loading"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the second device reflects the updated week from the cloud"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator shows the week is synced"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Cloud Sync status indicates syncing then synced after a local change",
+    "description": "Verifies that making a weekly data change updates the UI immediately and the sync status indicator transitions through syncing to synced.",
+    "category": "Cloud Sync",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Make a change to weekly data via the UI (for example, create a task, stop a timer, or update a habit)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the local state reflects the change immediately"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator shows the week becomes synced after syncing"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Manually create a time block and see it reflected in the timeline and weekly summary",
+    "description": "This test verifies a user can manually create a time block in the Weekly Log and the saved entry appears in the day timeline and weekly summary totals.",
+    "category": "Weekly Log (Daily Log)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Log view"
+      },
+      {
+        "type": "action",
+        "description": "Initiate manual creation of a time block entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill a short activity title into the activity field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid start time"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end time"
+      },
+      {
+        "type": "action",
+        "description": "Save the time block entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new time block is displayed in the selected day’s timeline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the weekly summary totals reflect the added time"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Create a backlog item and move it into the current week's agenda",
+    "description": "This test verifies a user can create a backlog task and move it into the Weekly Agenda where it appears in the weekly plan.",
+    "category": "Backlog & Agenda",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Backlog view"
+      },
+      {
+        "type": "action",
+        "description": "Initiate creation of a new backlog item"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Backlog task A\" into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the backlog item"
+      },
+      {
+        "type": "action",
+        "description": "Move \"Backlog task A\" into the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Agenda view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify \"Backlog task A\" is displayed in the current week’s plan"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Mark today’s habit complete and see weekly progress update",
+    "description": "Verifies marking a habit complete for today updates its weekly progress in the weekly view and summaries.",
+    "category": "Habits",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Habits"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new habit"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Stretch\" into the habit name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"3\" into the weekly target field"
+      },
+      {
+        "type": "action",
+        "description": "Save the habit"
+      },
+      {
+        "type": "action",
+        "description": "Open Habits for today"
+      },
+      {
+        "type": "action",
+        "description": "Mark the habit as complete for today"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit’s weekly progress indicator increases"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit summaries reflect the updated completion count"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Cloud Sync startup indicates a cloud check and reaches synced state",
+    "description": "Verifies that on app launch the sync indicator reflects a background cloud check and then shows the week as synced.",
+    "category": "Cloud Sync",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the app to finish initial loading"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator reflects a sync check and then shows the week is synced"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Create a category that can be selected when tagging items",
+    "description": "Verifies a user can create a new color-coded category and it appears in the category list and is available for selection when tagging an item.",
+    "category": "Categories",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Categories management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new category"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Focus\" into the category name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a color for the category"
+      },
+      {
+        "type": "action",
+        "description": "Save the category"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new category appears in the category list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the category is selectable when choosing a category tag on an item"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Create and save a daily journal entry",
+    "description": "Verifies a user can create a daily journal entry and it appears in the day’s review and contributes to the weekly review.",
+    "category": "Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Journal"
+      },
+      {
+        "type": "action",
+        "description": "Start a new daily entry for today"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Today I worked on my weekly plan.\" into the journal text area"
+      },
+      {
+        "type": "action",
+        "description": "Save the entry"
+      },
+      {
+        "type": "action",
+        "description": "Open today’s journal review view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the saved entry content is visible in today’s review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the weekly review indicates an entry exists for today"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Cloud Sync persists local-first changes across an app restart",
+    "description": "Verifies that a weekly change made locally is still present after restarting the app and the sync status returns to synced afterward.",
+    "category": "Cloud Sync",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Make a change to weekly data via the UI"
+      },
+      {
+        "type": "action",
+        "description": "Close the app"
+      },
+      {
+        "type": "action",
+        "description": "Reopen the app"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the previously made change is still present in the weekly view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator shows the week becomes synced after startup syncing completes"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Create a habit with a weekly target",
+    "description": "Verifies a user can create a custom habit with a weekly target and it appears in the habits list with the target displayed.",
+    "category": "Habits",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Habits"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new habit"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Drink Water\" into the habit name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"5\" into the weekly target field"
+      },
+      {
+        "type": "action",
+        "description": "Save the habit"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new habit appears in the habits list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit shows a weekly target value"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Edit an existing time block and see the updated block in the timeline",
+    "description": "This test verifies a user can edit a previously created time block and the updated entry is shown in the day timeline and affects totals.",
+    "category": "Weekly Log (Daily Log)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Log view"
+      },
+      {
+        "type": "action",
+        "description": "Initiate manual creation of a time block entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill a short activity title into the activity field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid start time"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end time"
+      },
+      {
+        "type": "action",
+        "description": "Save the time block entry"
+      },
+      {
+        "type": "action",
+        "description": "Open the newly created time block for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the end time to a different valid end time"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the time block shown in the day timeline reflects the updated duration"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the day or weekly total time is recalculated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Insights week selection shows charts and summaries for the chosen period",
+    "description": "Verifies the user can open Insights, select a different week/date range, and see the charts and weekly summaries update to reflect that period.",
+    "category": "Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Open Insights"
+      },
+      {
+        "type": "action",
+        "description": "Select a different week or date range for review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify charts for time by category, habit trends, and weekly totals are displayed for the selected period"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Create a categorized backlog item and keep its category when moved to the weekly plan",
+    "description": "This test verifies a user can assign a category to a backlog item and the category is shown when the item is moved into the Weekly Agenda.",
+    "category": "Backlog & Agenda",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Backlog view"
+      },
+      {
+        "type": "action",
+        "description": "Initiate creation of a new backlog item"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Backlog task with category\" into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a category for the backlog item"
+      },
+      {
+        "type": "action",
+        "description": "Save the backlog item"
+      },
+      {
+        "type": "action",
+        "description": "Move \"Backlog task with category\" into the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Agenda view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the moved item is displayed in the weekly plan with its category indicated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Browse weekly journal review organized by day",
+    "description": "Verifies weekly journal review can be opened and entries are grouped by day for quick browsing.",
+    "category": "Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Journal"
+      },
+      {
+        "type": "action",
+        "description": "Start a new daily entry for today"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Entry for weekly review grouping.\" into the journal text area"
+      },
+      {
+        "type": "action",
+        "description": "Save the entry"
+      },
+      {
+        "type": "action",
+        "description": "Open the weekly journal review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the weekly review displays sections grouped by day"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify today’s day section shows at least one entry"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Cloud Sync shows queued state when multiple changes are made quickly",
+    "description": "Verifies that making several rapid weekly changes results in the sync indicator showing a non-idle syncing/queued state and then returning to synced after completion.",
+    "category": "Cloud Sync",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Make a change to weekly data via the UI"
+      },
+      {
+        "type": "action",
+        "description": "Make another change to weekly data via the UI"
+      },
+      {
+        "type": "action",
+        "description": "Make a third change to weekly data via the UI"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator shows an active syncing or queued state at some point during the sequence"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sync status indicator returns to synced after background syncing completes"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Insights chart filter toggles recompute the displayed results",
+    "description": "Verifies the user can toggle a chart filter/overlay and the charts update to reflect the filter selection.",
+    "category": "Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Open Insights"
+      },
+      {
+        "type": "action",
+        "description": "Toggle a chart filter or overlay option"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the charts update to reflect the selected filter state"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Insights responds to local weekly changes after returning to Insights",
+    "description": "Verifies that after making a change to weekly data elsewhere, returning to Insights reflects the updated underlying weekly data.",
+    "category": "Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Open Insights"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to a different app section"
+      },
+      {
+        "type": "action",
+        "description": "Make a small change to weekly data via the UI (for example, create a simple entry that affects weekly totals)"
+      },
+      {
+        "type": "action",
+        "description": "Return to Insights"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the charts or weekly totals reflect the change"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Insights remains consistent after navigating away and returning",
+    "description": "Verifies the selected week/date range and resulting charts remain consistent when the user leaves Insights and comes back.",
+    "category": "Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Open Insights"
+      },
+      {
+        "type": "action",
+        "description": "Select a different week or date range for review"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to a different app section"
+      },
+      {
+        "type": "action",
+        "description": "Return to Insights"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the charts and summaries still reflect the previously selected period"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC022",
+    "title": "Prevent starting a second timer while one is active",
+    "description": "This test verifies the app blocks creating a second active timer and shows an in-app prompt to stop or replace the current timer.",
+    "category": "Timer / Stopwatch",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Start a timer for a current task"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to start a second timer while the first is still active"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an in-app prompt is displayed to stop or replace the existing active timer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only one timer session remains active"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC023",
+    "title": "Prevent saving a habit with an invalid weekly target",
+    "description": "Verifies the app blocks saving a habit when the weekly target is zero or non-numeric and shows a validation error.",
+    "category": "Habits",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Habits"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new habit"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Read\" into the habit name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"0\" into the weekly target field"
+      },
+      {
+        "type": "action",
+        "description": "Save the habit"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a weekly target validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit is not added to the habits list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC024",
+    "title": "Enforce category limit of five active tasks in Weekly Agenda",
+    "description": "This test verifies a user cannot add a sixth active task into the same Weekly Agenda category and sees a validation message preventing it.",
+    "category": "Backlog & Agenda",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app start view"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the Weekly Agenda view"
+      },
+      {
+        "type": "action",
+        "description": "Add a new task into a single category in the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Agenda task 1\" into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task"
+      },
+      {
+        "type": "action",
+        "description": "Add a new task into the same category in the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Agenda task 2\" into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task"
+      },
+      {
+        "type": "action",
+        "description": "Add a new task into the same category in the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Agenda task 3\" into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task"
+      },
+      {
+        "type": "action",
+        "description": "Add a new task into the same category in the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Agenda task 4\" into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task"
+      },
+      {
+        "type": "action",
+        "description": "Add a new task into the same category in the Weekly Agenda"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Agenda task 5\" into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to add a sixth active task into the same category"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation message is displayed preventing more than five active tasks in that category"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sixth task is not added to the category list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC025",
+    "title": "Prevent saving a category without a name",
+    "description": "Verifies creating a category without a name is blocked and a validation error is shown.",
+    "category": "Categories",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the app home screen"
+      },
+      {
+        "type": "action",
+        "description": "Click to open Categories management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new category"
+      },
+      {
+        "type": "action",
+        "description": "Leave the category name field empty"
+      },
+      {
+        "type": "action",
+        "description": "Select a color for the category"
+      },
+      {
+        "type": "action",
+        "description": "Save the category"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a category name validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the category is not added to the category list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC026",
+    "title": "Insights handles an empty week with a clear empty state",
+    "description": "Verifies Insights can render for a week with no tracked data and shows an appropriate empty state rather than broken charts.",
+    "category": "Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app"
+      },
+      {
+        "type": "action",
+        "description": "Open Insights"
+      },
+      {
+        "type": "action",
+        "description": "Select a week/date range that appears to have no tracked entries"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state is visible or charts show no data without UI breakage"
+      }
+    ],
+    "priority": "Low"
+  }
+]

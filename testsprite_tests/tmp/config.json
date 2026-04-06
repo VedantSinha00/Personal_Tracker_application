@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "Personal Tracker Application",
+    "projectPath": "c:\\Users\\vedan\\OneDrive\\Desktop\\College\\Personal Tracker Application",
+    "testIds": [],
+    "additionalInstruction": "Run the full suite of 26 tests (TC001-TC026) to re-verify every case since the user reported potential UI failures.",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-0qbt5iujPupxhUkseLbLA2UUfL_hlXVS_C6oIj1ZAFJaBEJBQkjhhD1MV1sWAfJXFJRLOSWa1wL8TW9mMlHpT-Z5QIoYCmxTkFfzlay7eElEUrfkmCN1i23DTuMNO9VTlMs"
+    }
+  },
+  "serverPort": 50173,
+  "proxy": "http://6f8033e7-830f-4163-8991-f76d2afd9ecd:7V0BQ67DgNlCv61EWw8Ds5A2BuXRbZpl@tun.testsprite.com:8080"
+}

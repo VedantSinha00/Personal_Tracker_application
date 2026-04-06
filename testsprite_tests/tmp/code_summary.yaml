@@ -1,0 +1,34 @@
+tech_stack:
+  core:
+    - HTML
+    - JavaScript (ESM)
+  styling:
+    - Vanilla CSS
+  framework:
+    - Electron (Desktop Wrapper)
+  backend:
+    - Supabase (Auth, Database)
+  dependencies:
+    - electron-updater
+    - jimp
+
+features:
+  - name: Weekly Log
+    description: Core tracking feature for tasks and events in a weekly grid.
+  - name: Insights
+    description: Productivity charts and habits data visualization.
+  - name: Journal
+    description: Daily and weekly journaling/review system.
+  - name: Categories
+    description: Organization system for tasks with color-coded labels.
+  - name: Habits
+    description: Tracking and visualizing recurring habits completion.
+  - name: Timer/Stopwatch
+    description: Integrated task duration tracking.
+  - name: Cloud Sync
+    description: Secure data synchronization using Supabase.
+  - name: Authentication
+    description: User authentication via Supabase and deep-link callbacks.
+
+project_type: frontend
+local_port: 3000
