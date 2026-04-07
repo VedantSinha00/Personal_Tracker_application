@@ -21,4 +21,4 @@ Use these semantic layers for all complex tasks:
 *Record major architectural changes here to maintain intent across chat resets*.
 
 - [Project Standards]: Added `CLAUDE.md` to enforce systematic workflow (Specify → Plan → Task → Implement) and deterministic code standards.
-- [Version Update]: Bumped version to 1.2.01 for new release and restored uncommitted local UI changes (CSS/JS tweaks).
+- [Version Update]: Bumped version to 1.2.2 for new release and fixed version metadata mismatch (standardized on SemVer).
