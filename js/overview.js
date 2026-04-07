@@ -16,7 +16,7 @@ export function renderOv(d) {
   const intention = d.intention || '';
   const intentionHTML = `
     <div class="lp-intention" style="background:var(--surface-elevated); padding:var(--space-4); border-radius:24px; box-shadow:var(--elevation-base); flex: 1;">
-      <div class="lp-intention-lbl" style="font-family:var(--font-heading); color:var(--text3); font-size:12px; margin-bottom:var(--space-2); letter-spacing:0.5px; font-weight:600;">THIS WEEK'S INTENTION</div>
+      <div class="lp-intention-lbl" style="font-family:var(--font-heading); color:var(--text3); font-size:12px; margin-bottom:var(--space-2); letter-spacing:0.02em; font-weight:500;">This week's intention</div>
       ${intention
         ? `<div class="lp-intention-text" style="font-size:24px; font-weight:600; color:var(--text); line-height:1.3;">${intention}</div>`
         : `<div class="lp-intention-empty" style="color:var(--text3); font-style:italic;">No intention set — go to Stack to write one</div>`}
@@ -52,7 +52,7 @@ export function renderOv(d) {
           <div style="display:flex;align-items:center;gap:6px;">
             <span class="lp-focus-badge"
               style="--badge-hex:${hex};--badge-text:${textCol};
-                     background:color-mix(in srgb,${hex} 40%,var(--badge-base,#fff));
+                     background:color-mix(in srgb,${hex} 55%,var(--badge-base,#fff));
                      color:${textCol};">${c.name}</span>
             ${items.length > 0 ? `<i data-lucide="chevron-down" class="todo-chevron" style="width:16px;height:16px;color:var(--text3);transition:transform 0.2s;"></i>` : ''}
           </div>
@@ -91,7 +91,7 @@ export function renderOv(d) {
   // ── Today's Log Card ──
   const dayCardHTML = `
     <div class="lp-section">
-      <div style="font-size:11px;color:var(--text3);font-family:var(--font-body);letter-spacing:0.4px;margin-bottom:12px;font-weight:600;">TODAY'S LOG</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--font-body);letter-spacing:0.02em;margin-bottom:12px;font-weight:500;">Today's log</div>
       <div class="ov-day-wrap" style="width:100%;">
         ${renderDayCard(ti, todayDay, ti, loadHabits())}
       </div>
@@ -101,7 +101,7 @@ export function renderOv(d) {
   const allH = allHabits();
   const streaksHTML = `
     <div class="lp-section">
-      <div class="lp-section-hdr">THIS WEEK STREAKS</div>
+      <div class="lp-section-hdr">This week</div>
       <div class="lp-streaks">
         ${allH.map(h => {
           const count = d.days.filter(day => day.habits && day.habits[h.id]).length;

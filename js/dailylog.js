@@ -101,7 +101,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
       ${day.fullRest ? '' : `
         <div class="day-actions">
           <button class="add-btn" style="flex:1;"
-            data-action="open-block" data-day="${dayOffset}" data-block="new">+ log block</button>
+            data-action="open-block" data-day="${dayOffset}" data-block="new">Add entry +</button>
           ${dayOffset === ti ? `<button class="add-btn" style="flex:1;border-color:var(--accent);color:var(--accent);"
             data-action="open-start-timer" data-day="${dayOffset}">+ start</button>` : ''}
         </div>
@@ -178,7 +178,7 @@ export function openM(di, bi) {
   populateCatSelect();
 
   document.getElementById('mTitle').textContent =
-    (editIdx !== null ? 'Edit block — ' : 'Log block — ') + FULL[editDay];
+    (editIdx !== null ? 'Edit entry — ' : 'New entry — ') + FULL[editDay];
   
   isLogFromTimer = false; // Reset by default
   hideModalError('fError');
