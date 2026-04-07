@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=phase2_v1">
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -208,8 +208,8 @@
       <div id="stackWeeklyView">
         <!-- 🎯 Hero Intention: Bold, centered, non-green -->
         <div class="intention-box predominant">
-          <div class="ilbl">THIS WEEK'S INTENTION</div>
-          <input class="iinput" id="intention" placeholder="What would make this week a win?">
+          <div class="ilbl">This week's intention</div>
+          <input class="iinput" id="intention" placeholder="What matters most this week?">
         </div>
 
         <!-- 🛠️ Action Row: Quick Add (Left) & Controls (Right) -->
@@ -261,27 +261,27 @@
     <div id="review" class="sec">
       <div class="rv-metrics-split" style="margin-bottom:3rem;">
         <div class="rv-habits-col">
-          <div class="rv-sec-lbl">HABIT ACHIEVEMENTS</div>
+          <div class="rv-sec-lbl">Habit achievements</div>
           <div id="rvHabitsList" class="rv-habits-list"></div>
         </div>
         <div class="rv-stats-col">
-          <div class="rv-sec-lbl">WEEKLY SUMMARY</div>
+          <div class="rv-sec-lbl">Weekly summary</div>
           <div id="rvCoreStats" class="rv-stats-grid"></div>
         </div>
       </div>
 
       <div class="rv-row-split">
         <div class="rv-card">
-          <div class="rv-lbl">WHAT WORKED</div>
+          <div class="rv-lbl">What worked</div>
           <textarea class="rv-ta" id="rvW" placeholder="Write here..."></textarea>
         </div>
         <div class="rv-card">
-          <div class="rv-lbl">WHAT DIDN'T</div>
+          <div class="rv-lbl">What didn't</div>
           <textarea class="rv-ta" id="rvD" placeholder="Write here..."></textarea>
         </div>
       </div>
       <div class="rv-card" style="margin-bottom:2rem;">
-        <div class="rv-lbl">ONE THING TO ADJUST</div>
+        <div class="rv-lbl">One thing to adjust</div>
         <textarea class="rv-ta" id="rvA" placeholder="Write here..."></textarea>
       </div>
     </div>
@@ -368,17 +368,17 @@
       <div class="modal-error" id="fError"></div>
       
       <div class="frow" id="intentRow">
-        <label class="flbl">WHAT DID YOU WORK ON?</label>
+        <label class="flbl">What did you work on?</label>
         <textarea id="fIntent" placeholder="e.g. Finish the login flow refactor" maxlength="300"></textarea>
         <div id="fIntentCount" style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px;">0 / 300</div>
       </div>
       <div class="frow">
-        <label class="flbl">CATEGORY / AREA</label>
+        <label class="flbl">Category / area</label>
         <select id="fCat" class="cat-select"></select>
       </div>
 
       <div class="frow">
-        <label class="flbl">TIME OF DAY</label>
+        <label class="flbl">Time of day</label>
         <div class="time-slots">
           <button class="time-slot" data-slot="early-morning">Early morning</button>
           <button class="time-slot" data-slot="morning">Morning</button>
@@ -390,7 +390,7 @@
       </div>
 
       <div class="frow">
-        <label class="flbl">DURATION</label>
+        <label class="flbl">Duration</label>
         <input type="text" id="fDur" placeholder="e.g. 45 min or 1h 30m">
         <div class="dur-chips">
           <button class="dur-chip" data-dur="30m">30m</button>
@@ -403,7 +403,7 @@
       </div>
 
       <div class="frow">
-        <label class="flbl">FOCUS QUALITY</label>
+        <label class="flbl">Focus quality</label>
         <div class="erow">
           <button class="eopt" data-energy="low">Low</button>
           <button class="eopt" data-energy="medium">Medium</button>
@@ -412,7 +412,7 @@
       </div>
 
       <div class="frow" id="linkedTasksRow" style="display:none;">
-        <label class="flbl">RELEVANT STACK TASKS</label>
+        <label class="flbl">Relevant tasks</label>
         <div id="fLinkedTasks" class="linked-tasks-list"></div>
         <div class="inline-add-task">
             <input type="text" id="fNewTask" placeholder="Add a new task to this area...">
@@ -421,7 +421,7 @@
 
 
       <div class="frow">
-        <label class="flbl">NOTES</label>
+        <label class="flbl">Notes</label>
         <textarea id="fNotes" placeholder="Any extra context?"></textarea>
       </div>
 
@@ -490,7 +490,7 @@
 
         <!-- ── Unified Start: Tasks (Notes moved to end) ── -->
         <div class="frow" id="stTasksRow" style="display:none;">
-          <label class="flbl">RELEVANT STACK TASKS</label>
+          <label class="flbl">Relevant tasks</label>
           <div id="stLinkedTasks" class="linked-tasks-list"></div>
         </div>
 
