@@ -22,3 +22,12 @@ Use these semantic layers for all complex tasks:
 
 - [Project Standards]: Added `CLAUDE.md` to enforce systematic workflow (Specify → Plan → Task → Implement) and deterministic code standards.
 - [Version Update]: Bumped version to 1.2.2 for new release and fixed version metadata mismatch (standardized on SemVer).
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
