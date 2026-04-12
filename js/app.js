@@ -26,7 +26,8 @@ import { getCurrentUser } from './sb.js';
 import {
   load, save, wk, setWk, getAbsWk,
   loadCats, exportD, importD, updateExportLbl,
-  initRealtimeSync, flushPendingSyncs, repairCategories
+  initRealtimeSync, flushPendingSyncs, repairCategories,
+  runStartupMigration,
 } from './storage.js';
 
 import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
@@ -35,13 +36,14 @@ import { renderOv as _renderOv, initOverviewListeners } from './overview.js';
 import { updM as _updM, renderReview as _renderReview,
          initReviewListeners } from './review.js';
 import { renderSt, saveStackInputs, updateCarryBtn,
-         initStackListeners } from './stack.js';
+         initStackListeners, carryForward } from './stack.js';
 import { openCatModal, closeCatModal, initCategoriesListeners } from './categories.js';
 import { openHabitsModal, closeHabitsModal, initHabitsListeners } from './habits.js';
 import { initInsights, renderInsights } from './insights.js';
 import { initBacklog, renderBacklog } from './backlog.js';
 
 import { initTimerTick, togglePauseTimer } from './timer.js';
+import { checkForWeekChange } from './weekState.js';
 import { showToast } from './toast.js';
 import { initAllCustomSelects } from './custom-select.js';
 
@@ -351,7 +353,11 @@ applyTheme();
 // ── Auth-ready handler ────────────────────────────────────────────────────────
 // Extracted as a named function so it can be called both from the event listener
 // AND directly when app.js loads after the event already fired (CDN race condition).
-let _appInited = false;
+let _appInited  = false;
+// Set to true only after the full startup data load (including loadFromSupabase)
+// and the first renderAll() have completed. Gates the wt:week-changed callback.
+let _dataLoaded = false;
+
 async function handleAuthReady() {
   if (_appInited) return;   // guard against double-init on fast networks
   _appInited = true;
@@ -379,6 +385,8 @@ async function handleAuthReady() {
     }
   }
   renderAll();
+  _dataLoaded = true; // data load + first render are both complete — gate is now open
+  checkForWeekChange(); // safe to dispatch wt:week-changed now that listener and data are ready
 }
 
 // Listen for the event — covers the login / re-login path.
@@ -387,6 +395,34 @@ document.addEventListener('wt:auth-ready', () => {
   _appInited = false;   // allow re-init on sign-out + re-login
   handleAuthReady();
 }, { once: false });
+
+// ── Week-change orchestration ─────────────────────────────────────────────────
+// weekState.js detects the calendar rollover and dispatches wt:week-changed on
+// window (at most once per genuine rollover). Registered here at module scope
+// so it is wired exactly once — never inside a function that can run again.
+window.addEventListener('wt:week-changed', () => {
+  // Change 1: guard against the event firing before the initial data load
+  // finishes. This can happen when _lastKnownWeek is null (first session) and
+  // checkForWeekChange() runs synchronously on weekState module load.
+  if (!_dataLoaded) {
+    console.warn('[wt:week-changed] Fired before data load completed — ignoring to prevent race condition.');
+    return;
+  }
+
+  updateWkLabel();
+  renderAll();
+
+  // Change 3: run migration before triggering carry-forward. If migration
+  // throws, log and bail — do not invoke carryForward with a corrupt state.
+  try {
+    runStartupMigration();
+  } catch(err) {
+    console.error('[wt:week-changed] runStartupMigration failed — carry-forward skipped:', err);
+    return;
+  }
+
+  carryForward();
+});
 
 // Race-condition fix for page refresh over a CDN:
 // auth.js (small file) may resolve getSession() and fire wt:auth-ready before

@@ -4,6 +4,8 @@ import { loadTimer, saveTimer } from './storage.js';
 
 let _timerInterval = null;
 
+window.addEventListener('wt:week-changed', refreshTimerDisplays);
+
 export function startTimer(cat, intent, offsetMinutes = 0, notes = '', linkedTasks = []) {
   const startTime = Date.now() - (offsetMinutes * 60 * 1000);
   const t = { cat, intent, startTime, notes, linkedTasks, accumulatedMs: 0, isPaused: false };
@@ -58,9 +60,59 @@ export function stopTimer(preserve = false) {
   return { ...t, minutes };
 }
 
+export function refreshTimerDisplays() {
+  const t = loadTimer();
+
+  const indicator = document.getElementById('stopwatchIndicator');
+  const badge = document.getElementById('stopwatchCategoryBadge');
+  const display = document.getElementById('stopwatchDisplay');
+  const toggleBtn = document.getElementById('navPauseResumeBtn');
+
+  if (!t) return;
+
+  if (indicator) {
+    indicator.dataset.active = 'true';
+    const activeTab = localStorage.getItem('wt_active_tab') || 'ov';
+    indicator.style.display = (activeTab === 'ov') ? 'none' : 'flex';
+  }
+  if (badge) badge.textContent = t.cat;
+
+  t.accumulatedMs = t.accumulatedMs || 0;
+  const currentSessionElapsed = t.isPaused ? 0 : Date.now() - t.startTime;
+  const elapsedMs = t.accumulatedMs + currentSessionElapsed;
+
+  const totalSecs = Math.floor(elapsedMs / 1000);
+  if (!isFinite(totalSecs)) {
+    if (indicator) indicator.style.display = 'none';
+    return;
+  }
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+
+  const timeStr = (h > 0 ? h + ':' : '') +
+                  (m < 10 && h > 0 ? '0' : '') + m + ':' +
+                  (s < 10 ? '0' : '') + s;
+
+  if (t.isPaused) {
+    if (display) display.textContent = timeStr;
+    if (toggleBtn) toggleBtn.textContent = 'Resume';
+  } else {
+    if (display) display.textContent = timeStr;
+    if (toggleBtn) toggleBtn.textContent = 'Pause';
+  }
+
+  updateOtherTimerDisplays(t, timeStr);
+
+  // 6-hour limit check
+  if (totalSecs === 6 * 3600 && !t.isPaused) {
+    console.warn("6-hour timer limit reached.");
+  }
+}
+
 export function initTimerTick() {
   if (_timerInterval) clearInterval(_timerInterval);
-  
+
   const tick = () => {
     const t = loadTimer();
     if (!t) {
@@ -68,52 +120,7 @@ export function initTimerTick() {
       _timerInterval = null;
       return;
     }
-
-    const indicator = document.getElementById('stopwatchIndicator');
-    const badge = document.getElementById('stopwatchCategoryBadge');
-    const display = document.getElementById('stopwatchDisplay');
-    
-    if (indicator) {
-      indicator.dataset.active = 'true';
-      const activeTab = localStorage.getItem('wt_active_tab') || 'ov';
-      indicator.style.display = (activeTab === 'ov') ? 'none' : 'flex';
-    }
-    if (badge) badge.textContent = t.cat;
-
-    t.accumulatedMs = t.accumulatedMs || 0;
-    const currentSessionElapsed = t.isPaused ? 0 : Date.now() - t.startTime;
-    const elapsedMs = t.accumulatedMs + currentSessionElapsed;
-    
-    const totalSecs = Math.floor(elapsedMs / 1000);
-    if (!isFinite(totalSecs)) {
-      const indicator = document.getElementById('stopwatchIndicator');
-      if (indicator) indicator.style.display = 'none';
-      return;
-    }
-    const h = Math.floor(totalSecs / 3600);
-    const m = Math.floor((totalSecs % 3600) / 60);
-    const s = totalSecs % 60;
-    
-    const timeStr = (h > 0 ? h + ':' : '') + 
-                    (m < 10 && h > 0 ? '0' : '') + m + ':' + 
-                    (s < 10 ? '0' : '') + s;
-
-    if (display) {
-      display.textContent = timeStr;
-    }
-
-    updateOtherTimerDisplays(t, timeStr);
-
-    // Update global navbar button
-    const toggleBtn = document.getElementById('navPauseResumeBtn');
-    if (toggleBtn) {
-      toggleBtn.textContent = t.isPaused ? 'Resume' : 'Pause';
-    }
-
-    // 6-hour limit check
-    if (totalSecs === 6 * 3600 && !t.isPaused) {
-      console.warn("6-hour timer limit reached.");
-    }
+    refreshTimerDisplays();
   };
 
   tick(); // Run immediately
