@@ -26,10 +26,12 @@ function openAccountModal() {
   // Pre-fill username from auth metadata
   document.getElementById('accountUsername').value = user?.user_metadata?.username || '';
   hideBanner();
+  document.body.classList.add('modal-open');
   document.getElementById('accountModal').classList.add('open');
 }
 
 function closeAccountModal() {
+  document.body.classList.remove('modal-open');
   document.getElementById('accountModal').classList.remove('open');
 }
 

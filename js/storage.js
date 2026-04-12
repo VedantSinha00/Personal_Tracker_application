@@ -315,7 +315,11 @@ async function _syncBacklog(b) {
 
 // ── Active Timer ──────────────────────────────────────────────────────────────
 export function loadTimer() {
-  try { return JSON.parse(localStorage.getItem('wt_timer') || 'null'); }
+  try {
+    const t = JSON.parse(localStorage.getItem('wt_timer') || 'null');
+    if (t && (!t.cat || !t.startTime)) return null;
+    return t;
+  }
   catch(e) { return null; }
 }
 
@@ -616,7 +620,7 @@ export async function loadFromSupabase() {
             const localT = loadTimer();
             if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
               const remoteT = row.active_timer;
-              if (remoteT && remoteT.cat) { // Ensure it's a real timer
+              if (remoteT && remoteT.cat && remoteT.startTime) { // Ensure it's a real timer
                 remoteT.__synced_at = row.updated_at;
                 localStorage.setItem('wt_timer', JSON.stringify(remoteT));
               }
@@ -633,8 +637,10 @@ export async function loadFromSupabase() {
         const localT = loadTimer();
         if (!localT || (prof.updated_at && new Date(prof.updated_at) > new Date(localT.__synced_at || 0))) {
           const remoteT = prof.active_timer;
-          remoteT.__synced_at = prof.updated_at;
-          localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+          if (remoteT && remoteT.cat && remoteT.startTime) {
+            remoteT.__synced_at = prof.updated_at;
+            localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+          }
         }
       }
     } catch(e) { console.warn('[load] global timer skip:', e.message); }
@@ -823,9 +829,11 @@ function handleRemoteProfileChange(row) {
     const localT = loadTimer();
     if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
       const remoteT = row.active_timer;
-      remoteT.__synced_at = row.updated_at;
-      localStorage.setItem('wt_timer', JSON.stringify(remoteT));
-      document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
+      if (remoteT && remoteT.cat && remoteT.startTime) {
+        remoteT.__synced_at = row.updated_at;
+        localStorage.setItem('wt_timer', JSON.stringify(remoteT));
+        document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
+      }
     }
   }
 }

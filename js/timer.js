@@ -85,6 +85,11 @@ export function initTimerTick() {
     const elapsedMs = t.accumulatedMs + currentSessionElapsed;
     
     const totalSecs = Math.floor(elapsedMs / 1000);
+    if (!isFinite(totalSecs)) {
+      const indicator = document.getElementById('stopwatchIndicator');
+      if (indicator) indicator.style.display = 'none';
+      return;
+    }
     const h = Math.floor(totalSecs / 3600);
     const m = Math.floor((totalSecs % 3600) / 60);
     const s = totalSecs % 60;

@@ -130,7 +130,7 @@ async function initializeApp() {
 
   // 4. App Ready
   await app.whenReady();
-  
+
   registerIpcHandlers();
 
   // Initialize auto-updater only if packaged

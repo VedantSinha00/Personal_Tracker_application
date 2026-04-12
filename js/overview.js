@@ -71,6 +71,11 @@ export function renderOv(d) {
             `).join('')}
           </div>
         ` : ''}
+        <input type="text" class="lp-todo-input" placeholder="Add task..."
+          data-action="add-todo" data-catname="${c.name}"
+          style="margin-top:10px;width:100%;box-sizing:border-box;background:none;border:none;
+                 border-bottom:1px solid var(--border);color:var(--text);font-size:12px;
+                 padding:4px 0;outline:none;cursor:text;">
       </div>`;
   }
 
@@ -165,8 +170,8 @@ export function initOverviewListeners() {
 
     // ── Accordion toggle for tasks ──
     const focusItemWrap = e.target.closest('[data-action="toggle-todos"]');
-    // Don't toggle accordion if the user clicked exactly on a checkbox or label inside
-    if (focusItemWrap && !e.target.closest('.lp-todo-item')) {
+    // Don't toggle accordion if the user clicked on a checkbox, label, or add-task input
+    if (focusItemWrap && !e.target.closest('.lp-todo-item') && !e.target.closest('[data-action="add-todo"]')) {
       const todosEl = focusItemWrap.querySelector('.lp-todos');
       const chevron = focusItemWrap.querySelector('.todo-chevron');
       if (todosEl) {
@@ -183,6 +188,20 @@ export function initOverviewListeners() {
       }
       return;
     }
+  });
+
+  document.getElementById('ovMain').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !e.target.matches('[data-action="add-todo"]')) return;
+    const val = e.target.value.trim();
+    if (!val) return;
+    const catname = e.target.dataset.catname;
+    const d = load();
+    if (!d.todos) d.todos = {};
+    if (!d.todos[catname]) d.todos[catname] = [];
+    d.todos[catname].push({ text: val, done: false });
+    save(d);
+    e.target.value = '';
+    document.dispatchEvent(new CustomEvent('wt:day-changed'));
   });
 
   document.getElementById('ovMain').addEventListener('change', e => {

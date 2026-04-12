@@ -21,10 +21,12 @@ export function openCatModal() {
   renderCatList();
   renderColorPicker('swatchRow', selCatColor, hex => { selCatColor = hex; });
   document.getElementById('catNameInput').value = '';
+  document.body.classList.add('modal-open');
   document.getElementById('catModal').classList.add('open');
 }
 
 export function closeCatModal() {
+  document.body.classList.remove('modal-open');
   document.getElementById('catModal').classList.remove('open');
   // Notify app.js so stack and day grid re-render with updated categories.
   document.dispatchEvent(new CustomEvent('wt:cats-changed'));
