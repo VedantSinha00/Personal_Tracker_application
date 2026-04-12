@@ -4,10 +4,11 @@
 
 import { FULL } from './constants.js';
 import {
-  load, save, loadCats, loadHabits, allHabits, wk,
+  load, save, loadCats, loadHabits, allHabits, wk, loadTimer,
 } from './storage.js';
 import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
+import { syncCustomSelect } from './custom-select.js';
 import { startTimer, stopTimer, togglePauseTimer } from './timer.js';
 
 // ── Modal state ───────────────────────────────────────────────────────────────
@@ -225,6 +226,7 @@ export function openM(di, bi) {
     // Render linked tasks if category exists
     if (b.category) _renderLinkedTasks(b.category, b.linkedTasks || []);
   }
+  document.body.classList.add('modal-open');
   document.getElementById('modal').classList.add('open');
 }
 
@@ -241,6 +243,7 @@ export function openStartTimerM(di) {
   document.getElementById('stIntent').value = '';
   document.getElementById('stIntentCount').textContent = '0 / 300';
   document.getElementById('stLinkedTasks').innerHTML = '';
+  document.getElementById('stNewTask').value = '';
   document.getElementById('stTasksRow').style.display = 'none';
 
   // Reset offsets
@@ -248,10 +251,12 @@ export function openStartTimerM(di) {
     c.classList.toggle('selected', c.dataset.offset === "0");
   });
   document.getElementById('stManualOffset').value = '';
+  document.body.classList.add('modal-open');
   document.getElementById('startStopwatchModal').classList.add('open');
 }
 
 export function closeStartTimerM() {
+  document.body.classList.remove('modal-open');
   document.getElementById('startStopwatchModal').classList.remove('open');
 }
 
@@ -267,7 +272,9 @@ function handleTimerStopped() {
   isLogFromTimer = true; // Mark as timer result to prevent easy closing
   
   // Override fields with timer data
-  document.getElementById('fCat').value = result.cat;
+  const fCatEl = document.getElementById('fCat');
+  fCatEl.value = result.cat;
+  syncCustomSelect(fCatEl); // refresh the custom dropdown trigger to show the pre-filled category
   document.getElementById('fIntent').value = result.intent;
   document.getElementById('fIntentCount').textContent = (result.intent ? result.intent.length : 0) + ' / 300';
   document.getElementById('fNotes').value = result.notes || '';
@@ -311,6 +318,7 @@ function hideModalError(id) {
 }
 
 export function closeM() {
+  document.body.classList.remove('modal-open');
   document.getElementById('modal').classList.remove('open');
 }
 
@@ -637,22 +645,42 @@ export function initDailyLogListeners() {
     
     if (e.target.id === 'stCancelBtn') { closeStartTimerM(); return; }
     if (e.target.id === 'stStartBtn') {
+      if (loadTimer()) {
+        showModalError('stError', 'A stopwatch is already running. Stop it before starting a new one.');
+        return;
+      }
+
       const cat = document.getElementById('stCat').value;
       const intent = document.getElementById('stIntent').value.trim();
-      if (!cat) { 
-        showModalError('stError', "Please select an area first."); 
-        return; 
+      if (!cat) {
+        showModalError('stError', "Please select an area first.");
+        return;
       }
-      
+
       const manualOffset = +document.getElementById('stManualOffset').value;
       const finalOffset = manualOffset > 0 ? manualOffset : selSTOffset;
       const notes = ''; // No notes at start anymore
 
-      // Collect linked tasks
+      // Collect linked tasks from checked boxes
       const linkedTasks = [];
       document.querySelectorAll('#stLinkedTasks input[type="checkbox"]:checked').forEach(cb => {
         linkedTasks.push({ cat: cb.dataset.cat, idx: +cb.dataset.idx });
       });
+
+      // Save new task if provided and auto-link it to this session
+      const newTaskInput = document.getElementById('stNewTask');
+      if (newTaskInput && newTaskInput.value.trim()) {
+        const newTaskText = newTaskInput.value.trim();
+        const d = load();
+        if (!d.todos) d.todos = {};
+        if (!d.todos[cat]) d.todos[cat] = [];
+        const newIdx = d.todos[cat].length;
+        d.todos[cat].push({ text: newTaskText, done: false });
+        save(d);
+        newTaskInput.value = '';
+        linkedTasks.push({ cat, idx: newIdx });
+        document.dispatchEvent(new CustomEvent('wt:day-changed'));
+      }
 
       startTimer(cat, intent, finalOffset, notes, linkedTasks, editDay);
       closeStartTimerM();
@@ -662,6 +690,7 @@ export function initDailyLogListeners() {
 
   document.getElementById('stCat').addEventListener('change', e => {
     _renderLinkedTasks(e.target.value, [], 'stLinkedTasks', 'stTasksRow');
+    document.getElementById('stNewTask').value = '';
   });
 
   document.getElementById('stIntent').addEventListener('input', e => {
@@ -704,5 +733,25 @@ export function initDailyLogListeners() {
   document.getElementById('fDur').addEventListener('input', e => validateDur(e.target));
   document.getElementById('fDur').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fNotes').focus(); }
+  });
+
+  // Inline task addition from stopwatch modal
+  document.getElementById('stNewTask').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const text = e.target.value.trim();
+    if (!text) return;
+    const cat = document.getElementById('stCat').value;
+    if (!cat) {
+      showModalError('stError', 'Select an area first.');
+      return;
+    }
+    const d = load();
+    if (!d.todos) d.todos = {};
+    if (!d.todos[cat]) d.todos[cat] = [];
+    d.todos[cat].push({ text, done: false });
+    save(d);
+    e.target.value = '';
+    _renderLinkedTasks(cat, [], 'stLinkedTasks', 'stTasksRow');
+    document.dispatchEvent(new CustomEvent('wt:stack-saved'));
   });
 }

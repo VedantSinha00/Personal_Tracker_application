@@ -23,10 +23,12 @@ export function openHabitsModal() {
   if (formTitle) formTitle.textContent = 'ADD NEW HABIT';
   document.querySelector('#habitsModal .habit-add-row .btn-p').textContent = 'Add';
   
+  document.body.classList.add('modal-open');
   document.getElementById('habitsModal').classList.add('open');
 }
 
 export function closeHabitsModal() {
+  document.body.classList.remove('modal-open');
   document.getElementById('habitsModal').classList.remove('open');
   // Notify app.js that habits changed so day grid and overview re-render.
   document.dispatchEvent(new CustomEvent('wt:habits-changed'));

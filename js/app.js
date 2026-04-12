@@ -127,8 +127,8 @@ function applyTheme() {
 }
 
 // ── Help modal ────────────────────────────────────────────────────────────────
-function openHelp()  { document.getElementById('helpModal').classList.add('open'); }
-function closeHelp() { document.getElementById('helpModal').classList.remove('open'); }
+function openHelp()  { document.body.classList.add('modal-open'); document.getElementById('helpModal').classList.add('open'); }
+function closeHelp() { document.body.classList.remove('modal-open'); document.getElementById('helpModal').classList.remove('open'); }
 
 // ── Intention save ────────────────────────────────────────────────────────────
 // The intention input lives in the Stack tab HTML but its value belongs
@@ -209,6 +209,7 @@ function initListeners() {
     _updM(d);
     renderSt(d);
     renderBacklog();
+    if (_insightsInited) renderInsights();
   });
 
   // Toggling a built-in habit from the Overview panel
@@ -363,18 +364,21 @@ async function handleAuthReady() {
   const recovered = repairCategories(); // Ensure all historical categories/missions are visible
   if (recovered > 0) showToast(`Recovered ${recovered} areas from history.`, 'success');
   initAllCustomSelects(); // Transform native selects into premium dropdowns
-  renderAll();
 
-  // Pull latest data from Supabase in the background, then re-render.
-  try {
-    await loadFromSupabase();
-    initRealtimeSync(); 
-    const cloudRecovered = repairCategories();
-    if (cloudRecovered > 0) showToast(`Recovered ${cloudRecovered} areas from cloud.`, 'success');
-    renderAll();
-  } catch (err) {
-    console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
+  // Single render pass: if a user session exists, wait for remote data before
+  // rendering so the UI paints exactly once with the freshest data available.
+  // If there is no session, render immediately from local cache only.
+  if (getCurrentUser()) {
+    try {
+      await loadFromSupabase();
+      initRealtimeSync();
+      const cloudRecovered = repairCategories();
+      if (cloudRecovered > 0) showToast(`Recovered ${cloudRecovered} areas from cloud.`, 'success');
+    } catch (err) {
+      console.warn('[wt:auth-ready] loadFromSupabase failed:', err);
+    }
   }
+  renderAll();
 }
 
 // Listen for the event — covers the login / re-login path.
