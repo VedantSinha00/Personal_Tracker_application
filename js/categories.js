@@ -41,6 +41,10 @@ export function renderCatList() {
   const ordered = [...rest, ...pinned];
 
   document.getElementById('catList').innerHTML = ordered.map(c => {
+    if (c == null || c.name == null) {
+      console.warn('[renderCatList] Skipping invalid category entry:', c);
+      return '';
+    }
     const realIdx  = cats.indexOf(c);
     const hex      = resolveHex(c.color);
     const isOthers = c.name === 'Others';
@@ -118,7 +122,10 @@ function renameCat(idx, newName) {
   const cats = loadCats();
   if (!newName || !cats[idx]) return;
   if (newName === cats[idx].name) return;
-  if (cats.some((c, i) => i !== idx && c.name.toLowerCase() === newName.toLowerCase())) return;
+  if (cats.some((c, i) => i !== idx && c.name.toLowerCase() === newName.toLowerCase())) {
+    console.warn(`[renameCat] Rename aborted: "${newName}" already exists in categories (case-insensitive collision with existing name).`);
+    return;
+  }
 
   const oldName = cats[idx].name;
   cats[idx].name = newName;

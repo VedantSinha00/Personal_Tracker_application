@@ -16,6 +16,7 @@
 
 import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
 import { sb, getCurrentUser } from './sb.js';
+import { isCurrentWeek } from './weekState.js';
 
 // ── Week state (Absolute Anchored) ───────────────────────────────────────────
 export let wk = 0;
@@ -230,10 +231,17 @@ export function saveCatArchive(arch) {
 
 // ── Repair Categories ─────────────────────────────────────────────────────────
 // Scans historical data and ensures all used categories are in the active list.
+// A category is only recovered if it has real content: at least one task in its
+// todo list, or a non-empty stack text. Empty shell entries are skipped.
 export function repairCategories() {
   const cats = loadCats();
-  const catNames = new Set(cats.map(c => c.name.toLowerCase()));
-  const discovered = new Set();
+  // Map: original-case name → hasContent (true if any scan pass found real content)
+  const discovered = new Map();
+
+  const markContent = (name, hasContent) => {
+    if (!name) return;
+    discovered.set(name, (discovered.get(name) ?? false) || hasContent);
+  };
 
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -242,28 +250,42 @@ export function repairCategories() {
         const d = JSON.parse(localStorage.getItem(k));
         if (d.days) {
           d.days.forEach(day => {
-            if (day.blocks) day.blocks.forEach(b => { if (b.category) discovered.add(b.category); });
+            if (day.blocks) day.blocks.forEach(b => {
+              // A time block is inherently content
+              if (b.category) markContent(b.category, true);
+            });
           });
         }
-        if (d.todos) Object.keys(d.todos).forEach(cat => discovered.add(cat));
-        if (d.stack) Object.keys(d.stack).forEach(cat => discovered.add(cat));
+        if (d.todos) {
+          Object.entries(d.todos).forEach(([cat, tasks]) => {
+            // A task only counts as content if it exists and is not flagged deleted
+            markContent(cat, Array.isArray(tasks) && tasks.some(t => !t.deleted));
+          });
+        }
+        if (d.stack) {
+          Object.entries(d.stack).forEach(([cat, text]) => {
+            markContent(cat, typeof text === 'string' && text.trim() !== '');
+          });
+        }
       } catch(e) {}
     }
   }
 
-  // 3. Scan Backlog
+  // Scan Backlog — each item is inherently content
   try {
     const bData = JSON.parse(localStorage.getItem('wt_backlog'));
     if (bData && bData.items) {
-      bData.items.forEach(it => { if (it.category) discovered.add(it.category); });
+      bData.items.forEach(it => { if (it.category) markContent(it.category, true); });
     }
   } catch(e) {}
 
   let added = 0;
-  discovered.forEach(name => {
+  discovered.forEach((hasContent, name) => {
+    // Content gate: skip empty shells
+    if (!hasContent) return;
     const clean = name.trim();
     if (!clean) return;
-    
+
     const existing = cats.find(c => c.name.toLowerCase() === clean.toLowerCase());
     if (existing) {
       if (existing.hidden) {
@@ -276,8 +298,22 @@ export function repairCategories() {
     }
   });
 
+  // Deduplication: remove any duplicate entries (case-insensitive) from the list,
+  // keeping the first occurrence. Stamp every entry with a categoryVersion so
+  // callers can detect stale recovery across week boundaries.
+  const ts = Date.now();
+  const seen = new Set();
+  const dedupedCats = cats
+    .filter(c => {
+      const key = c.name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(c => ({ ...c, categoryVersion: ts }));
+
   if (added > 0) {
-    saveCats(cats);
+    saveCats(dedupedCats);
     console.log(`[repair] Recovered ${added} categories from historical logs.`);
     document.dispatchEvent(new CustomEvent('wt:cats-changed'));
   }
@@ -564,6 +600,70 @@ function loadOrderForOffset(offset) {
   } catch(e) { return null; }
 }
 
+// ── Startup migration helpers ─────────────────────────────────────────────────
+
+// Removes duplicate entries from the stored category list, keeping first occurrence.
+function cleanupDuplicateCategories() {
+  const cats = loadCats();
+  const seen = new Set();
+  const deduped = cats.filter(c => {
+    const key = c.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (deduped.length !== cats.length) {
+    saveCats(deduped);
+    console.log(`[migration] Removed ${cats.length - deduped.length} duplicate categories.`);
+  }
+}
+
+// Strips __carried_forward markers from every week except the current one.
+// These markers are set by the carry-forward operation and are only meaningful
+// during the loadFromSupabase write-gate; once incorporated they are stale.
+function purgeStaleCarryData() {
+  const currentAbsWk = getAbsWk(0);
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('wt_wk_')) continue;
+    const offset = parseInt(k.replace('wt_wk_', ''), 10);
+    if (offset === currentAbsWk) continue; // leave current week untouched
+    try {
+      const d = JSON.parse(localStorage.getItem(k));
+      if (d && '__carried_forward' in d) {
+        delete d.__carried_forward;
+        localStorage.setItem(k, JSON.stringify(d));
+      }
+    } catch(e) {
+      console.warn('[migration] purgeStaleCarryData: skipping', k, e.message);
+    }
+  }
+}
+
+/**
+ * Runs once at app start, before any data load.
+ * Deduplicates categories, purges stale carry markers, and removes
+ * category-level deleted flags. Task-level deleted flags are never touched.
+ */
+export function runStartupMigration() {
+  cleanupDuplicateCategories();
+  purgeStaleCarryData();
+
+  // Strip deleted flag from category objects only — never from task objects
+  const cats = loadCats();
+  let changed = false;
+  cats.forEach(c => {
+    if ('deleted' in c) {
+      delete c.deleted;
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveCats(cats);
+    console.log('[migration] Removed category-level deleted flags.');
+  }
+}
+
 // ── Remote load on login ──────────────────────────────────────────────────────
 // Called once by app.js after auth is confirmed (wt:auth-ready event).
 // Pulls all data from Supabase into localStorage so the rest of the app
@@ -584,46 +684,55 @@ export async function loadFromSupabase() {
 
   try {
     // Weekly data
-    const { data: weeks } = await sb
+    const { data: weeks, error: weeksError } = await sb
       .from('weekly_data')
       .select('*')
       .eq('user_id', user.id);
 
+    if (weeksError) {
+      console.error('[loadFromSupabase] weekly_data fetch failed — local state preserved:', weeksError);
+      return;
+    }
+
     if (weeks && weeks.length > 0) {
       weeks.forEach(row => {
         const key = 'wt_wk_' + row.week_offset;
-        // Only overwrite if Supabase version is newer than local cache
+        // Only overwrite if Supabase version is strictly newer than local cache
         const local = localStorage.getItem(key);
-        const localTs = local ? (JSON.parse(local).__updated_at || 0) : 0;
-        if (!localTs || new Date(row.updated_at) > new Date(localTs)) {
-          // preserve local todos if Supabase doesn't have them yet
-          const existingLocal = localStorage.getItem(key);
-          const oldD = existingLocal ? JSON.parse(existingLocal) : {};
+        const localD = local ? JSON.parse(local) : {};
+        const localTs = localD.__updated_at || 0;
+        if (localTs && !(new Date(row.updated_at) > new Date(localTs))) return;
 
-          const d = {
-            intention:   row.intention  || '',
-            stack:       row.stack      || {},
-            // DEFENSIVE: Never overwrite local tasks with null/undefined from cloud
-            todos:       (row.todos && Object.keys(row.todos).length > 0) ? row.todos : (oldD.todos || {}),
-            days:        row.days       || [],
-            review:      row.review     || {},
-            __updated_at: row.updated_at,
-          };
-          localStorage.setItem(key, JSON.stringify(d));
-          if (row.focus && Object.keys(row.focus).length > 0)
-            localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
-          if (row.item_order && row.item_order.length > 0)
-            localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
-          
-          // Restore timer if found and more recent
-          if (row.active_timer) {
-            const localT = loadTimer();
-            if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
-              const remoteT = row.active_timer;
-              if (remoteT && remoteT.cat && remoteT.startTime) { // Ensure it's a real timer
-                remoteT.__synced_at = row.updated_at;
-                localStorage.setItem('wt_timer', JSON.stringify(remoteT));
-              }
+        // Week-boundary guard: use isCurrentWeek so the check is never duplicated.
+        // For past/future weeks, only allow todos/stack to be overwritten when the
+        // remote row was explicitly flagged as a carry-forward. This prevents a stale
+        // remote snapshot from clobbering local edits on non-current week offsets.
+        const rowMonday = getMonFromAbs(row.week_offset).toDateString();
+        const rowIsCurrentWeek = isCurrentWeek(rowMonday);
+        const allowTodosStack = rowIsCurrentWeek || !!row.__carried_forward;
+
+        const d = {
+          intention:   row.intention  || '',
+          stack:       allowTodosStack ? (row.stack || {}) : (localD.stack || {}),
+          todos:       allowTodosStack ? (row.todos || {}) : (localD.todos || {}),
+          days:        row.days       || [],
+          review:      row.review     || {},
+          __updated_at: row.updated_at,
+        };
+        localStorage.setItem(key, JSON.stringify(d));
+        if (row.focus && Object.keys(row.focus).length > 0)
+          localStorage.setItem('wt_focus_' + row.week_offset, JSON.stringify(row.focus));
+        if (row.item_order && row.item_order.length > 0)
+          localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
+
+        // Restore timer if found and more recent
+        if (row.active_timer) {
+          const localT = loadTimer();
+          if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
+            const remoteT = row.active_timer;
+            if (remoteT && remoteT.cat && remoteT.startTime) { // Ensure it's a real timer
+              remoteT.__synced_at = row.updated_at;
+              localStorage.setItem('wt_timer', JSON.stringify(remoteT));
             }
           }
         }
@@ -646,11 +755,16 @@ export async function loadFromSupabase() {
     } catch(e) { console.warn('[load] global timer skip:', e.message); }
 
     // Categories
-    const { data: cats } = await sb
+    const { data: cats, error: catsError } = await sb
       .from('categories')
       .select('*')
       .eq('user_id', user.id)
       .order('position');
+
+    if (catsError) {
+      console.error('[loadFromSupabase] categories fetch failed — local state preserved:', catsError);
+      return;
+    }
 
     if (cats && cats.length > 0) {
       // Preserve local hidden state since the Supabase table lacks a 'hidden' column
@@ -673,10 +787,15 @@ export async function loadFromSupabase() {
 
 
     // Habits
-    const { data: habits } = await sb
+    const { data: habits, error: habitsError } = await sb
       .from('habits')
       .select('*')
       .eq('user_id', user.id);
+
+    if (habitsError) {
+      console.error('[loadFromSupabase] habits fetch failed — local state preserved:', habitsError);
+      return;
+    }
 
     if (habits && habits.length > 0) {
       const mapped = habits.map(h => ({

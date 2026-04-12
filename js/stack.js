@@ -19,6 +19,10 @@ document.addEventListener('wt:backlog-changed', () => {
   renderSt(load());
 });
 
+// ── Carry-forward in-progress guard ──────────────────────────────────────────
+// Prevents double-click from triggering two concurrent carry operations.
+let _carryInProgress = false;
+
 // ── Drag state ────────────────────────────────────────────────────────────────
 // These three variables are the entire shared state of an in-progress drag.
 // They are module-scoped — nothing outside stack.js can touch them.
@@ -189,75 +193,119 @@ function toggleFocus(catName) {
 // Copies last week's stack text, focus levels, and order into this week,
 // but only for fields that are currently empty.
 export function carryForward() {
-  const prevKey = 'wt_wk_' + getAbsWk(wk - 1);
-  let prev;
-  try { const r = localStorage.getItem(prevKey); prev = r ? JSON.parse(r) : null; }
-  catch(e) { prev = null; }
-
+  // Double-click protection: bail if a carry is already in progress.
+  if (_carryInProgress) return;
+  _carryInProgress = true;
   const btn = document.getElementById('carryBtn');
+  if (btn) btn.disabled = true;
 
-  if (!prev || (!prev.stack && !prev.todos)) {
-    btn.textContent = '✕ Nothing to carry';
-    setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
-    return;
-  }
-
-  const d    = load();
-  if (!d.stack) d.stack = {};
-  if (!d.todos) d.todos = {};
-  const cats = loadCats();
-  let carried = 0;
-
-  cats.forEach(c => {
-    // 1. Carry text inputs
-    const prevVal = prev.stack ? (prev.stack[c.name] || '') : '';
-    if (prevVal && !d.stack[c.name]) { d.stack[c.name] = prevVal; carried++; }
-
-    // 2. Carry unfinished tasks (todos)
-    if (prev.todos && prev.todos[c.name]) {
-      const uncomps = prev.todos[c.name].filter(t => !t.done);
-      if (uncomps.length > 0) {
-        if (!d.todos[c.name]) d.todos[c.name] = [];
-        uncomps.forEach(ut => {
-          // Avoid exact string duplicates
-          if (!d.todos[c.name].find(dt => dt.text === ut.text)) {
-            d.todos[c.name].push({ text: ut.text, done: false });
-            carried++;
-          }
-        });
-      }
-    }
-  });
-
-  // Carry focus levels
-  const prevFocusKey = 'wt_focus_' + getAbsWk(wk - 1);
-  const prevOrderKey = 'wt_order_' + getAbsWk(wk - 1);
   try {
-    const pf = localStorage.getItem(prevFocusKey);
-    if (pf) {
-      const prevFocus = JSON.parse(pf);
-      const curFocus  = loadFocus();
-      cats.forEach(c => {
-        if (!curFocus[c.name] && prevFocus[c.name]) curFocus[c.name] = prevFocus[c.name];
+    // Confirm before reading or writing any data.
+    if (!confirm('Carry unfinished tasks from last week?')) return;
+
+    const prevKey = 'wt_wk_' + getAbsWk(wk - 1);
+    let prev;
+    try { const r = localStorage.getItem(prevKey); prev = r ? JSON.parse(r) : null; }
+    catch(e) { prev = null; }
+
+    if (!prev || (!prev.stack && !prev.todos)) {
+      btn.textContent = '✕ Nothing to carry';
+      setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      return;
+    }
+
+    const d    = load();
+    if (!d.stack) d.stack = {};
+    if (!d.todos) d.todos = {};
+
+    // Only carry visible (non-hidden) categories.
+    const cats = loadCats().filter(c => !c.hidden);
+
+    // Early-return guard: bail if source week has no content in eligible categories.
+    // Prevents silently overwriting valid destination data with an empty week.
+    const sourceHasContent = cats.some(c => {
+      const stackText = prev.stack ? (prev.stack[c.name] || '') : '';
+      if (stackText.trim()) return true;
+      const tasks = prev.todos ? (prev.todos[c.name] || []) : [];
+      return tasks.some(t => !t.done && !t.deleted);
+    });
+    if (!sourceHasContent) {
+      btn.textContent = '✕ Nothing to carry';
+      setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      return;
+    }
+
+    let carried = 0;
+
+    cats.forEach(c => {
+      // 1. Carry text inputs
+      const prevVal = prev.stack ? (prev.stack[c.name] || '') : '';
+      if (prevVal && !d.stack[c.name]) { d.stack[c.name] = prevVal; carried++; }
+
+      // 2. Carry unfinished, non-deleted tasks (todos).
+      if (prev.todos && prev.todos[c.name]) {
+        const uncomps = prev.todos[c.name].filter(t => !t.done && !t.deleted);
+        if (uncomps.length > 0) {
+          if (!d.todos[c.name]) d.todos[c.name] = [];
+          uncomps.forEach(ut => {
+            if (!d.todos[c.name].find(dt => dt.text === ut.text)) {
+              // Build carried task field-by-field; legacy fields (deleted, carried,
+              // sourceWeek, _v) are intentionally omitted. No id field exists in
+              // this codebase's task schema, so none is generated or copied.
+              d.todos[c.name].push({ text: ut.text, done: false, deleted: false });
+              carried++;
+            }
+          });
+        }
+      }
+    });
+
+    // Carry focus levels
+    const prevFocusKey = 'wt_focus_' + getAbsWk(wk - 1);
+    const prevOrderKey = 'wt_order_' + getAbsWk(wk - 1);
+    try {
+      const pf = localStorage.getItem(prevFocusKey);
+      if (pf) {
+        const prevFocus = JSON.parse(pf);
+        const curFocus  = loadFocus();
+        cats.forEach(c => {
+          if (!curFocus[c.name] && prevFocus[c.name]) curFocus[c.name] = prevFocus[c.name];
+        });
+        saveFocus(curFocus);
+      }
+      // Carry order only if this week has no custom order yet
+      const po = localStorage.getItem(prevOrderKey);
+      if (po && !loadOrder()) {
+        localStorage.setItem(orderKey(), po);
+      }
+    } catch(e) {}
+
+    // Deduplication pass over destination todos and stack.
+    // Identity key is t.text, matching the duplicate check used in the copy loop above.
+    Object.keys(d.todos).forEach(cat => {
+      const seen = new Set();
+      d.todos[cat] = d.todos[cat].filter(t => {
+        if (seen.has(t.text)) return false;
+        seen.add(t.text);
+        return true;
       });
-      saveFocus(curFocus);
-    }
-    // Carry order only if this week has no custom order yet
-    const po = localStorage.getItem(prevOrderKey);
-    if (po && !loadOrder()) {
-      localStorage.setItem(orderKey(), po);
-    }
-  } catch(e) {}
+    });
+    // stack values are plain strings (one per category) — no dedup needed there.
 
-  save(d);
-  renderSt(d);
+    save(d);
+    renderSt(d);
 
-  btn.classList.add('carried');
-  btn.innerHTML = `✓ Carried ${carried} item${carried !== 1 ? 's' : ''}`;
-  setTimeout(() => {
-    btn.classList.remove('carried');
-    btn.innerHTML = '↩ Carry from last week';
-  }, 3000);
+    btn.classList.add('carried');
+    btn.innerHTML = `✓ Carried ${carried} item${carried !== 1 ? 's' : ''}`;
+    setTimeout(() => {
+      btn.classList.remove('carried');
+      btn.innerHTML = '↩ Carry from last week';
+    }, 3000);
+  } finally {
+    // Always release the guard and re-enable the button, even if an error was thrown.
+    _carryInProgress = false;
+    if (btn) btn.disabled = false;
+  }
 }
 
 export function updateCarryBtn(d) {
