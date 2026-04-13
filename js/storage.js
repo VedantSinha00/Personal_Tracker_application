@@ -936,12 +936,15 @@ async function handleRemoteCatsChange() {
     const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
     const hiddenMap = {};
     localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
+    const _deletedSet = new Set(getDeletedCats());
 
-    const mapped = cats.map(c => ({ 
-      name: c.name, 
-      color: c.color,
-      hidden: !!hiddenMap[c.name]
-    }));
+    const mapped = cats
+      .filter(c => !_deletedSet.has(c.name))
+      .map(c => ({
+        name: c.name,
+        color: c.color,
+        hidden: !!hiddenMap[c.name]
+      }));
     localStorage.setItem('wt_categories', JSON.stringify(mapped));
     
     // Trigger repair after remote change to catch any orphaned data
