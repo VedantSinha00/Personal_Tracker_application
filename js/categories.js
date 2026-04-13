@@ -9,6 +9,7 @@ import {
   loadOrder, saveOrder, orderKey,
   loadCatArchive, saveCatArchive,
   addDeletedCat, clearDeletedCat, getDeletedCats,
+  _softDeleteCategory
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
@@ -115,6 +116,7 @@ function deleteCat(idx) {
     arch[removing.name + '_deleted'] = true;
     saveCatArchive(arch);
     addDeletedCat(removing.name);
+    _softDeleteCategory(removing.name);
   }
   cats.splice(idx, 1);
   saveCats(cats);
