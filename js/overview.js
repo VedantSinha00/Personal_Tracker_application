@@ -137,7 +137,7 @@ export function renderOv(d) {
   el.innerHTML = splitHTML;
   
   if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+    lucide.createIcons({ root: document.getElementById('ovMain') });
   }
 }
 

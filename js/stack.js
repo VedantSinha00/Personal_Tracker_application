@@ -159,7 +159,7 @@ export function renderSt(d, animate) {
   attachStackListeners();
 
   if (typeof lucide !== 'undefined') {
-    lucide.createIcons({ root: document.getElementById('stackDragContainer') });
+    lucide.createIcons({ nodes: document.getElementById('stackDragContainer').querySelectorAll('[data-lucide]') });
   }
 }
 
@@ -369,7 +369,7 @@ function attachStackListeners() {
         showToast(`Added mission to ${cat}`, 'success');
         setTimeout(() => {
           const inp = document.querySelector(`.task-input[data-catname="${cat}"]`);
-          if (inp) inp.focus();
+          if (inp && document.activeElement !== inp) inp.focus({ preventScroll: true });
         }, 10);
       }
     });

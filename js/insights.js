@@ -20,18 +20,32 @@ const TF_OPTIONS = [
 ];
 let curTF = 0;
 
+// ── Weeks cache ───────────────────────────────────────────────────────────────
+let _weeksCache     = null;
+let _weeksCacheTime = 0;
+
 // ── Data helpers ──────────────────────────────────────────────────────────────
 function getAllWeeks() {
+  if (_weeksCache !== null && Date.now() - _weeksCacheTime < 60000) {
+    return [..._weeksCache];
+  }
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
     if (k && k.startsWith('wt_wk_')) keys.push(k);
   }
-  return keys.map(k => ({
+  _weeksCache = keys.map(k => ({
     key:    k,
     offset: parseInt(k.replace('wt_wk_', ''), 10) || 0,
     data:   JSON.parse(localStorage.getItem(k)),
   }));
+  _weeksCacheTime = Date.now();
+  return [..._weeksCache];
+}
+
+export function invalidateWeeksCache() {
+  _weeksCache     = null;
+  _weeksCacheTime = 0;
 }
 
 function getInsightsData() {

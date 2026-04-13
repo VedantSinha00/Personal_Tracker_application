@@ -253,6 +253,7 @@ export function openStartTimerM(di) {
   document.getElementById('stManualOffset').value = '';
   document.body.classList.add('modal-open');
   document.getElementById('startStopwatchModal').classList.add('open');
+  syncCustomSelect(document.getElementById('stCat'));
 }
 
 export function closeStartTimerM() {
@@ -625,7 +626,7 @@ export function initDailyLogListeners() {
       return;
     }
 
-    if (e.target.id === 'delBtn')                    { delBlock(); return; }
+    if (e.target.closest('#delBtn'))                  { delBlock(); return; }
     if (e.target.closest('#modal .btn-p'))           { saveBlock(); return; }
     if (e.target.closest('#modal .btn:not(.btn-p)')) { closeM();    return; }
   });
@@ -643,8 +644,8 @@ export function initDailyLogListeners() {
       return;
     }
     
-    if (e.target.id === 'stCancelBtn') { closeStartTimerM(); return; }
-    if (e.target.id === 'stStartBtn') {
+    if (e.target.closest('#stCancelBtn')) { closeStartTimerM(); return; }
+    if (e.target.closest('#stStartBtn')) {
       if (loadTimer()) {
         showModalError('stError', 'A stopwatch is already running. Stop it before starting a new one.');
         return;
