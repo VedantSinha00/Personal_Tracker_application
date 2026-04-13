@@ -280,11 +280,18 @@ export function repairCategories() {
   } catch(e) {}
 
   let added = 0;
+  
+  // Arch contains the explicitly deleted flag for categories that shouldn't be resurrected.
+  const arch = loadCatArchive();
+
   discovered.forEach((hasContent, name) => {
     // Content gate: skip empty shells
     if (!hasContent) return;
     const clean = name.trim();
     if (!clean) return;
+
+    // Do not resurrect if it was explicitly deleted by the user from the modal
+    if (arch[clean + '_deleted']) return;
 
     const existing = cats.find(c => c.name.toLowerCase() === clean.toLowerCase());
     if (existing) {
@@ -337,7 +344,7 @@ export function saveBacklog(b) {
 
 async function _syncBacklog(b) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     await sb.from('backlog').upsert({
       user_id:    user.id,
@@ -365,7 +372,7 @@ export function saveTimer(t) {
   
   // Sync to Supabase in background
   const user = getCurrentUser();
-  if (user && user.id !== 'dev-user-local') {
+  if (user && user.id !== '00000000-0000-0000-0000-000000000000') {
     if (_syncQueue['timer']) clearTimeout(_syncQueue['timer']);
     _syncQueue['timer'] = setTimeout(() => _syncTimer(t), 1000);
   }
@@ -373,7 +380,7 @@ export function saveTimer(t) {
 
 async function _syncTimer(t) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     // Attempt to store in profiles table first (global user metadata)
     const { error } = await sb.from('profiles').upsert({
@@ -469,7 +476,7 @@ export function loadFocusKey() { return 'wt_focus_'; }
 
 async function _perfSyncWeek(offset, d) {
   const user = getCurrentUser();
-  if (!user) return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   // Use the exact timestamp generated when save() mapped it to localStorage
   const now = d.__updated_at || new Date().toISOString();
   try {
@@ -502,7 +509,7 @@ async function _perfSyncWeek(offset, d) {
 
 async function _syncWeekFocusOrder(offset) {
   const user = getCurrentUser();
-  if (!user || user.id === 'dev-user-local') return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     const focus     = loadFocusForOffset(offset);
     const itemOrder = loadOrderForOffset(offset);
@@ -530,7 +537,7 @@ async function _syncWeekFocusOrder(offset) {
 
 async function _syncCategories(cats) {
   const user = getCurrentUser();
-  if (!user || user.id === 'dev-user-local') return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     // Delete all existing categories for this user and re-insert.
     // Simpler than diffing — category lists are short.
@@ -552,7 +559,7 @@ async function _syncCategories(cats) {
 
 async function _syncHabits(habits) {
   const user = getCurrentUser();
-  if (!user || user.id === 'dev-user-local') return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     await sb.from('habits').delete().eq('user_id', user.id);
     if (habits.length > 0) {
@@ -573,7 +580,7 @@ async function _syncHabits(habits) {
 
 async function _syncCatArchive(arch) {
   const user = getCurrentUser();
-  if (!user || user.id === 'dev-user-local') return;
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
     await sb.from('cat_archive').upsert({
       user_id:    user.id,

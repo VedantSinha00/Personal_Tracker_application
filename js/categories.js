@@ -89,6 +89,14 @@ export function addCat() {
   if (othersIdx !== -1) cats.splice(othersIdx, 0, entry);
   else cats.push(entry);
   saveCats(cats);
+  
+  // If the category was previously deleted, unmark it so it isn't treated as a ghost.
+  const arch = loadCatArchive();
+  if (arch[name + '_deleted']) {
+    delete arch[name + '_deleted'];
+    saveCatArchive(arch);
+  }
+
   nameEl.value = '';
   renderCatList();
   renderColorPicker('swatchRow', selCatColor, hex => { selCatColor = hex; });
@@ -98,9 +106,11 @@ function deleteCat(idx) {
   const cats = loadCats();
   const removing = cats[idx];
   // Archive the colour so old blocks still render correctly
+  // Also set a _deleted flag to prevent the 'repairCategories' function from resurrecting it.
   if (removing) {
     const arch = loadCatArchive();
     arch[removing.name] = removing.color;
+    arch[removing.name + '_deleted'] = true;
     saveCatArchive(arch);
   }
   cats.splice(idx, 1);
