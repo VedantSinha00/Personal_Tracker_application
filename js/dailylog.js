@@ -536,7 +536,7 @@ export function initDailyLogListeners() {
       if (!area) return;
       const isOpen = area.style.display !== 'none';
       area.style.display = isOpen ? 'none' : 'block';
-      if (!isOpen) area.querySelector('textarea').focus();
+      if (!isOpen) area.querySelector('textarea').focus({ preventScroll: true });
       return;
     }
   });
@@ -733,7 +733,7 @@ export function initDailyLogListeners() {
   // Duration text input — live validation
   document.getElementById('fDur').addEventListener('input', e => validateDur(e.target));
   document.getElementById('fDur').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fNotes').focus(); }
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fNotes').focus({ preventScroll: true }); }
   });
 
   // Inline task addition from stopwatch modal

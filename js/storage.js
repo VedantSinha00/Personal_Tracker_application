@@ -229,6 +229,27 @@ export function saveCatArchive(arch) {
   _syncQueue['cat_archive'] = setTimeout(() => _syncCatArchive(arch), 1500);
 }
 
+// ── Deleted-category blacklist ────────────────────────────────────────────────
+// Tracks explicitly user-deleted category names so repairCategories() never
+// automatically resurrects them from historical data.
+const _DELETED_KEY = 'wt_deleted_cats';
+
+export function getDeletedCats() {
+  try { return JSON.parse(localStorage.getItem(_DELETED_KEY) || '[]'); }
+  catch { return []; }
+}
+
+export function addDeletedCat(name) {
+  const arr = getDeletedCats();
+  if (!arr.includes(name)) arr.push(name);
+  localStorage.setItem(_DELETED_KEY, JSON.stringify(arr));
+}
+
+export function clearDeletedCat(name) {
+  const arr = getDeletedCats().filter(n => n !== name);
+  localStorage.setItem(_DELETED_KEY, JSON.stringify(arr));
+}
+
 // ── Repair Categories ─────────────────────────────────────────────────────────
 // Scans historical data and ensures all used categories are in the active list.
 // A category is only recovered if it has real content: at least one task in its
@@ -280,9 +301,10 @@ export function repairCategories() {
   } catch(e) {}
 
   let added = 0;
-  
+
   // Arch contains the explicitly deleted flag for categories that shouldn't be resurrected.
   const arch = loadCatArchive();
+  const _deletedSet = new Set(getDeletedCats());
 
   discovered.forEach((hasContent, name) => {
     // Content gate: skip empty shells
@@ -292,6 +314,7 @@ export function repairCategories() {
 
     // Do not resurrect if it was explicitly deleted by the user from the modal
     if (arch[clean + '_deleted']) return;
+    if (_deletedSet.has(clean)) return; // blacklisted — skip resurrection
 
     const existing = cats.find(c => c.name.toLowerCase() === clean.toLowerCase());
     if (existing) {

@@ -1,3 +1,9 @@
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const _debounce = (fn, delay) => {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+};
+
 // ── Global Error Handling ────────────────────────────────────────────────────
 // Catch errors early in the boot process.
 window.onerror = function(msg, url, line, col, error) {
@@ -264,10 +270,10 @@ function initListeners() {
   });
 
   // Stack inputs saved — overview should reflect updated focus text immediately
-  document.addEventListener('wt:stack-saved', () => {
+  document.addEventListener('wt:stack-saved', _debounce(() => {
     const d = load();
     _renderOv(d);
-  });
+  }, 150));
 
   // Habits changed
   document.addEventListener('wt:habits-changed', () => {
