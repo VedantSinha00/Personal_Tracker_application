@@ -8,6 +8,7 @@ import {
   loadFocus, saveFocus,
   loadOrder, saveOrder, orderKey,
   loadCatArchive, saveCatArchive,
+  addDeletedCat, clearDeletedCat,
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
@@ -88,6 +89,7 @@ export function addCat() {
   const entry = { name, color: selCatColor };
   if (othersIdx !== -1) cats.splice(othersIdx, 0, entry);
   else cats.push(entry);
+  clearDeletedCat(name);
   saveCats(cats);
   
   // If the category was previously deleted, unmark it so it isn't treated as a ghost.
@@ -112,6 +114,7 @@ function deleteCat(idx) {
     arch[removing.name] = removing.color;
     arch[removing.name + '_deleted'] = true;
     saveCatArchive(arch);
+    addDeletedCat(removing.name);
   }
   cats.splice(idx, 1);
   saveCats(cats);
