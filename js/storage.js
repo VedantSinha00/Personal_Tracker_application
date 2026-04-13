@@ -565,25 +565,69 @@ async function _syncWeekFocusOrder(offset) {
   }
 }
 
-async function _syncCategories(cats) {
+export async function _softDeleteCategory(name) {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
-    // Delete all existing categories for this user and re-insert.
-    // Simpler than diffing — category lists are short.
-    await sb.from('categories').delete().eq('user_id', user.id);
-    if (cats.length > 0) {
-      await sb.from('categories').insert(
-        cats.map((c, i) => ({
-          user_id:  user.id,
-          name:     c.name,
-          color:    c.color,
-          position: i,
-        }))
-      );
+    const { error } = await sb.from('categories')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .eq('name', name);
+    if(error) console.warn('[sync] soft delete failed:', error.message);
+  } catch(err) {
+    console.warn('[sync] soft delete failed:', err.message);
+  }
+}
+
+async function _syncCategories(localCats) {
+  const user = getCurrentUser();
+  if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
+  try {
+    const { data: remote, error } = await sb.from('categories')
+      .select('id,name,color,deleted_at,position')
+      .eq('user_id', user.id);
+      
+    if (error) {
+      console.warn('[sync] categories fetch error', error);
+      return;
+    }
+
+    const remoteMap = new Map((remote || []).map(c => [c.name.toLowerCase(), c]));
+    const localMap = new Map(localCats.map(c => [c.name.toLowerCase(), c]));
+
+    const toInsert = [];
+    const toUpdate = [];
+    
+    localCats.forEach((cat, index) => {
+      const remoteCat = remoteMap.get(cat.name.toLowerCase());
+      if (!remoteCat) {
+        toInsert.push({ user_id: user.id, name: cat.name, color: cat.color, deleted_at: null, position: index });
+      } else if (remoteCat.deleted_at || remoteCat.color !== cat.color || remoteCat.position !== index) {
+        toUpdate.push({ id: remoteCat.id, user_id: user.id, name: cat.name, color: cat.color, deleted_at: null, position: index });
+      }
+    });
+
+    const toDelete = [];
+    for (const [name, remoteCat] of remoteMap) {
+      if (!localMap.has(name) && !remoteCat.deleted_at) {
+        toDelete.push(remoteCat);
+      }
+    }
+
+    if (toInsert.length > 0) {
+      await sb.from('categories').insert(toInsert);
+    }
+    if (toUpdate.length > 0) {
+      await sb.from('categories').upsert(toUpdate);
+    }
+    
+    for (const d of toDelete) {
+      await sb.from('categories')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', d.id);
     }
   } catch(err) {
-    console.warn('[sync] categories failed:', err.message);
+    console.warn('[sync] categories sync failed:', err.message);
   }
 }
 
@@ -837,7 +881,7 @@ export async function loadFromSupabase() {
       );
       const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
       const mapped = cats
-        .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
+        .filter(c => !c.deleted_at && !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
         .map(c => ({ 
           name: c.name, 
           color: c.color,
@@ -964,13 +1008,13 @@ async function handleRemoteCatsChange() {
     const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
 
     const mapped = cats
-      .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
+      .filter(c => !c.deleted_at && !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
       .map(c => ({
         name: c.name,
         color: c.color,
         hidden: !!hiddenMap[c.name]
       }));
-    localStorage.setItem('wt_categories', JSON.stringify(mapped));
+    saveCats(mapped);
     
     // Trigger repair after remote change to catch any orphaned data
     repairCategories();
