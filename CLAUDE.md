@@ -23,6 +23,7 @@ Use these semantic layers for all complex tasks:
 - [Project Standards]: Added `CLAUDE.md` to enforce systematic workflow (Specify → Plan → Task → Implement) and deterministic code standards.
 - [Version Update]: Bumped version to 1.2.2 for new release and fixed version metadata mismatch (standardized on SemVer).
 - [Week Transition & Sync]: Bumped version to 1.2.4. Implemented robust week-rollover detection (persistent last-seen Monday), hardened sync by fixing UUID identifier syntax (Supabase compliant), and resolved stopwatch flickering. Made carry-forward logic automatic (removed prompt dialog), and resolved a critical UI persistent bug restricting category deletion.
+- [Performance & Reliability]: Bumped version to 1.2.5. Implemented "Optimistic Rendering" for instant startup on reload. Optimized Lucide icon rendering by adding element-scoping to prevent expensive full-DOM scans. Fixed a critical responsive bug in the stopwatch start button by switching to `closest()` delegation. Resolved "ghost scrolling" in the Stack tab by adding `preventScroll: true` to focus logic. Unified UI aesthetic by applying premium dropdown styles to the stopwatch modal.
 
 ## graphify
 

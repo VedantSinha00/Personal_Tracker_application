@@ -205,13 +205,14 @@ function initListeners() {
 
   // Any day data changed (habit toggle, block add/edit/delete)
   document.addEventListener('wt:day-changed', () => {
+    const activeTab = localStorage.getItem('wt_active_tab');
     const d = load();
     _renderDG(d);
     _renderOv(d);
     _updM(d);
     renderSt(d);
     renderBacklog();
-    if (_insightsInited) renderInsights();
+    if (_insightsInited && activeTab === 'insights') renderInsights();
   });
 
   // Toggling a built-in habit from the Overview panel
@@ -235,14 +236,15 @@ function initListeners() {
 
   // Categories changed (add / delete / rename / reorder / visibility)
   document.addEventListener('wt:cats-changed', () => {
+    const activeTab = localStorage.getItem('wt_active_tab');
     const d = load();
     // Sync stack keys with current category names
     const cats = loadCats();
     const cNames = cats.map(c => c.name);
-    
+
     if (!d.stack) d.stack = {};
     cats.forEach(c => { if (d.stack[c.name] === undefined) d.stack[c.name] = ''; });
-    
+
     // Clean up orphans from memory before saving
     Object.keys(d.stack).forEach(k => {
       if (!cNames.includes(k)) delete d.stack[k];
@@ -258,7 +260,7 @@ function initListeners() {
     _renderDG(d);
     _renderOv(d);   // keep Overview in sync when categories change
     _updM(d);       // instantly update metrics (Total Hours/Blocks) in Review tab
-    if (_insightsInited) renderInsights(); // instantly update Insights graphs
+    if (_insightsInited && activeTab === 'insights') renderInsights(); // instantly update Insights graphs
   });
 
   // Stack inputs saved — overview should reflect updated focus text immediately
@@ -384,9 +386,10 @@ async function handleAuthReady() {
   if (recovered > 0) showToast(`Recovered ${recovered} areas from history.`, 'success');
   initAllCustomSelects(); // Transform native selects into premium dropdowns
 
-  // Single render pass: if a user session exists, wait for remote data before
-  // rendering so the UI paints exactly once with the freshest data available.
-  // If there is no session, render immediately from local cache only.
+  // Optimistic render from local cache so the UI is immediately responsive.
+  renderAll();
+
+  // If a user session exists, fetch remote data and re-render with fresh state.
   if (getCurrentUser()) {
     try {
       await loadFromSupabase();
