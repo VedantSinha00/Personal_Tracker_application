@@ -799,7 +799,18 @@ export async function loadFromSupabase() {
         .eq('user_id', user.id)
         .maybeSingle();
       if (arch && arch.archive) {
-        localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
+        const localArch = loadCatArchive();
+        const merged = { ...arch.archive };
+        Object.keys(localArch).forEach(k => {
+          if (k.endsWith('_deleted') && !merged[k]) {
+            merged[k] = localArch[k];
+          }
+        });
+        localStorage.setItem('wt_cat_archive', JSON.stringify(merged));
+        const localOnlyDeleted = Object.keys(localArch).filter(k => k.endsWith('_deleted') && !arch.archive[k]);
+        if (localOnlyDeleted.length > 0) {
+          _syncCatArchive(merged);
+        }
       }
     } catch(e) { console.warn('[load] cat_archive skip:', e.message); }
 
@@ -836,7 +847,7 @@ export async function loadFromSupabase() {
       // DEFENSIVE: Never overwrite local categories with a significantly smaller list 
       // from cloud unless the cloud data is explicitly newer or the local list is empty/default.
       if (mapped.length >= localCats.length || localCats.length <= 6) {
-        localStorage.setItem('wt_categories', JSON.stringify(mapped));
+        saveCats(mapped);
         document.dispatchEvent(new CustomEvent('wt:cats-changed'));
       }
     }
@@ -989,6 +1000,20 @@ function handleRemoteBacklogChange(row) {
 function handleRemoteArchiveChange(row) {
   if (row && row.archive) {
     localStorage.setItem('wt_cat_archive', JSON.stringify(row.archive));
+    const archDeletedLower = new Set(
+      Object.keys(row.archive)
+        .filter(k => k.endsWith('_deleted'))
+        .map(k => k.toLowerCase())
+    );
+    const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
+    const cats = loadCats();
+    const filtered = cats.filter(
+      c => !_deletedSet.has(c.name.toLowerCase()) &&
+           !archDeletedLower.has((c.name + '_deleted').toLowerCase())
+    );
+    if (filtered.length !== cats.length) {
+      saveCats(filtered);
+    }
     document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'archive' } }));
   }
 }
