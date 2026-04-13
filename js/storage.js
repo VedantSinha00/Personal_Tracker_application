@@ -1014,11 +1014,12 @@ async function handleRemoteCatsChange() {
         color: c.color,
         hidden: !!hiddenMap[c.name]
       }));
-    saveCats(mapped);
-    
-    // Trigger repair after remote change to catch any orphaned data
-    repairCategories();
-    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'categories' } }));
+    const mappedStr = JSON.stringify(mapped);
+    if (localStorage.getItem('wt_categories') !== mappedStr) {
+      saveCats(mapped);
+      repairCategories();
+      document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'categories' } }));
+    }
   }
 }
 
