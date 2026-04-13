@@ -8,7 +8,7 @@ import {
   loadFocus, saveFocus,
   loadOrder, saveOrder, orderKey,
   loadCatArchive, saveCatArchive,
-  addDeletedCat, clearDeletedCat,
+  addDeletedCat, clearDeletedCat, getDeletedCats,
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
@@ -286,6 +286,14 @@ function attachCatDragListeners() {
 // ── Ensure a category exists (used by Pull to Week) ─────────────────────
 export function ensureCatExists(name) {
   if (!name) return 'Others';
+  const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
+  const arch = loadCatArchive();
+  const archDeletedLower = new Set(
+    Object.keys(arch).filter(k => k.endsWith('_deleted')).map(k => k.toLowerCase())
+  );
+  if (_deletedSet.has(name.toLowerCase()) || archDeletedLower.has((name + '_deleted').toLowerCase())) {
+    return 'Others';
+  }
   const cats = loadCats();
   const existing = cats.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (existing) return existing.name;
