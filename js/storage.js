@@ -306,6 +306,11 @@ export function repairCategories() {
 
   // Arch contains the explicitly deleted flag for categories that shouldn't be resurrected.
   const arch = loadCatArchive();
+  const archDeletedLower = new Set(
+    Object.keys(arch)
+      .filter(k => k.endsWith('_deleted'))
+      .map(k => k.toLowerCase())
+  );
   const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
 
   discovered.forEach((hasContent, name) => {
@@ -315,8 +320,8 @@ export function repairCategories() {
     if (!clean) return;
 
     // Do not resurrect if it was explicitly deleted by the user from the modal
-    if (arch[clean + '_deleted']) return;
-    if (_deletedSet.has(clean)) return; // blacklisted — skip resurrection
+    if (archDeletedLower.has((clean + '_deleted').toLowerCase())) return;
+    if (_deletedSet.has(clean.toLowerCase())) return; // blacklisted — skip resurrection
 
     const existing = cats.find(c => c.name.toLowerCase() === clean.toLowerCase());
     if (existing) {
@@ -804,9 +809,12 @@ export async function loadFromSupabase() {
       const hiddenMap = {};
       localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
       const arch = loadCatArchive();
+      const archDeletedLower = new Set(
+        Object.keys(arch).filter(k => k.endsWith('_deleted')).map(k => k.toLowerCase())
+      );
       const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
       const mapped = cats
-        .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !arch[c.name + '_deleted'])
+        .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
         .map(c => ({ 
           name: c.name, 
           color: c.color,
@@ -940,10 +948,13 @@ async function handleRemoteCatsChange() {
     const hiddenMap = {};
     localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
     const arch = loadCatArchive();
+    const archDeletedLower = new Set(
+      Object.keys(arch).filter(k => k.endsWith('_deleted')).map(k => k.toLowerCase())
+    );
     const _deletedSet = new Set(getDeletedCats().map(n => n.toLowerCase()));
 
     const mapped = cats
-      .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !arch[c.name + '_deleted'])
+      .filter(c => !_deletedSet.has(c.name.toLowerCase()) && !archDeletedLower.has((c.name + '_deleted').toLowerCase()))
       .map(c => ({
         name: c.name,
         color: c.color,
