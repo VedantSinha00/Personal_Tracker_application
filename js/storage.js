@@ -791,6 +791,18 @@ export async function loadFromSupabase() {
       }
     } catch(e) { console.warn('[load] global timer skip:', e.message); }
 
+    // Cat archive - LOAD THIS BEFORE CATEGORIES SO FILTERING IS ACCURATE
+    try {
+      const { data: arch } = await sb
+        .from('cat_archive')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (arch && arch.archive) {
+        localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
+      }
+    } catch(e) { console.warn('[load] cat_archive skip:', e.message); }
+
     // Categories
     const { data: cats, error: catsError } = await sb
       .from('categories')
@@ -829,7 +841,6 @@ export async function loadFromSupabase() {
       }
     }
 
-
     // Habits
     const { data: habits, error: habitsError } = await sb
       .from('habits')
@@ -850,18 +861,6 @@ export async function loadFromSupabase() {
       }));
       localStorage.setItem('wt_habits', JSON.stringify(mapped));
     }
-
-    // Cat archive
-    try {
-      const { data: arch } = await sb
-        .from('cat_archive')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (arch && arch.archive) {
-        localStorage.setItem('wt_cat_archive', JSON.stringify(arch.archive));
-      }
-    } catch(e) { console.warn('[load] cat_archive skip:', e.message); }
 
     // Backlog
     try {
