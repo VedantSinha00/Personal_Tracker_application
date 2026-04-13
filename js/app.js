@@ -238,8 +238,21 @@ function initListeners() {
     const d = load();
     // Sync stack keys with current category names
     const cats = loadCats();
+    const cNames = cats.map(c => c.name);
+    
     if (!d.stack) d.stack = {};
     cats.forEach(c => { if (d.stack[c.name] === undefined) d.stack[c.name] = ''; });
+    
+    // Clean up orphans from memory before saving
+    Object.keys(d.stack).forEach(k => {
+      if (!cNames.includes(k)) delete d.stack[k];
+    });
+    if (d.todos) {
+      Object.keys(d.todos).forEach(k => {
+        if (!cNames.includes(k)) delete d.todos[k];
+      });
+    }
+
     save(d);
     renderSt(d);
     _renderDG(d);

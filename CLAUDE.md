@@ -22,6 +22,7 @@ Use these semantic layers for all complex tasks:
 
 - [Project Standards]: Added `CLAUDE.md` to enforce systematic workflow (Specify → Plan → Task → Implement) and deterministic code standards.
 - [Version Update]: Bumped version to 1.2.2 for new release and fixed version metadata mismatch (standardized on SemVer).
+- [Week Transition & Sync]: Bumped version to 1.2.4. Implemented robust week-rollover detection (persistent last-seen Monday), hardened sync by fixing UUID identifier syntax (Supabase compliant), and resolved stopwatch flickering. Made carry-forward logic automatic (removed prompt dialog), and resolved a critical UI persistent bug restricting category deletion.
 
 ## graphify
 

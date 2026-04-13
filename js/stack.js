@@ -200,9 +200,6 @@ export function carryForward() {
   if (btn) btn.disabled = true;
 
   try {
-    // Confirm before reading or writing any data.
-    if (!confirm('Carry unfinished tasks from last week?')) return;
-
     const prevKey = 'wt_wk_' + getAbsWk(wk - 1);
     let prev;
     try { const r = localStorage.getItem(prevKey); prev = r ? JSON.parse(r) : null; }
