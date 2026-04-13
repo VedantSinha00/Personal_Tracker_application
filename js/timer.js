@@ -163,7 +163,7 @@ function updateOtherTimerDisplays(t, timeStr) {
 
 function renderActiveTimerCard(t, timeStr, compact = false) {
   const isPaused = t.isPaused;
-  const pulseAnim = isPaused ? '' : 'animation: gentle-pulse 2s infinite;';
+  const pulseAnim = '';
   const pauseBg = isPaused ? 'background:var(--amber-bg); color:var(--amber); border-color:var(--amber);' : '';
   const btnTxt = isPaused ? 'Resume' : 'Pause';
 
