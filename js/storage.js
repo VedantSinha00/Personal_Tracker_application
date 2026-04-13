@@ -801,11 +801,14 @@ export async function loadFromSupabase() {
       const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
       const hiddenMap = {};
       localCats.forEach(c => { if (c.hidden) hiddenMap[c.name] = true; });
-      const mapped = cats.map(c => ({ 
-        name: c.name, 
-        color: c.color,
-        hidden: !!hiddenMap[c.name]
-      }));
+      const _deletedSet = new Set(getDeletedCats());
+      const mapped = cats
+        .filter(c => !_deletedSet.has(c.name))
+        .map(c => ({ 
+          name: c.name, 
+          color: c.color,
+          hidden: !!hiddenMap[c.name]
+        }));
       
       // DEFENSIVE: Never overwrite local categories with a significantly smaller list 
       // from cloud unless the cloud data is explicitly newer or the local list is empty/default.
