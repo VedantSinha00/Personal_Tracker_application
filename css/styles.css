@@ -27,15 +27,16 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
 :root {
       /* Base Colors - Light Theme (Warm Parchment) */
       --bg: #F3EDE3;
-      --surface: #FDFAF5;
+      --surface: #FAF9F6;
       --surface-hover: #EDE5D8;
-      --surface-elevated: #FEFCF8;
+      --surface-elevated: #FAF9F6;
+      --paper-opacity: 0.05;
       --border: rgba(120, 85, 50, 0.10);
       --border2: rgba(120, 85, 50, 0.20);
 
       /* Text */
       --text: #2C1F14;
-      --text2: #7A6050;
+      --text2: #5A4E44;
       --text3: #B09A8A;
 
       /* Brand / Semantic Colors (Earthy) */
@@ -332,7 +333,8 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
     }
 
     .day-card {
-      background: var(--surface-grad);
+      background: var(--surface);
+      filter: url(#paperTexture);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.75rem;
@@ -646,6 +648,7 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
 
     .intention-box {
       background: var(--surface);
+      filter: url(#paperTexture);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1rem 1.25rem;
@@ -663,7 +666,8 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
     .iinput {
       width: 100%;
       border: none;
-      background: transparent;
+      background: var(--surface);
+      filter: url(#paperTexture);
       font-size: 14px;
       color: var(--text);
       outline: none;
@@ -690,6 +694,7 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
       align-items: stretch;
       gap: 0;
       background: var(--surface);
+      filter: url(#paperTexture);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 11px 14px;
@@ -717,7 +722,8 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
     .sinput {
       flex: 1;
       border: none;
-      background: var(--surface-hover);
+      background: var(--surface);
+      filter: url(#paperTexture);
       padding: var(--space-1) var(--space-2);
       border-radius: var(--radius-sm);
       font-size: var(--text-sm);
@@ -757,6 +763,7 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
 
     .rv-stat-card {
       background: var(--surface);
+      filter: url(#paperTexture);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.25rem 0.5rem;
@@ -822,7 +829,7 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
     }
     .rv-card:focus-within { border-color: var(--blue); background: var(--surface); }
     .rv-lbl { font-size: 11px; font-weight: 600; color: var(--text3); margin-bottom: 1rem; letter-spacing: 0.02em; }
-    .rv-ta { width: 100%; min-height: 240px; background: transparent; border: none; outline: none; color: var(--text); font-size: 15px; line-height: 1.85; resize: vertical; font-family: var(--font-journal); }
+    .rv-ta { width: 100%; min-height: 240px; background: var(--surface); filter: url(#paperTexture); border: 1px solid var(--border); outline: none; color: var(--text); font-size: 15px; line-height: 1.85; resize: vertical; font-family: var(--font-journal); }
 
     @media (max-width: 1100px) {
       .rv-metrics-split { grid-template-columns: 1fr; gap: 2.5rem; }
