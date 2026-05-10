@@ -275,23 +275,33 @@ async function handleSignOut() {
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // Check for an existing session with a timeout
+    // Show login UI immediately — new users see the screen right away without waiting for network
+    showAuth();
+
+    // Check for existing session in background with a short timeout
     const sessionPromise = sb.auth.getSession();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timed out')), 8000)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Connection timed out')), 2000)
     );
 
-    console.log('[auth] Initializing session...');
-    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+    console.log('[auth] Checking for existing session...');
+    let session = null;
+    try {
+      const { data } = await Promise.race([sessionPromise, timeoutPromise]);
+      session = data?.session ?? null;
+    } catch (e) {
+      console.warn('[auth] Session check timed out or failed:', e.message);
+      // Login screen is already visible — nothing else to do
+    }
     console.log('[auth] Session check complete. Session:', !!session);
 
     if (session) {
       setCurrentUser(session.user);
       const user = session.user;
-      
+
       // Check if user has a username
       const username = user.user_metadata?.username;
-      
+
       if (!username) {
         // Re-verify from DB in case metadata is stale
         const { data: profile } = await sb.from('profiles').select('username').eq('id', user.id).single();
@@ -308,8 +318,6 @@ async function handleSignOut() {
         showApp();
         document.dispatchEvent(new CustomEvent('wt:auth-ready', { detail: { user: user } }));
       }
-    } else {
-      showAuth();
     }
 
     // Keep _currentUser in sync
