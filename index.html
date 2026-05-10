@@ -8,10 +8,12 @@
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+        media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"></noscript>
   <link rel="stylesheet" href="css/styles.css?v=phase2_v1">
-  <!-- Lucide icons -->
-  <script defer src="https://unpkg.com/lucide@1.14.0/dist/umd/lucide.min.js"></script>
+  <!-- Lucide icons — self-hosted to avoid unpkg.com round trip -->
+  <script defer src="vendor/lucide.min.js"></script>
   <!-- Global error catcher for diagnosing silent module failures -->
   <script>
     window.onerror = function(msg, url, line, col, error) {
@@ -22,8 +24,8 @@
        document.body.innerHTML += '<div style="position:fixed;top:80px;left:0;width:100%;background:orange;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;">Unhandled Rejection: ' + e.reason + '</div>';
     });
   </script>
-  <!-- Supabase JS SDK (loaded before any module scripts) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.4"></script>
+  <!-- Supabase JS SDK — self-hosted to avoid cdn.jsdelivr.net round trip -->
+  <script defer src="vendor/supabase.min.js"></script>
 
   <!-- Inline styles for the loading screen (renders before main CSS) -->
   <style id="initial-styles">
