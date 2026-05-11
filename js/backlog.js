@@ -8,25 +8,22 @@ import { showToast } from './toast.js';
 import { populateCatSelect, ensureCatExists } from './categories.js';
 
 export function initBacklog() {
-  // Navigation: Toggle within Stack
-  const gotoBtn = document.getElementById('gotoBacklogBtn');
-  if (gotoBtn) {
-    gotoBtn.onclick = () => toggleBacklogView(true);
+  // Global nav "Backlog" button — switch to Stack tab and scroll to the section
+  const globalBtn = document.getElementById('globalBacklogBtn');
+  if (globalBtn) {
+    globalBtn.onclick = () => {
+      document.querySelector('.tab[data-tab="stack"]')?.click();
+      setTimeout(() => {
+        document.getElementById('backlogSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    };
   }
 
-  const hideBtn = document.getElementById('hideBacklogBtn');
-  if (hideBtn) {
-    hideBtn.onclick = () => toggleBacklogView(false);
-  }
-
-  // Quick Add: Support both Stack-tab and Backlog-tab forms
+  // Add backlog item on button click
   document.addEventListener('click', e => {
     if (e.target.classList.contains('add-backlog-item-btn')) {
-      const inputId = e.target.dataset.inputId || 'backlogItemInput';
-      const selectId = e.target.dataset.selectId || 'backlogCatSelect';
-      const input = document.getElementById(inputId);
-      const select = document.getElementById(selectId);
-      
+      const input  = document.getElementById('backlogItemInput');
+      const select = document.getElementById('backlogCatSelect');
       if (input && input.value.trim()) {
         addBacklogItem(input.value.trim(), select.value);
         input.value = '';
@@ -36,31 +33,6 @@ export function initBacklog() {
   });
 
   populateCatSelect();
-}
-
-export function toggleBacklogView(showBacklog) {
-  const weekly = document.getElementById('stackWeeklyView');
-  const backlog = document.getElementById('stackBacklogView');
-  const carryBtn = document.getElementById('carryBtn');
-  
-  if (!weekly || !backlog) return;
-
-  if (showBacklog) {
-    weekly.style.display = 'none';
-    backlog.style.display = 'block';
-    if (carryBtn) {
-      carryBtn.style.opacity = '0.3';
-      carryBtn.style.pointerEvents = 'none';
-    }
-    renderBacklog();
-  } else {
-    weekly.style.display = 'block';
-    backlog.style.display = 'none';
-    if (carryBtn) {
-      carryBtn.style.opacity = '1';
-      carryBtn.style.pointerEvents = 'auto';
-    }
-  }
 }
 
 export function renderBacklog() {
@@ -75,7 +47,7 @@ export function renderBacklog() {
   cats.forEach(c => catsMap[c.name] = c);
 
   if (backlog.items.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text3);font-family:inherit;font-size:13px;border:1px dashed var(--border);border-radius:var(--radius);">Your backlog is empty. Add something above!</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text3);font-family:inherit;font-size:13px;border:1px dashed var(--border);border-radius:var(--radius);">Your backlog is empty. Add an agenda item using the form above.</div>`;
     return;
   }
 

@@ -6,7 +6,7 @@ const electron = require('electron');
 const path = require('path');
 
 // Extract APIs (handle case where require('electron') might return a string in Node mode)
-const { app, BrowserWindow, shell, ipcMain } = typeof electron === 'object' ? electron : require('electron');
+const { app, BrowserWindow, shell, ipcMain, Menu, MenuItem } = typeof electron === 'object' ? electron : require('electron');
 
 // ── Application State ──────────────────────────────────────────────────────
 let mainWindow;
@@ -87,6 +87,26 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   mainWindow.setIcon(path.join(__dirname, 'assets/logo.ico'));
+
+  // Spell-check context menu — shows correction suggestions on right-click
+  mainWindow.webContents.on('context-menu', (event, params) => {
+    if (!params.misspelledWord && params.dictionarySuggestions.length === 0) return;
+    const menu = new Menu();
+    for (const suggestion of params.dictionarySuggestions) {
+      menu.append(new MenuItem({
+        label: suggestion,
+        click: () => mainWindow.webContents.replaceMisspelling(suggestion)
+      }));
+    }
+    if (params.misspelledWord) {
+      if (params.dictionarySuggestions.length > 0) menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(new MenuItem({
+        label: 'Add to dictionary',
+        click: () => mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+      }));
+    }
+    menu.popup();
+  });
 
   // Handle external links
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

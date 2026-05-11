@@ -163,9 +163,12 @@ function renameCat(idx, newName) {
 // ── Populate the category <select> in the block modal ───────────────────────
 // ── Populate the category <select> dropdowns throughout the app ───────────
 export function populateCatSelect() {
-  const cats = sortedCats();
-  const options = cats
-    .filter(c => !c.hidden)
+  const focus = loadFocus();
+  const all   = sortedCats().filter(c => !c.hidden);
+  // Mirror the Stack tab's visual order: high focus first, then low focus
+  const high  = all.filter(c => (focus[c.name] || 'high') === 'high');
+  const low   = all.filter(c => (focus[c.name] || 'high') === 'low');
+  const options = [...high, ...low]
     .map(c => `<option value="${c.name}">${c.name}</option>`)
     .join('');
   

@@ -93,7 +93,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
       <div class="habit-row" style="flex-wrap:wrap;gap:10px 16px;">
         ${customHabitHTML}
       </div>
-      <div class="blocks-stack">
+      <div class="blocks-stack" data-day="${dayOffset}">
         ${blockPills}
         ${noBlocks && isPast ? `<div class="missed-msg">Nothing logged</div>` : ''}
         <!-- Placeholder for active timer in Daily Log -->
@@ -185,6 +185,7 @@ export function openM(di, bi) {
   hideModalError('fError');
 
   document.getElementById('fCat').value    = '';
+  syncCustomSelect(document.getElementById('fCat'));
   document.getElementById('fIntent').value = '';
   document.getElementById('fIntentCount').textContent = '0 / 300';
   document.getElementById('fDur').value    = '';
@@ -265,8 +266,8 @@ function handleTimerStopped() {
   const result = stopTimer(true);
   if (!result) return;
   
-  const today = new Date().getDay();
-  const ti = today === 0 ? 6 : today - 1;
+  // Use the day the timer started on, not the current day (handles past-midnight sessions)
+  const ti = result.startDay !== undefined ? result.startDay : (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
 
   // Open the standard log modal pre-filled with the timer result
   openM(ti, 'new');
@@ -286,8 +287,8 @@ function handleTimerStopped() {
   const durStr = (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm' : (h === 0 ? '0m' : ''));
   document.getElementById('fDur').value = durStr;
   
-  // Determine slot based on current time
-  const hr = new Date().getHours();
+  // Determine slot based on when the timer started, not when it stopped
+  const hr = new Date(result.startTime).getHours();
   let slot = 'morning';
   if (hr < 5) slot = 'late-night';
   else if (hr < 9) slot = 'early-morning';
@@ -437,8 +438,13 @@ export function initDailyLogListeners() {
   // uniformly whether the card is in the Daily Log tab or the Overview tab.
   const appShell = document.getElementById('appShell');
 
-  // --- DRAG AND DROP FOR BLOCKS ---
+  // --- DRAG AND DROP FOR BLOCKS (within-day reorder + cross-day move) ---
   let draggedBlock = null;
+
+  function _clearDragIndicators() {
+    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
+    appShell.querySelectorAll('.blocks-stack').forEach(el => el.classList.remove('drop-target'));
+  }
 
   appShell.addEventListener('dragstart', e => {
     const pill = e.target.closest('.block-pill');
@@ -449,44 +455,60 @@ export function initDailyLogListeners() {
   });
 
   appShell.addEventListener('dragover', e => {
-    const pill = e.target.closest('.block-pill');
-    if (!pill || !draggedBlock) return;
-    if (draggedBlock.day !== +pill.dataset.day) return;
+    if (!draggedBlock) return;
+    const pill  = e.target.closest('.block-pill');
+    const stack = e.target.closest('.blocks-stack');
+    if (!pill && !stack) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
-    pill.style.borderTop = '2px solid var(--text)';
+    _clearDragIndicators();
+    if (pill) {
+      pill.style.borderTop = '2px solid var(--accent)';
+    } else {
+      // Hovering over empty space in a day's stack
+      stack.classList.add('drop-target');
+    }
   });
 
   appShell.addEventListener('dragleave', e => {
     const pill = e.target.closest('.block-pill');
     if (pill) pill.style.borderTop = '';
+    const stack = e.target.closest('.blocks-stack');
+    if (stack && !stack.contains(e.relatedTarget)) stack.classList.remove('drop-target');
   });
 
-  appShell.addEventListener('dragend', e => {
-    if (draggedBlock && draggedBlock.el) draggedBlock.el.style.opacity = '1';
-    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
+  appShell.addEventListener('dragend', () => {
+    if (draggedBlock?.el) draggedBlock.el.style.opacity = '1';
+    _clearDragIndicators();
     draggedBlock = null;
   });
 
   appShell.addEventListener('drop', e => {
-    const pill = e.target.closest('.block-pill');
-    if (!pill || !draggedBlock) return;
-    if (draggedBlock.day !== +pill.dataset.day) return; 
+    if (!draggedBlock) return;
+    const pill  = e.target.closest('.block-pill');
+    const stack = e.target.closest('.blocks-stack');
+    if (!pill && !stack) return;
     e.preventDefault();
-    
-    appShell.querySelectorAll('.block-pill').forEach(el => el.style.borderTop = '');
-    
-    const d = load();
-    const blocks = d.days[draggedBlock.day].blocks;
+    _clearDragIndicators();
+
+    const d       = load();
+    const fromDay = draggedBlock.day;
     const fromIdx = draggedBlock.idx;
-    const toIdx = +pill.dataset.block;
-    
-    if (fromIdx === toIdx) return;
-    
-    const [movedBlock] = blocks.splice(fromIdx, 1);
-    blocks.splice(toIdx, 0, movedBlock);
-    
+
+    if (pill) {
+      const toDay = +pill.dataset.day;
+      const toIdx = +pill.dataset.block;
+      if (fromDay === toDay && fromIdx === toIdx) return;
+      const [moved] = d.days[fromDay].blocks.splice(fromIdx, 1);
+      d.days[toDay].blocks.splice(toIdx, 0, moved);
+    } else {
+      // Dropped onto a stack container — append to that day
+      const toDay = +stack.dataset.day;
+      if (fromDay === toDay) return;
+      const [moved] = d.days[fromDay].blocks.splice(fromIdx, 1);
+      d.days[toDay].blocks.push(moved);
+    }
+
     save(d);
     document.dispatchEvent(new CustomEvent('wt:day-changed'));
   });
@@ -717,6 +739,12 @@ export function initDailyLogListeners() {
       const cat = document.getElementById('fCat').value || 'Others';
       if (!text) return;
 
+      // Snapshot checked state before re-rendering
+      const currentLinked = [];
+      document.querySelectorAll('#fLinkedTasks input[type="checkbox"]:checked').forEach(cb => {
+        currentLinked.push({ cat: cb.dataset.cat, idx: +cb.dataset.idx });
+      });
+
       const d = load();
       if (!d.todos) d.todos = {};
       if (!d.todos[cat]) d.todos[cat] = [];
@@ -724,7 +752,7 @@ export function initDailyLogListeners() {
       save(d);
 
       e.target.value = '';
-      _renderLinkedTasks(cat);
+      _renderLinkedTasks(cat, currentLinked);
       // Notify other tabs
       document.dispatchEvent(new CustomEvent('wt:stack-saved'));
     }

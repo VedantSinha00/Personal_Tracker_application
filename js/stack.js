@@ -12,7 +12,7 @@ import {
   sortedCats, wk, getAbsWk,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
-import { pushToBacklog, toggleBacklogView } from './backlog.js';
+import { pushToBacklog } from './backlog.js';
 
 // Re-render when items are pulled from backlog
 document.addEventListener('wt:backlog-changed', () => {
@@ -184,7 +184,7 @@ export function saveStackInputs() {
 // ── Focus toggle ──────────────────────────────────────────────────────────────
 function toggleFocus(catName) {
   const f = loadFocus();
-  f[catName] = (f[catName] === 'high') ? 'low' : 'high';
+  f[catName] = ((f[catName] || 'high') === 'high') ? 'low' : 'high';
   saveFocus(f);
   renderSt(load());
 }
@@ -609,12 +609,4 @@ export function initStackListeners() {
     if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
   });
 
-  // Carry forward button
-  document.getElementById('carryBtn').addEventListener('click', carryForward);
-
-  // Navigate to Backlog View (internal)
-  const gotoBtn = document.getElementById('gotoBacklogBtn');
-  if (gotoBtn) {
-    gotoBtn.onclick = () => toggleBacklogView(true);
-  }
 }
