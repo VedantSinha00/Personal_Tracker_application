@@ -387,10 +387,18 @@ async function _syncBacklog(b) {
 }
 
 // ── Active Timer ──────────────────────────────────────────────────────────────
+const _MAX_TIMER_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 export function loadTimer() {
   try {
     const t = JSON.parse(localStorage.getItem('wt_timer') || 'null');
-    if (t && (!t.cat || !t.startTime)) return null;
+    if (!t || !t.cat || !t.startTime) return null;
+    // Discard timers whose startTime is older than 24 hours — they are ghost sessions
+    if (Date.now() - t.startTime > _MAX_TIMER_AGE_MS) {
+      console.warn('[timer] Discarding stale timer from', new Date(t.startTime).toLocaleString());
+      localStorage.removeItem('wt_timer');
+      return null;
+    }
     return t;
   }
   catch(e) { return null; }
@@ -806,12 +814,13 @@ export async function loadFromSupabase() {
         if (row.item_order && row.item_order.length > 0)
           localStorage.setItem('wt_order_' + row.week_offset, JSON.stringify(row.item_order));
 
-        // Restore timer if found and more recent
+        // Restore timer if found, more recent, and not stale
         if (row.active_timer) {
           const localT = loadTimer();
           if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
             const remoteT = row.active_timer;
-            if (remoteT && remoteT.cat && remoteT.startTime) { // Ensure it's a real timer
+            if (remoteT && remoteT.cat && remoteT.startTime &&
+                Date.now() - remoteT.startTime <= _MAX_TIMER_AGE_MS) {
               remoteT.__synced_at = row.updated_at;
               localStorage.setItem('wt_timer', JSON.stringify(remoteT));
             }
@@ -827,7 +836,8 @@ export async function loadFromSupabase() {
         const localT = loadTimer();
         if (!localT || (prof.updated_at && new Date(prof.updated_at) > new Date(localT.__synced_at || 0))) {
           const remoteT = prof.active_timer;
-          if (remoteT && remoteT.cat && remoteT.startTime) {
+          if (remoteT && remoteT.cat && remoteT.startTime &&
+              Date.now() - remoteT.startTime <= _MAX_TIMER_AGE_MS) {
             remoteT.__synced_at = prof.updated_at;
             localStorage.setItem('wt_timer', JSON.stringify(remoteT));
           }
@@ -1064,15 +1074,24 @@ function handleRemoteArchiveChange(row) {
 }
 
 function handleRemoteProfileChange(row) {
-  if (row && row.active_timer) {
-    const localT = loadTimer();
-    if (!localT || (row.updated_at && new Date(row.updated_at) > new Date(localT.__synced_at || 0))) {
+  if (!row) return;
+  const localT = loadTimer();
+  const remoteIsNewer = row.updated_at && new Date(row.updated_at) > new Date((localT && localT.__synced_at) || 0);
+
+  if (row.active_timer) {
+    // Remote has a timer — restore it if newer and not stale
+    if (!localT || remoteIsNewer) {
       const remoteT = row.active_timer;
-      if (remoteT && remoteT.cat && remoteT.startTime) {
+      if (remoteT && remoteT.cat && remoteT.startTime &&
+          Date.now() - remoteT.startTime <= _MAX_TIMER_AGE_MS) {
         remoteT.__synced_at = row.updated_at;
         localStorage.setItem('wt_timer', JSON.stringify(remoteT));
         document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
       }
     }
+  } else if (localT && remoteIsNewer) {
+    // Remote cleared the timer — honour that and clear locally too
+    localStorage.removeItem('wt_timer');
+    document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
   }
 }

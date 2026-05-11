@@ -6,9 +6,11 @@ let _timerInterval = null;
 
 window.addEventListener('wt:week-changed', refreshTimerDisplays);
 
-export function startTimer(cat, intent, offsetMinutes = 0, notes = '', linkedTasks = []) {
+export function startTimer(cat, intent, offsetMinutes = 0, notes = '', linkedTasks = [], startDay = null) {
   const startTime = Date.now() - (offsetMinutes * 60 * 1000);
-  const t = { cat, intent, startTime, notes, linkedTasks, accumulatedMs: 0, isPaused: false };
+  const today = new Date().getDay();
+  const dayIndex = startDay !== null ? startDay : (today === 0 ? 6 : today - 1);
+  const t = { cat, intent, startTime, notes, linkedTasks, startDay: dayIndex, accumulatedMs: 0, isPaused: false };
   saveTimer(t);
   initTimerTick();
 }

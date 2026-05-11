@@ -198,6 +198,7 @@
         <button class="tab"        data-tab="insights">Insights</button>
       </div>
       <div class="global-tools" style="display: flex; gap: 8px;">
+        <button class="btn" id="globalBacklogBtn" title="Open backlog" style="display:flex;align-items:center;gap:5px; padding: 5px 12px; font-size: 12px; background:transparent; border:1px solid var(--border); color:var(--text3);"><i data-lucide="inbox" style="width:13px;height:13px;"></i> Backlog</button>
         <button class="btn" data-action="open-habits" title="Manage custom habits" style="display:flex;align-items:center;gap:5px; padding: 5px 12px; font-size: 12px; background:transparent; border:1px solid var(--border); color:var(--text3);"><i data-lucide="heart-pulse" style="width:13px;height:13px;"></i> Habits</button>
         <button class="btn" data-action="open-cats" title="Manage categories" style="display:flex;align-items:center;gap:5px; padding: 5px 12px; font-size: 12px; background:transparent; border:1px solid var(--border); color:var(--text3);"><i data-lucide="tag" style="width:13px;height:13px;"></i> Categories</button>
       </div>
@@ -208,27 +209,12 @@
     <div id="days"     class="sec"><div class="day-grid" id="dayGrid"></div></div>
     <div id="stack" class="sec">
       <div id="stackWeeklyView">
-        <!-- 🎯 Hero Intention: Bold, centered, non-green -->
+        <!-- 🎯 Hero Intention -->
         <div class="intention-box predominant">
           <div class="ilbl">This week's intention</div>
           <input class="iinput" id="intention" placeholder="What matters most this week?">
         </div>
 
-        <!-- 🛠️ Action Row: Quick Add (Left) & Controls (Right) -->
-        <div class="stack-action-row">
-          <div class="backlog-add-form integrated">
-            <input type="text" id="backlogItemInput" placeholder="Quick add task to agenda..." class="backlog-input">
-            <select id="backlogCatSelect" class="backlog-select backlog-cat-select"></select>
-            <button class="btn btn-p add-backlog-item-btn">Add</button>
-          </div>
-          
-          <div class="stack-controls-group">
-            <button class="carry-btn" id="gotoBacklogBtn" title="Show Backlog to pull tasks">
-              <i data-lucide="inbox"></i> <span>Backlog</span>
-            </button>
-            <button class="carry-btn" id="carryBtn" title="Carry items from last week">↩ Carry from last week</button>
-          </div>
-        </div>
         <div id="stackDragContainer">
           <div class="stack-section-lbl" id="highLbl" style="display:none">HIGH FOCUS</div>
           <div id="highS"></div>
@@ -237,26 +223,17 @@
           <div class="stack-section-lbl stack-section-drop" id="highLbl2" data-level="high" style="display:none;">↑ HIGH FOCUS</div>
           <div id="lowEmptyHint" style="display:none;margin-top:0.5rem;padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);text-align:center;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">No low focus items</div>
         </div>
-      </div>
 
-      <!-- ── Backlog Sub-view (Mirrors Stack precisely) ─────────────────── -->
-      <div id="stackBacklogView" style="display:none;">
-        <div class="stack-action-row">
-          <div class="backlog-add-form integrated">
-            <input type="text" id="backlogItemInputTab" placeholder="Quick add task to agenda..." class="backlog-input">
-            <select id="backlogCatSelectTab" class="backlog-select backlog-cat-select"></select>
-            <button class="btn btn-p add-backlog-item-btn" data-input-id="backlogItemInputTab" data-select-id="backlogCatSelectTab">Add</button>
+        <!-- ── Backlog Section ───────────────────────────────────────── -->
+        <div class="backlog-inline-section" id="backlogSection">
+          <div class="stack-section-lbl" style="margin-top:0;">BACKLOG</div>
+          <div class="backlog-add-form integrated" style="margin:0.75rem 0 1rem;">
+            <input type="text" id="backlogItemInput" placeholder="Add agenda item..." class="backlog-input">
+            <select id="backlogCatSelect" class="backlog-select backlog-cat-select"></select>
+            <button class="btn btn-p add-backlog-item-btn">Add</button>
           </div>
-          
-          <div class="stack-controls-group">
-            <button class="carry-btn" id="hideBacklogBtn">
-              <i data-lucide="arrow-left"></i> <span>Back to Weekly Sprint</span>
-            </button>
-          </div>
+          <div id="backlogList"></div>
         </div>
-        
-        <div class="stack-section-lbl">BACKLOG</div>
-        <div id="backlogList" style="margin-top:0.5rem;"></div>
       </div>
     </div>
 

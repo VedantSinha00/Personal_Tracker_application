@@ -41,14 +41,14 @@ import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
 import { renderOv as _renderOv, initOverviewListeners } from './overview.js';
 import { updM as _updM, renderReview as _renderReview,
          initReviewListeners } from './review.js';
-import { renderSt, saveStackInputs, updateCarryBtn,
+import { renderSt, saveStackInputs,
          initStackListeners, carryForward } from './stack.js';
 import { openCatModal, closeCatModal, initCategoriesListeners } from './categories.js';
 import { openHabitsModal, closeHabitsModal, initHabitsListeners } from './habits.js';
 import { initInsights, renderInsights } from './insights.js';
 import { initBacklog, renderBacklog } from './backlog.js';
 
-import { initTimerTick, togglePauseTimer } from './timer.js';
+import { initTimerTick, togglePauseTimer, refreshTimerDisplays } from './timer.js';
 import { checkForWeekChange } from './weekState.js';
 import { showToast } from './toast.js';
 import { initAllCustomSelects } from './custom-select.js';
@@ -99,15 +99,18 @@ function swTab(id) {
 // ── Full re-render ────────────────────────────────────────────────────────────
 function renderAll() {
   const d = load();
-  document.getElementById('intention').value = d.intention || '';
+  const intentionEl = document.getElementById('intention');
+  if (intentionEl) intentionEl.value = d.intention || '';
   _renderReview(d);
   _renderDG(d);
   _renderOv(d);
   renderSt(d);
-  updateCarryBtn(d);
   renderBacklog();
   // Refresh Lucide icons after every DOM render (icons may have been replaced)
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  // Re-inject the active timer card immediately so it never disappears between
+  // renderAll() calls and the next setInterval tick (which can be up to 1s later).
+  refreshTimerDisplays();
 }
 
 // ── Week navigation ───────────────────────────────────────────────────────────
