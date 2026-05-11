@@ -6,6 +6,7 @@ import {
   load, save, loadHabits, saveHabits, allHabits,
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
+import { showToast } from './toast.js';
 
 // Tracks the currently selected colour in the habit colour picker.
 let selHabitColor = '#2d6a4f';
@@ -57,9 +58,19 @@ export function addCustomHabit() {
   const targetEl = document.getElementById('habitTargetInput');
   const addBtn   = document.querySelector('#habitsModal .habit-add-row .btn-p');
   const name = nameEl.value.trim();
-  if (!name) return;
+  if (!name) {
+    showToast('Please enter a habit name.', 'warning');
+    nameEl.focus();
+    return;
+  }
 
-  const target = Math.min(7, Math.max(1, parseInt(targetEl.value) || 5));
+  const rawTarget = parseInt(targetEl.value, 10);
+  if (isNaN(rawTarget) || rawTarget < 1) {
+    showToast('Target must be at least 1 day per week.', 'warning');
+    targetEl.select();
+    return;
+  }
+  const target = Math.min(7, rawTarget);
   const habits  = loadHabits();
 
   // Prevent duplicates (case-insensitive) across built-in + custom

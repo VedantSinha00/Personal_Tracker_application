@@ -45,7 +45,7 @@ import { renderSt, saveStackInputs,
          initStackListeners, carryForward } from './stack.js';
 import { openCatModal, closeCatModal, initCategoriesListeners } from './categories.js';
 import { openHabitsModal, closeHabitsModal, initHabitsListeners } from './habits.js';
-import { initInsights, renderInsights } from './insights.js';
+import { initInsights, renderInsights, invalidateWeeksCache } from './insights.js';
 import { initBacklog, renderBacklog } from './backlog.js';
 
 import { initTimerTick, togglePauseTimer, refreshTimerDisplays } from './timer.js';
@@ -111,6 +111,9 @@ function renderAll() {
   // Re-inject the active timer card immediately so it never disappears between
   // renderAll() calls and the next setInterval tick (which can be up to 1s later).
   refreshTimerDisplays();
+  // Re-render Insights if it has been initialised — covers the case where
+  // data arrives from Supabase after the tab was already visited.
+  if (_insightsInited) { invalidateWeeksCache(); renderInsights(); }
 }
 
 // ── Week navigation ───────────────────────────────────────────────────────────
@@ -221,7 +224,7 @@ function initListeners() {
     _updM(d);
     renderSt(d);
     renderBacklog();
-    if (_insightsInited && activeTab === 'insights') renderInsights();
+    if (_insightsInited) { invalidateWeeksCache(); if (activeTab === 'insights') renderInsights(); }
   });
 
   // Toggling a built-in habit from the Overview panel
