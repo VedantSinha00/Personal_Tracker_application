@@ -177,15 +177,15 @@ export function populateCatSelect() {
   if (fCat) {
     const oldVal = fCat.value;
     fCat.innerHTML = '<option value="" disabled selected>Select Area</option>' + options;
-    if (oldVal && cats.find(c => c.name === oldVal)) fCat.value = oldVal;
+    if (oldVal && all.find(c => c.name === oldVal)) fCat.value = oldVal;
   }
-  
+
   // Timer Modal dropdown
   const stCat = document.getElementById('stCat');
   if (stCat) {
     const oldVal = stCat.value;
     stCat.innerHTML = '<option value="" disabled selected>Select Area</option>' + options;
-    if (oldVal && cats.find(c => c.name === oldVal)) stCat.value = oldVal;
+    if (oldVal && all.find(c => c.name === oldVal)) stCat.value = oldVal;
   }
 
   // Backlog / Stack Quick-Add selects
@@ -193,7 +193,7 @@ export function populateCatSelect() {
   backlogSelects.forEach(sel => {
     const oldVal = sel.value;
     sel.innerHTML = options;
-    if (oldVal && cats.find(c => c.name === oldVal)) sel.value = oldVal;
+    if (oldVal && all.find(c => c.name === oldVal)) sel.value = oldVal;
   });
 
   // Sync custom dropdowns
