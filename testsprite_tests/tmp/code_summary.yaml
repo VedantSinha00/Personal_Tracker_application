@@ -1,34 +1,58 @@
+version: "2"
+type: frontend
 tech_stack:
-  core:
-    - HTML
-    - JavaScript (ESM)
-  styling:
-    - Vanilla CSS
-  framework:
-    - Electron (Desktop Wrapper)
-  backend:
-    - Supabase (Auth, Database)
-  dependencies:
-    - electron-updater
-    - jimp
-
+  - HTML
+  - Vanilla JavaScript
+  - CSS
+  - Supabase
+  - Electron
+routes:
+  - path: /
+    file: index.html
+    auth_required: false
+    description: Main application page with multiple tabs (Overview, Weekly log, Stack, Review, Insights)
 features:
-  - name: Weekly Log
-    description: Core tracking feature for tasks and events in a weekly grid.
-  - name: Insights
-    description: Productivity charts and habits data visualization.
-  - name: Journal
-    description: Daily and weekly journaling/review system.
-  - name: Categories
-    description: Organization system for tasks with color-coded labels.
-  - name: Habits
-    description: Tracking and visualizing recurring habits completion.
-  - name: Timer/Stopwatch
-    description: Integrated task duration tracking.
-  - name: Cloud Sync
-    description: Secure data synchronization using Supabase.
-  - name: Authentication
-    description: User authentication via Supabase and deep-link callbacks.
-
-project_type: frontend
-local_port: 3000
+  - name: User Authentication
+    description: Login with Google using Supabase Auth
+    files:
+      - js/auth.js
+      - js/sb.js
+    entry_route: /
+    user_interactions:
+      - Click "Continue with Google" button
+      - Handle auth callback from Supabase
+    auth_required: false
+  - name: Weekly Tracker
+    description: Track daily tasks and intentions
+    files:
+      - js/app.js
+      - js/dailylog.js
+    entry_route: /
+    user_interactions:
+      - Click tabs to switch between Overview, Weekly log, Stack, etc.
+      - Click "Log block" to add a new task
+      - Select category and duration
+    auth_required: true
+  - name: Habits Management
+    description: Manage and track daily habits
+    files:
+      - js/habits.js
+    entry_route: /
+    user_interactions:
+      - Click Habits button to open management modal
+      - Add new habits with target days per week
+      - Check habits on daily cards
+    auth_required: true
+  - name: Productivity Insights
+    description: View heatmaps and momentum charts
+    files:
+      - js/insights.js
+    entry_route: /
+    user_interactions:
+      - Navigate to Insights tab
+      - View heatmap and focus distribution
+    auth_required: true
+known_limitations:
+  - issue: Requires Supabase connection for data sync
+    location: js/storage.js
+    impact: May fail if offline or database is unreachable
