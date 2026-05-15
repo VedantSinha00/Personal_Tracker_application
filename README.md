@@ -2,7 +2,7 @@
 
 > A full-featured **desktop + web** productivity tracker built with Vanilla JS, Electron, and Supabase. Designed and shipped solo using a vibe coding workflow — from concept to packaged Windows installer.
 
-**[Live Web Demo](https://vedantsinha00.github.io/Personal_Tracker_application/)** | **v1.3.3**
+**[Live Web Demo](https://vedantsinha00.github.io/Personal_Tracker_application/)** | **v1.2.8**
 
 ---
 
