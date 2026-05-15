@@ -2,7 +2,7 @@
 
 > A full-featured **desktop + web** productivity tracker built with Vanilla JS, Electron, and Supabase. Designed and shipped solo using a vibe coding workflow — from concept to packaged Windows installer.
 
-**[Live Web Demo](https://vedantsinha00.github.io/Personal_Tracker_application/)** | **v1.1.2**
+**[Live Web Demo](https://vedantsinha00.github.io/Personal_Tracker_application/)** | **v1.3.3**
 
 ---
 
@@ -31,14 +31,15 @@ A weekly habit and work tracker that runs as a native Windows desktop app (via E
 - **Custom Categories** — Add, rename, reorder, and color-code your own work categories (36-swatch palette + hex picker).
 - **Custom Habits** — Define habits with individual targets, colors, and per-day tracking.
 - **Cloud Sync + Offline First** — Supabase integration with `localStorage` as an instant cache. Works offline; syncs in the background.
-- **Smart Recovery** — Dedicated logic to detect and repair corrupt or missing category/mission data after sync conflicts.
+- **Smart Recovery** — Dedicated logic to detect and repair corrupt or missing category/mission data after sync conflicts, including server-side soft-delete synchronization.
 - **Auto-Updater** — Electron desktop build checks GitHub Releases on launch and offers a one-click "Restart & Install."
 - **Data Export / Import** — Full JSON export and import for backup and migration.
+- **Account Settings** — Change your display username directly from within the app.
 
 ### UI/UX Details
 
 - Frameless Electron window with custom titlebar (Windows-optimized)
-- Dark mode with glassmorphic overlays and 1px borders
+- Dark mode and Light mode, both with glassmorphic overlays and 1px borders
 - Custom-built dropdown components (no OS-native selects)
 - FLIP-based drag-and-drop reordering in the Stack tab
 - Micro-animations on tab switches, modals, and toasts
@@ -78,6 +79,8 @@ js/
   categories.js         Category CRUD, color management, smart recovery
   habits.js             Custom habit configuration modal
   timer.js              Stopwatch — isolated to avoid circular dependencies
+  weekState.js          Week identity and rollover detection (fires wt:week-changed)
+  account.js            Account Settings modal — username management
   toast.js              Non-blocking notification system
   custom-select.js      Custom dropdown component (replaces native <select>)
   colours.js            Color resolution and badge contrast utilities
