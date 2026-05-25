@@ -1,7 +1,7 @@
 // @ts-check
 // ── timer.js ───────────────────────────────────────────────────────────────
 // Low-level timer logic to avoid circular dependencies between app.js and dailylog.js
-import { loadTimer, saveTimer } from './storage.js';
+import { loadTimer, saveTimer, wk } from './storage.js';
 
 /** @typedef {import('./constants.js').TimerState} TimerState */
 
@@ -145,6 +145,9 @@ export function initTimerTick() {
 }
 
 function updateOtherTimerDisplays(t, timeStr) {
+  // Only show inline timer cards when viewing the current week
+  if (wk !== 0) return;
+
   // 1. Overview Tab
   const ovContainer = document.getElementById('ovTimerContainer');
   if (ovContainer) {
