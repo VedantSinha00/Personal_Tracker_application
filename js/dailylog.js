@@ -184,8 +184,9 @@ export function openM(di, bi) {
   isLogFromTimer = false; // Reset by default
   hideModalError('fError');
 
-  document.getElementById('fCat').value    = '';
-  syncCustomSelect(document.getElementById('fCat'));
+  const fCatEl = document.getElementById('fCat');
+  fCatEl.selectedIndex = 0;
+  syncCustomSelect(fCatEl);
   document.getElementById('fIntent').value = '';
   document.getElementById('fIntentCount').textContent = '0 / 300';
   document.getElementById('fDur').value    = '';

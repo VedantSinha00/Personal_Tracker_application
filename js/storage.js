@@ -1,3 +1,4 @@
+// @ts-check
 // ── storage.js ───────────────────────────────────────────────────────────────
 // The data layer. All reads/writes go through this file.
 //
@@ -18,10 +19,18 @@ import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
 import { sb, getCurrentUser } from './sb.js';
 import { isCurrentWeek } from './weekState.js';
 
+/** @typedef {import('./constants.js').Category}   Category   */
+/** @typedef {import('./constants.js').Habit}      Habit      */
+/** @typedef {import('./constants.js').WeekData}   WeekData   */
+/** @typedef {import('./constants.js').BacklogData} BacklogData */
+/** @typedef {import('./constants.js').TimerState} TimerState */
+
 // ── Week state (Absolute Anchored) ───────────────────────────────────────────
 export let wk = 0;
+/** @param {number} val */
 export function setWk(val) { wk = val; }
 
+/** @param {number} relativeOffset @returns {number} */
 export function getAbsWk(relativeOffset) {
   // Epoch: Midnight local time of Monday, March 23, 2026
   const d = new Date();
@@ -33,17 +42,19 @@ export function getAbsWk(relativeOffset) {
   return Math.round((d.getTime() - epoch.getTime()) / (7 * 24 * 60 * 60 * 1000));
 }
 
+/** @param {number} absOffset @returns {Date} */
 export function getMonFromAbs(absOffset) {
   const m = new Date(2026, 2, 23, 0, 0, 0, 0);
   m.setDate(m.getDate() + absOffset * 7);
   return m;
 }
 
-export function wkKey()    { return 'wt_wk_' + getAbsWk(wk); }
-export function orderKey() { return 'wt_order_' + getAbsWk(wk); }
-export function focusKey() { return 'wt_focus_' + getAbsWk(wk); }
+/** @returns {string} */ export function wkKey()    { return 'wt_wk_' + getAbsWk(wk); }
+/** @returns {string} */ export function orderKey() { return 'wt_order_' + getAbsWk(wk); }
+/** @returns {string} */ export function focusKey() { return 'wt_focus_' + getAbsWk(wk); }
 
 // ── Default week data ─────────────────────────────────────────────────────────
+/** @returns {WeekData} */
 export function def() {
   const cats  = loadCats();
   const stack = {};
@@ -63,6 +74,7 @@ export function def() {
 // ── Synchronous read/write (localStorage cache) ───────────────────────────────
 // These are called throughout the app and must remain synchronous.
 
+/** @returns {WeekData} */
 export function load() {
   try {
     const r = localStorage.getItem(wkKey());
@@ -94,6 +106,7 @@ function migrateData(d) {
 
 const _syncQueue = {};
 
+/** @param {WeekData} [d] */
 export function save(d) {
   // If no data passed (e.g. from a manual console sync), load the current week's local data
   if (!d) {
@@ -115,6 +128,7 @@ export function save(d) {
 }
 
 // ── Categories ────────────────────────────────────────────────────────────────
+/** @returns {Category[]} */
 export function loadCats() {
   try {
     const r = localStorage.getItem('wt_categories');
@@ -122,6 +136,7 @@ export function loadCats() {
   } catch(e) { return DEFAULT_CATS.slice(); }
 }
 
+/** @param {Category[]} cats */
 export function saveCats(cats) {
   localStorage.setItem('wt_categories', JSON.stringify(cats));
   if (_syncQueue['cats']) clearTimeout(_syncQueue['cats']);
@@ -129,6 +144,7 @@ export function saveCats(cats) {
 }
 
 // ── Custom habits ─────────────────────────────────────────────────────────────
+/** @returns {Habit[]} */
 export function loadHabits() {
   try {
     const r = localStorage.getItem('wt_habits');
@@ -143,6 +159,7 @@ export function loadHabits() {
   } catch(e) { return DEFAULT_HABITS.slice(); }
 }
 
+/** @param {Habit[]} h */
 export function saveHabits(h) {
   localStorage.setItem('wt_habits', JSON.stringify(h));
   if (_syncQueue['habits']) clearTimeout(_syncQueue['habits']);
@@ -168,6 +185,7 @@ export function flushPendingSyncs() {
   _syncBacklog(loadBacklog());
 }
 
+/** @returns {Habit[]} */
 export function allHabits() {
   return loadHabits();
 }
@@ -175,6 +193,7 @@ export function allHabits() {
 // ── Focus levels ──────────────────────────────────────────────────────────────
 // Focus and order are stored inside weekly_data in Supabase (see _syncWeek),
 // so no separate sync call is needed here.
+/** @returns {Record<string, number>} category name → focus level (1–5) */
 export function loadFocus() {
   try {
     const r = localStorage.getItem(focusKey());
@@ -182,6 +201,7 @@ export function loadFocus() {
   } catch(e) { return {}; }
 }
 
+/** @param {Record<string, number>} f */
 export function saveFocus(f) {
   localStorage.setItem(focusKey(), JSON.stringify(f));
   // Merge into weekly data sync — read current week data and re-sync
@@ -189,6 +209,7 @@ export function saveFocus(f) {
 }
 
 // ── Stack item order ──────────────────────────────────────────────────────────
+/** @returns {string[] | null} ordered category names, or null if unset */
 export function loadOrder() {
   try {
     const r = localStorage.getItem(orderKey());
@@ -196,11 +217,13 @@ export function loadOrder() {
   } catch(e) { return null; }
 }
 
+/** @param {string[]} arr */
 export function saveOrder(arr) {
   localStorage.setItem(orderKey(), JSON.stringify(arr));
   _syncWeekFocusOrder(getAbsWk(wk));
 }
 
+/** @returns {Category[]} categories in user-defined order, "Others" always last */
 export function sortedCats() {
   const cats  = loadCats();
   const order = loadOrder();
@@ -234,11 +257,13 @@ export function saveCatArchive(arch) {
 // automatically resurrects them from historical data.
 const _DELETED_KEY = 'wt_deleted_cats';
 
+/** @returns {string[]} lowercase category names the user has explicitly deleted */
 export function getDeletedCats() {
   try { return JSON.parse(localStorage.getItem(_DELETED_KEY) || '[]'); }
   catch { return []; }
 }
 
+/** @param {string} name */
 export function addDeletedCat(name) {
   const arr = getDeletedCats();
   const lower = name.toLowerCase();
@@ -246,6 +271,7 @@ export function addDeletedCat(name) {
   localStorage.setItem(_DELETED_KEY, JSON.stringify(arr));
 }
 
+/** @param {string} name */
 export function clearDeletedCat(name) {
   const lower = name.toLowerCase();
   const arr = getDeletedCats().filter(n => n.toLowerCase() !== lower);
@@ -256,6 +282,7 @@ export function clearDeletedCat(name) {
 // Scans historical data and ensures all used categories are in the active list.
 // A category is only recovered if it has real content: at least one task in its
 // todo list, or a non-empty stack text. Empty shell entries are skipped.
+/** @returns {number} count of categories recovered */
 export function repairCategories() {
   const cats = loadCats();
   // Map: original-case name → hasContent (true if any scan pass found real content)
@@ -359,6 +386,7 @@ export function repairCategories() {
 
 
 // ── Backlog ───────────────────────────────────────────────────────────────────
+/** @returns {BacklogData} */
 export function loadBacklog() {
   try {
     const r = localStorage.getItem('wt_backlog');
@@ -366,6 +394,7 @@ export function loadBacklog() {
   } catch(e) { return { items: [] }; }
 }
 
+/** @param {BacklogData} b */
 export function saveBacklog(b) {
   localStorage.setItem('wt_backlog', JSON.stringify(b));
   if (_syncQueue['backlog']) clearTimeout(_syncQueue['backlog']);
@@ -389,6 +418,7 @@ async function _syncBacklog(b) {
 // ── Active Timer ──────────────────────────────────────────────────────────────
 const _MAX_TIMER_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+/** @returns {TimerState | null} */
 export function loadTimer() {
   try {
     const t = JSON.parse(localStorage.getItem('wt_timer') || 'null');
@@ -404,6 +434,7 @@ export function loadTimer() {
   catch(e) { return null; }
 }
 
+/** @param {TimerState | null} t */
 export function saveTimer(t) {
   if (t === null) localStorage.removeItem('wt_timer');
   else localStorage.setItem('wt_timer', JSON.stringify(t));
@@ -470,6 +501,7 @@ export function exportD() {
   updateExportLbl();
 }
 
+/** @param {Event} e */
 export function importD(e) {
   console.log('Import started');
   const file = e.target.files[0];
@@ -758,6 +790,7 @@ export function runStartupMigration() {
 // Pulls all data from Supabase into localStorage so the rest of the app
 // works as normal. This is the only time we read FROM Supabase — after
 // this point, localStorage is always up to date.
+/** @returns {Promise<void>} */
 export async function loadFromSupabase() {
   const user = getCurrentUser();
   if (!user) return;

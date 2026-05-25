@@ -22,7 +22,7 @@ export function initBacklog() {
   // Add backlog item on button click
   document.addEventListener('click', e => {
     if (e.target.classList.contains('add-backlog-item-btn')) {
-      const input  = document.getElementById('backlogItemInput');
+      const input = document.getElementById('backlogItemInput');
       const select = document.getElementById('backlogCatSelect');
       if (input && input.value.trim()) {
         addBacklogItem(input.value.trim(), select.value);
@@ -38,7 +38,7 @@ export function initBacklog() {
 export function renderBacklog() {
   const container = document.getElementById('backlogList');
   if (!container) return;
-  
+
   const backlog = loadBacklog();
   const cats = loadCats();
   const d = load();
@@ -55,7 +55,7 @@ export function renderBacklog() {
     const c = catsMap[item.category] || { name: item.category, color: 'gray' };
     const hex = resolveHex(c.color);
     const tasks = item.tasks || [];
-    
+
     return `
       <div class="backlog-agenda-card" data-idx="${idx}">
         <div class="backlog-header">
@@ -96,12 +96,12 @@ export function renderBacklog() {
   // Delegation for actions
   container.onclick = e => {
     const pullTaskBtn = e.target.closest('[data-action="pull-backlog-task"]');
-    const delBtn  = e.target.closest('.del-backlog-item');
+    const delBtn = e.target.closest('.del-backlog-item');
     const delTaskBtn = e.target.closest('[data-action="del-backlog-task"]');
 
     if (pullTaskBtn) {
       const idx = +pullTaskBtn.dataset.idx;
-      const ti  = +pullTaskBtn.dataset.tidx;
+      const ti = +pullTaskBtn.dataset.tidx;
       pullTaskToWeek(idx, ti);
     }
     if (delBtn) {
@@ -114,8 +114,8 @@ export function renderBacklog() {
     }
     if (delTaskBtn) {
       const idx = +delTaskBtn.dataset.idx;
-      const ti  = +delTaskBtn.dataset.tidx;
-      const bl  = loadBacklog();
+      const ti = +delTaskBtn.dataset.tidx;
+      const bl = loadBacklog();
       if (bl.items[idx] && bl.items[idx].tasks) {
         bl.items[idx].tasks.splice(ti, 1);
         saveBacklog(bl);
@@ -127,7 +127,7 @@ export function renderBacklog() {
   // Input listeners for editing titles and tasks
   container.oninput = e => {
     const titleInp = e.target.closest('[data-action="edit-backlog-title"]');
-    const taskSpan  = e.target.closest('[data-action="edit-backlog-task"]');
+    const taskSpan = e.target.closest('[data-action="edit-backlog-task"]');
 
     if (titleInp) {
       const bl = loadBacklog();
@@ -186,13 +186,13 @@ function pullTaskToWeek(idx, ti) {
   // LIMIT CHECK: 5 pending per category
   if (!d.todos) d.todos = {};
   if (!d.todos[targetCat]) d.todos[targetCat] = [];
-  
+
   const pendingCount = d.todos[targetCat].filter(t => !t.done).length;
   if (pendingCount >= 5) {
     showToast(`Stack full for ${targetCat} (max 5 pending items). Complete or remove tasks first.`, 'warning');
     return;
   }
-  
+
   // Smart Agenda: If category isn't in focus yet, use the card's title as focus
   if (!d.stack[targetCat] && item.text) {
     d.stack[targetCat] = item.text;
@@ -209,7 +209,7 @@ function pullTaskToWeek(idx, ti) {
 
   save(d);
   saveBacklog(bl);
-  
+
   renderBacklog();
   document.dispatchEvent(new CustomEvent('wt:backlog-changed'));
   showToast(`Pulled "${taskToMove.text}" to your ${targetCat} stack!`, 'success');
@@ -217,11 +217,11 @@ function pullTaskToWeek(idx, ti) {
 
 function addBacklogItem(text, category) {
   const bl = loadBacklog();
-  
+
   // Normalize comparison to find existing category box
   const targetCat = category.trim();
   const existing = bl.items.find(i => i.category.trim().toLowerCase() === targetCat.toLowerCase());
-  
+
   if (existing) {
     if (!existing.tasks) existing.tasks = [];
     existing.tasks.push({ text, done: false });
@@ -236,7 +236,7 @@ function addBacklogItem(text, category) {
     });
     showToast(`Created ${targetCat} agenda box`, 'success');
   }
-  
+
   // Ensure we never have duplicates in the data structure
   consolidateBacklog(bl);
   saveBacklog(bl);

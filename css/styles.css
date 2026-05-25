@@ -1531,7 +1531,7 @@ button, input, textarea, select, .tab, .nav-btn, .btn, .block-pill, .habit, .cli
     .cat-item.cat-drag-over { border-top: 2px solid var(--blue); }
     /* Inline colour picker popover */
     .cat-color-popover {
-      position: absolute; z-index: 500; background: var(--surface); border: 1px solid var(--border2);
+      position: absolute; z-index: 1100; background: var(--surface); border: 1px solid var(--border2);
       border-radius: var(--radius); padding: 10px; box-shadow: 0 4px 16px rgba(100,60,20,0.10);
       display: none;
     }

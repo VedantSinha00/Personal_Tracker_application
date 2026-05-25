@@ -1,11 +1,22 @@
+// @ts-check
 // ── timer.js ───────────────────────────────────────────────────────────────
 // Low-level timer logic to avoid circular dependencies between app.js and dailylog.js
 import { loadTimer, saveTimer } from './storage.js';
+
+/** @typedef {import('./constants.js').TimerState} TimerState */
 
 let _timerInterval = null;
 
 window.addEventListener('wt:week-changed', refreshTimerDisplays);
 
+/**
+ * @param {string}          cat
+ * @param {string}          intent
+ * @param {number}          [offsetMinutes]
+ * @param {string}          [notes]
+ * @param {string[]}        [linkedTasks]
+ * @param {number | null}   [startDay]
+ */
 export function startTimer(cat, intent, offsetMinutes = 0, notes = '', linkedTasks = [], startDay = null) {
   const startTime = Date.now() - (offsetMinutes * 60 * 1000);
   const today = new Date().getDay();
@@ -30,6 +41,10 @@ export function togglePauseTimer() {
   initTimerTick();
 }
 
+/**
+ * @param {boolean} [preserve] - if true, keeps the timer state in storage
+ * @returns {(TimerState & { minutes: number }) | null}
+ */
 export function stopTimer(preserve = false) {
   const t = loadTimer();
   if (!t) return null;
