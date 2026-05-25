@@ -13,7 +13,11 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
 > - **Overdue/Unscheduled Box**: Placed in the empty 8th slot of the Weekly Log grid.
 > - **Sticky Banner**: Displayed in the Overview tab directly above the "FOCUS AREAS" section.
 > - **Drop Restriction**: Dragging a ghost log to a past day is disabled.
-> - **Linking To-Dos**: When creating a ghost block, you can select an existing To-Do from the dropdown. This links the ghost block to that task.
+> - **Creation Switch**: A toggle/switch inside the "Log block" modal (`#modal`) allows switching between "Log Completed Session" and "Plan Session (Ghost Log)".
+>   - *Visibility*: This switch is only visible when the modal is opened from the Weekly Log tab/view (to keep Overview focused on today's execution).
+>   - *Plan Session Mode*: Shows Category, Intent, Day dropdown, and To-Do dropdown (optional). Hides Duration, Focus Quality, Notes, Time slots, etc. Saves directly as a ghost log on the target day.
+> - **Ghost Logs in Task List**: When logging a manual entry (without stopwatch) and selecting a category, any active ghost logs (planned sessions) of that category show up in the "Relevant tasks" list with a distinct background color tint.
+>   - Checking/selecting a ghost log in this list pre-fills the intent field and, when saved, converts/completes that ghost log.
 > - **End-of-week Rollover**: Automatically converts remaining ghost logs from the past week into To-Dos (active if < 5 items, backlog if >= 5). **If the ghost block was linked to an existing To-Do, rollover will NOT create a new task.**
 > - **Click Popup**: If a ghost block is already linked to a To-Do, the "Save as to-do" option is hidden in the action popup.
 >
@@ -88,7 +92,10 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
 - In Account Settings modal (`#accountModal`), add:
   - Dropdown `#exportWeekSelect`
   - Button `#exportSingleWeekBtn` (calls export for selected week)
-- In the "Log block" modal (`#modal`), add the "Plan Next Session" section (Category, To-Do selection dropdown `#fNextTaskSelect`, Intent, Day dropdown).
+- In the "Log block" modal (`#modal`), add:
+  - A modal type toggle switch at the top (Log Completed Session vs. Plan Session).
+  - A Day selection dropdown `#fDaySelect` (visible only in Plan Session mode, defaults to the day clicked).
+  - Support in the "Relevant tasks" container `#fLinkedTasks` to render both standard To-Do tasks and active ghost logs.
 - Create a dedicated modal overlay for the **Ghost Log Action Popup** (`#ghostLogPopup`).
 
 #### [MODIFY] [js/account.js](file:///g:/College/PROJECTS/Personal%20Tracker%20Application/js/account.js)
@@ -105,8 +112,11 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
 - Update `carryForward()` to automatically process uncompleted ghost blocks of the past week (skipping those already linked to To-Dos).
 
 #### [MODIFY] [js/dailylog.js](file:///g:/College/PROJECTS/Personal%20Tracker%20Application/js/dailylog.js)
-- Update `openM` to include the "Plan Next Session" fields and To-Do dropdown.
-- Update `saveBlock` to save the new ghost block into `d.ghosts`, including `linkedTask` reference.
+- Add modal type toggle switch logic to `openM` (accepting a parameter or checking the active tab context) to show/hide the toggle switch itself, and to hide/show duration, time slots, energy, notes, and show day selection based on the selected mode.
+- Update `_renderLinkedTasks` to fetch and display the category's active ghost logs in addition to To-Do tasks. Style ghost logs with a distinct CSS class (e.g. `.linked-ghost-item`).
+- Update `saveBlock` to:
+  - If in Plan Session mode: save a new ghost block into `d.ghosts` with selected day, category, intent, and linked To-Do.
+  - If a ghost log was selected from the list when saving a completed session: pre-fill details, auto-complete the linked To-Do, and delete/convert the selected ghost log from `d.ghosts`.
 - Render ghost blocks in day cards below completed blocks.
 - Wire up the Ghost Log Action Popup (hide "Save as to-do" if already linked).
 
@@ -124,6 +134,8 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
 
 #### [MODIFY] [css/styles.css](file:///g:/College/PROJECTS/Personal%20Tracker%20Application/css/styles.css)
 - Implement `.ghost-block` styling (marching ants animation, faded background, hover scale).
+- Add styling for the modal type toggle switch (e.g., segmented control style).
+- Add styling for ghost logs in the relevant tasks list (e.g., `.linked-ghost-item` with a distinct background color tint and border).
 - Add styles for custom `.task-checkbox`:
   - `appearance: none` for styling control.
   - Active: blank border.
@@ -158,9 +170,13 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
    - Start stopwatch, click "Pop Out". Verify main window minimizes, floating window ticks.
    - Click "Stop" in floating window. Main window restores, and "Log block" modal opens.
 2. **Ghost Log Creation & To-Do Link**:
-   - Log a completed block, check "Schedule a planned goal?".
-   - Choose a Category, select a To-Do. Verify intent pre-fills. Save.
+   - Click "Add entry +" on a day card. Toggle the modal switch to "Plan Session".
+   - Select a Category, select a To-Do. Verify intent pre-fills. Save.
    - Verify ghost block renders with marching ants border animation at the bottom of the day's blocks.
+   - Click "Add entry +" again on that day. Select the same Category.
+   - Verify the newly created ghost log appears in the "Relevant tasks" list with a distinct background tint.
+   - Check/select the ghost log from the list. Verify the intent pre-fills. Save.
+   - Verify the ghost block has disappeared from the day's blocks, and a completed block with its intent has been added.
 3. **Task Status Check/Drop Cycle**:
    - Click a task checkbox on the Stack tab. Verify it ticks (Completed).
    - Click it again. Verify it shows a cross `✕` and text strikes through (Dropped).

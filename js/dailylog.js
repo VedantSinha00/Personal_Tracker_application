@@ -10,6 +10,7 @@ import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
 import { syncCustomSelect } from './custom-select.js';
 import { startTimer, stopTimer, togglePauseTimer } from './timer.js';
+import { showToast } from './toast.js';
 
 // ── Modal state ───────────────────────────────────────────────────────────────
 let editDay       = null;
@@ -264,6 +265,7 @@ export function closeStartTimerM() {
 }
 
 function handleTimerStopped() {
+  if (isLogFromTimer) return; // Modal already open for this timer — ignore re-fire
   const result = stopTimer(true);
   if (!result) return;
   
@@ -394,6 +396,7 @@ export function saveBlock() {
   const SLOT_VALS = { 'early-morning': 1, 'morning': 2, 'afternoon': 3, 'evening': 4, 'night': 5, 'late-night': 6 };
   dayBlocks.sort((a, b) => (SLOT_VALS[a.slot] || 99) - (SLOT_VALS[b.slot] || 99));
 
+  const wasFromTimer = isLogFromTimer;
   if (isLogFromTimer) {
     stopTimer(false);
     isLogFromTimer = false;
@@ -410,6 +413,14 @@ export function saveBlock() {
   save(d);
   closeM();
   document.dispatchEvent(new CustomEvent('wt:day-changed'));
+
+  // Notify user if the timer entry landed on a different day than today
+  if (wasFromTimer) {
+    const todayIdx = todayI();
+    if (todayIdx !== -1 && editDay !== todayIdx) {
+      showToast(`Saved to ${FULL[editDay]} (where your session started).`, 'info', 4000);
+    }
+  }
 }
 
 export function delBlock() {
@@ -651,7 +662,7 @@ export function initDailyLogListeners() {
 
     if (e.target.closest('#delBtn'))                  { delBlock(); return; }
     if (e.target.closest('#modal .btn-p'))           { saveBlock(); return; }
-    if (e.target.closest('#modal .btn:not(.btn-p)')) { closeM();    return; }
+    if (e.target.closest('#modal .btn:not(.btn-p)')) { isLogFromTimer = false; closeM(); return; }
   });
 
   // ── Start Timer Modal ──
