@@ -1,6 +1,102 @@
+// @ts-check
 // ── constants.js ────────────────────────────────────────────────────────────
 // Pure static data. No logic, no DOM, no side effects.
 // Everything here is exported so other modules can import what they need.
+
+// ── Shared type definitions ───────────────────────────────────────────────
+
+/**
+ * @typedef {Object} Category
+ * @property {string}  name
+ * @property {string}  color            - hex color string
+ * @property {boolean} [hidden]
+ * @property {number}  [categoryVersion]
+ */
+
+/**
+ * @typedef {Object} Habit
+ * @property {string} id
+ * @property {string} name
+ * @property {number} target  - weekly target count
+ * @property {string} color   - hex color string
+ */
+
+/**
+ * @typedef {Object} Block
+ * @property {string} category
+ * @property {string} [intent]
+ * @property {string} [duration]     - human-readable, e.g. "2h" or "30m"
+ * @property {string} [notes]
+ * @property {string} [slot]         - time-of-day, e.g. "morning"
+ * @property {number} [focusQuality]
+ * @property {number} [energy]
+ */
+
+/**
+ * @typedef {Object} DayData
+ * @property {boolean}                  mvd       - Most Valuable Day flag
+ * @property {boolean}                  fullRest
+ * @property {Block[]}                  blocks
+ * @property {Record<string, boolean>}  habits    - habit id → completed
+ * @property {string}                   journal
+ */
+
+/**
+ * @typedef {Object} ReviewData
+ * @property {string} worked
+ * @property {string} didnt
+ * @property {string} adjust
+ */
+
+/**
+ * @typedef {Object} Task
+ * @property {string}  id
+ * @property {string}  text
+ * @property {boolean} done
+ * @property {boolean} [deleted]
+ */
+
+/**
+ * @typedef {Object} WeekData
+ * @property {string}                   intention
+ * @property {Record<string, string>}   stack       - category name → focus text
+ * @property {Record<string, Task[]>}   todos       - category name → task list
+ * @property {DayData[]}                days
+ * @property {ReviewData}               review
+ * @property {string}                   [__updated_at]  - ISO timestamp
+ */
+
+/**
+ * @typedef {Object} BacklogItem
+ * @property {string} id
+ * @property {string} text
+ * @property {string} category
+ * @property {Array<{text: string, done: boolean}>} [tasks]
+ */
+
+/**
+ * @typedef {Object} BacklogData
+ * @property {BacklogItem[]} items
+ */
+
+/**
+ * @typedef {Object} TimerState
+ * @property {string}   cat
+ * @property {string}   intent
+ * @property {number}   startTime      - epoch ms
+ * @property {string}   notes
+ * @property {string[]} linkedTasks
+ * @property {number}   startDay       - 0 = Mon … 6 = Sun
+ * @property {number}   accumulatedMs
+ * @property {boolean}  isPaused
+ * @property {string}   [__synced_at]  - ISO timestamp
+ */
+
+/**
+ * @typedef {Object} User
+ * @property {string} id
+ * @property {string} [email]
+ */
 
 export const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export const FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * toast.js
  * A lightweight notification system for the Weekly Tracker.

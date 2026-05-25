@@ -26,26 +26,26 @@ let _carryInProgress = false;
 // ── Drag state ────────────────────────────────────────────────────────────────
 // These three variables are the entire shared state of an in-progress drag.
 // They are module-scoped — nothing outside stack.js can touch them.
-let dragSrc         = null;   // catName of the item being dragged
+let dragSrc = null;   // catName of the item being dragged
 let dragInsertBefore = null;  // catName to insert before (null = append to end)
-let dragInsertLevel  = null;  // 'high' | 'low' — which section to drop into
+let dragInsertLevel = null;  // 'high' | 'low' — which section to drop into
 
 let _dragRafPending = false;
 const _dragHandlers = { over: null, drop: null };
 
 // ── Render ────────────────────────────────────────────────────────────────────
 export function renderSt(d, animate) {
-  const cats  = sortedCats();
+  const cats = sortedCats();
   const focus = loadFocus();
-  const stk   = d.stack || {};
+  const stk = d.stack || {};
 
   const highCats = cats.filter(c => (focus[c.name] || 'high') === 'high');
-  const lowCats  = cats.filter(c => (focus[c.name] || 'high') === 'low');
+  const lowCats = cats.filter(c => (focus[c.name] || 'high') === 'low');
 
   // Builds one stack item row. Uses data-* attributes for all interactions
   // so we can attach delegated listeners rather than inline handlers.
   function buildItem(c, level) {
-    const hex  = resolveHex(c.color);
+    const hex = resolveHex(c.color);
     const text = badgeTextColor(hex);
     const tasks = stkTodos[c.name] || [];
 
@@ -99,6 +99,13 @@ export function renderSt(d, animate) {
 
   const stkTodos = d.todos || {};
 
+  // Snapshot focus before any DOM change so we can restore it after
+  // attachStackListeners() replaces the containers (cloneNode destroys focus).
+  const prevActive = document.activeElement;
+  const prevFocusCat = prevActive?.dataset?.catname;
+  const prevFocusAct = prevActive?.dataset?.action;
+  const focusInStack = !!prevActive?.closest('#stackDragContainer');
+
   // ── F (First): record positions before any DOM change ──────────────────────
   // This is the F step of FLIP. We snapshot every item's current pixel
   // position so we can calculate how far it moved after the re-render.
@@ -117,11 +124,11 @@ export function renderSt(d, animate) {
       highS.insertAdjacentHTML('beforeend', buildItem(c, 'high'));
     });
   }
-  document.getElementById('lowS').innerHTML  = lowCats.map(c  => buildItem(c, 'low')).join('');
+  document.getElementById('lowS').innerHTML = lowCats.map(c => buildItem(c, 'low')).join('');
 
   // Show/hide section labels and the "no low focus" empty hint
-  document.getElementById('highLbl').style.display     = highCats.length ? '' : 'none';
-  document.getElementById('lowLbl').style.display      = lowCats.length  ? '' : 'none';
+  document.getElementById('highLbl').style.display = highCats.length ? '' : 'none';
+  document.getElementById('lowLbl').style.display = lowCats.length ? '' : 'none';
   const highLbl2 = document.getElementById('highLbl2');
   if (highLbl2) highLbl2.style.display = 'none'; // only shown during drag
   document.getElementById('lowEmptyHint').style.display = lowCats.length ? 'none' : '';
@@ -139,12 +146,12 @@ export function renderSt(d, animate) {
       const dy = prev.top - next.top;
       if (Math.abs(dy) < 2) return; // barely moved — skip
 
-      el.style.transform  = `translateY(${dy}px)`; // Invert: snap to old position
+      el.style.transform = `translateY(${dy}px)`; // Invert: snap to old position
       el.style.transition = 'none';
       el.offsetHeight;                              // force browser reflow
       el.classList.add('flip-animating');
       el.style.transition = '';                     // Play: CSS takes over
-      el.style.transform  = '';
+      el.style.transform = '';
       el.addEventListener('transitionend', () => {
         el.classList.remove('flip-animating');
       }, { once: true });
@@ -157,6 +164,18 @@ export function renderSt(d, animate) {
 
   // Re-attach delegated listeners for inputs and focus toggles
   attachStackListeners();
+
+  // Restore focus lost when attachStackListeners() replaced the containers.
+  // preventScroll: true stops the browser ghost-scrolling back to the input.
+  if (focusInStack && prevFocusCat) {
+    let target = null;
+    if (prevFocusAct === 'add-task') {
+      target = document.querySelector(`.task-input[data-catname="${prevFocusCat}"]`);
+    } else if (prevFocusAct === 'stack-input') {
+      target = document.getElementById(`si_${prevFocusCat}`);
+    }
+    if (target) target.focus({ preventScroll: true });
+  }
 
   if (typeof lucide !== 'undefined') {
     lucide.createIcons({ nodes: document.getElementById('stackDragContainer').querySelectorAll('[data-lucide]') });
@@ -203,7 +222,7 @@ export function carryForward() {
     const prevKey = 'wt_wk_' + getAbsWk(wk - 1);
     let prev;
     try { const r = localStorage.getItem(prevKey); prev = r ? JSON.parse(r) : null; }
-    catch(e) { prev = null; }
+    catch (e) { prev = null; }
 
     if (!prev || (!prev.stack && !prev.todos)) {
       btn.textContent = '✕ Nothing to carry';
@@ -211,7 +230,7 @@ export function carryForward() {
       return;
     }
 
-    const d    = load();
+    const d = load();
     if (!d.stack) d.stack = {};
     if (!d.todos) d.todos = {};
 
@@ -264,7 +283,7 @@ export function carryForward() {
       const pf = localStorage.getItem(prevFocusKey);
       if (pf) {
         const prevFocus = JSON.parse(pf);
-        const curFocus  = loadFocus();
+        const curFocus = loadFocus();
         cats.forEach(c => {
           if (!curFocus[c.name] && prevFocus[c.name]) curFocus[c.name] = prevFocus[c.name];
         });
@@ -275,7 +294,7 @@ export function carryForward() {
       if (po && !loadOrder()) {
         localStorage.setItem(orderKey(), po);
       }
-    } catch(e) {}
+    } catch (e) { }
 
     // Deduplication pass over destination todos and stack.
     // Identity key is t.text, matching the duplicate check used in the copy loop above.
@@ -309,7 +328,7 @@ export function updateCarryBtn(d) {
   const btn = document.getElementById('carryBtn');
   if (!btn) return;
   const cats = loadCats();
-  const stk  = d.stack || {};
+  const stk = d.stack || {};
   const allFilled = cats.every(c => stk[c.name]);
   btn.style.opacity = allFilled ? '0.4' : '1';
   btn.title = allFilled
@@ -397,7 +416,7 @@ function attachStackListeners() {
         if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
           const task = d.todos[cat][idx];
           pushToBacklog(task.text, cat);
-          
+
           // Remove from current week
           d.todos[cat].splice(idx, 1);
           save(d);
@@ -441,19 +460,19 @@ function initDrag() {
     zone.parentNode.replaceChild(newZone, zone);
 
     newZone.addEventListener('mousedown', () => row.setAttribute('draggable', 'true'));
-    row.addEventListener('mouseup',   () => row.setAttribute('draggable', 'false'));
+    row.addEventListener('mouseup', () => row.setAttribute('draggable', 'false'));
     row.addEventListener('dragstart', onDragStart);
-    row.addEventListener('dragend',   onDragEnd);
+    row.addEventListener('dragend', onDragEnd);
   });
 
   // Container-level over/drop — remove previous handlers before adding new
   // ones so they don't stack up across re-renders.
   if (_dragHandlers.over) container.removeEventListener('dragover', _dragHandlers.over);
-  if (_dragHandlers.drop) container.removeEventListener('drop',     _dragHandlers.drop);
+  if (_dragHandlers.drop) container.removeEventListener('drop', _dragHandlers.drop);
   _dragHandlers.over = onContainerDragOver;
   _dragHandlers.drop = onContainerDrop;
   container.addEventListener('dragover', _dragHandlers.over);
-  container.addEventListener('drop',     _dragHandlers.drop);
+  container.addEventListener('drop', _dragHandlers.drop);
 
   // Section labels as cross-section drop targets
   ['lowLbl', 'highLbl2'].forEach(id => {
@@ -465,7 +484,7 @@ function initDrag() {
     clone.addEventListener('dragover', e => {
       e.preventDefault(); e.stopPropagation();
       clone.classList.add('drop-over');
-      dragInsertLevel  = clone.dataset.level;
+      dragInsertLevel = clone.dataset.level;
       dragInsertBefore = '__section__';
       hideLine();
     });
@@ -500,12 +519,12 @@ function onDragStart(e) {
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', dragSrc);
   const el = e.currentTarget;
-  requestAnimationFrame(() => { try { el.classList.add('dragging'); } catch(_) {} });
+  requestAnimationFrame(() => { try { el.classList.add('dragging'); } catch (_) { } });
   document.querySelectorAll('.stack-section-drop').forEach(l => l.classList.add('drop-ready'));
 }
 
 function onDragEnd(e) {
-  try { e.currentTarget.classList.remove('dragging'); } catch(_) {}
+  try { e.currentTarget.classList.remove('dragging'); } catch (_) { }
   hideLine();
   document.querySelectorAll('.stack-section-drop').forEach(l => {
     l.classList.remove('drop-ready');
@@ -517,13 +536,13 @@ function onDragEnd(e) {
 
 function getOrderedRows() {
   const high = Array.from(document.querySelectorAll('#highS .si'));
-  const low  = Array.from(document.querySelectorAll('#lowS .si'));
+  const low = Array.from(document.querySelectorAll('#lowS .si'));
   return [...high, ...low]
     .filter(el => !el.classList.contains('dragging'))
     .map(el => ({
-      name:  el.dataset.catname,
+      name: el.dataset.catname,
       level: el.dataset.level,
-      rect:  el.getBoundingClientRect(),
+      rect: el.getBoundingClientRect(),
     }));
 }
 
@@ -544,14 +563,14 @@ function onContainerDragOver(e) {
 
     if (y < rows[0].rect.top + rows[0].rect.height * 0.5) {
       insertBefore = rows[0].name;
-      insertLevel  = rows[0].level;
-      lineY        = rows[0].rect.top - 4;
+      insertLevel = rows[0].level;
+      lineY = rows[0].rect.top - 4;
     } else {
       let placed = false;
       for (let i = 0; i < rows.length - 1; i++) {
         if (y < rows[i + 1].rect.top + rows[i + 1].rect.height * 0.25) {
           insertBefore = rows[i + 1].name;
-          insertLevel  = rows[i + 1].level;
+          insertLevel = rows[i + 1].level;
           lineY = rows[i].rect.bottom + (rows[i + 1].rect.top - rows[i].rect.bottom) / 2;
           placed = true;
           break;
@@ -559,13 +578,13 @@ function onContainerDragOver(e) {
       }
       if (!placed) {
         insertBefore = null;
-        insertLevel  = rows[rows.length - 1].level;
-        lineY        = rows[rows.length - 1].rect.bottom + 4;
+        insertLevel = rows[rows.length - 1].level;
+        lineY = rows[rows.length - 1].rect.bottom + 4;
       }
     }
 
     dragInsertBefore = insertBefore;
-    dragInsertLevel  = insertLevel;
+    dragInsertLevel = insertLevel;
     showLine(lineY);
   });
 }
@@ -575,22 +594,22 @@ function onContainerDrop(e) {
   hideLine();
   if (!dragSrc || dragInsertBefore === '__section__') return;
 
-  const src         = dragSrc;
+  const src = dragSrc;
   const insertBefore = dragInsertBefore;
-  const insertLevel  = dragInsertLevel || 'high';
+  const insertLevel = dragInsertLevel || 'high';
 
   const f = loadFocus();
   if ((f[src] || 'high') !== insertLevel) { f[src] = insertLevel; saveFocus(f); }
 
   const names = sortedCats().map(c => c.name).filter(n => n !== src);
-  const idx   = insertBefore ? names.indexOf(insertBefore) : -1;
+  const idx = insertBefore ? names.indexOf(insertBefore) : -1;
   if (idx === -1) names.push(src); else names.splice(idx, 0, src);
   saveOrder(names);
   renderSt(load());
 }
 
 function showLine(y) {
-  const line  = document.getElementById('dragInsertLine');
+  const line = document.getElementById('dragInsertLine');
   const cRect = document.getElementById('stackDragContainer').getBoundingClientRect();
   line.style.cssText = `display:block;top:${y}px;left:${cRect.left}px;width:${cRect.width}px;`;
 }

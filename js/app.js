@@ -29,6 +29,8 @@ window.onunhandledrejection = function(event) {
 import { loadFromSupabase } from './storage.js';
 import { getCurrentUser } from './sb.js';
 
+/** @typedef {import('./constants.js').WeekData} WeekData */
+
 import {
   load, save, wk, setWk, getAbsWk,
   loadCats, exportD, importD, updateExportLbl,
@@ -54,6 +56,7 @@ import { showToast } from './toast.js';
 import { initAllCustomSelects } from './custom-select.js';
 
 // ── Week label ────────────────────────────────────────────────────────────────
+/** @returns {string} e.g. "14 Apr — 20 Apr" */
 function wkLabel() {
   const m = getMon(wk);
   const s = new Date(m);
@@ -76,6 +79,7 @@ function updateWkLabel() {
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 let _insightsInited = false;
+/** @param {string} id - data-tab value, e.g. "ov", "stack", "insights" */
 function swTab(id) {
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -117,6 +121,7 @@ function renderAll() {
 }
 
 // ── Week navigation ───────────────────────────────────────────────────────────
+/** @param {number} dir - +1 for next week, -1 for previous */
 function chWk(dir) {
   setWk(wk + dir);
   updateWkLabel();
@@ -385,6 +390,7 @@ let _appInited  = false;
 // and the first renderAll() have completed. Gates the wt:week-changed callback.
 let _dataLoaded = false;
 
+/** @returns {Promise<void>} */
 async function handleAuthReady() {
   if (_appInited) return;   // guard against double-init on fast networks
   _appInited = true;

@@ -38,8 +38,8 @@ export function closeCatModal() {
 // "Others" is always pinned to the bottom and cannot be dragged or deleted.
 export function renderCatList() {
   const cats = loadCats();
-  const pinned  = cats.filter(c => c.name === 'Others');
-  const rest    = cats.filter(c => c.name !== 'Others');
+  const pinned = cats.filter(c => c.name === 'Others');
+  const rest = cats.filter(c => c.name !== 'Others');
   const ordered = [...rest, ...pinned];
 
   document.getElementById('catList').innerHTML = ordered.map(c => {
@@ -47,8 +47,8 @@ export function renderCatList() {
       console.warn('[renderCatList] Skipping invalid category entry:', c);
       return '';
     }
-    const realIdx  = cats.indexOf(c);
-    const hex      = resolveHex(c.color);
+    const realIdx = cats.indexOf(c);
+    const hex = resolveHex(c.color);
     const isOthers = c.name === 'Others';
     return `
       <div class="cat-item${isOthers ? ' others-item' : ''}"
@@ -92,7 +92,7 @@ export function addCat() {
   else cats.push(entry);
   clearDeletedCat(name);
   saveCats(cats);
-  
+
   // If the category was previously deleted, unmark it so it isn't treated as a ghost.
   const arch = loadCatArchive();
   if (arch[name + '_deleted']) {
@@ -164,14 +164,14 @@ function renameCat(idx, newName) {
 // ── Populate the category <select> dropdowns throughout the app ───────────
 export function populateCatSelect() {
   const focus = loadFocus();
-  const all   = sortedCats().filter(c => !c.hidden);
+  const all = sortedCats().filter(c => !c.hidden);
   // Mirror the Stack tab's visual order: high focus first, then low focus
-  const high  = all.filter(c => (focus[c.name] || 'high') === 'high');
-  const low   = all.filter(c => (focus[c.name] || 'high') === 'low');
+  const high = all.filter(c => (focus[c.name] || 'high') === 'high');
+  const low = all.filter(c => (focus[c.name] || 'high') === 'low');
   const options = [...high, ...low]
     .map(c => `<option value="${c.name}">${c.name}</option>`)
     .join('');
-  
+
   // Log Modal dropdown
   const fCat = document.getElementById('fCat');
   if (fCat) {
@@ -222,7 +222,7 @@ function openCatColorPicker(catIdx, dotEl) {
   // Position below the dot button
   const rect = dotEl.getBoundingClientRect();
   pop.style.position = 'fixed';
-  pop.style.top  = (rect.bottom + 6) + 'px';
+  pop.style.top = (rect.bottom + 6) + 'px';
   pop.style.left = Math.max(8, rect.left - 8) + 'px';
 
   renderColorPicker('_cpPop', c.color, hex => {
@@ -308,7 +308,7 @@ export function ensureCatExists(name) {
   const othersIdx = cats.findIndex(c => c.name === 'Others');
   if (othersIdx !== -1) cats.splice(othersIdx, 0, entry);
   else cats.push(entry);
-  
+
   saveCats(cats);
   populateCatSelect();
   return name;

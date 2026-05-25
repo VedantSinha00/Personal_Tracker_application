@@ -13,7 +13,7 @@ export function syncCustomSelect(select) {
   if (!select || select.tagName !== 'SELECT') return;
 
   let container = _customSelectsMap.get(select);
-  
+
   if (!container) {
     // Initial wrap
     container = document.createElement('div');
@@ -56,7 +56,7 @@ export function syncCustomSelect(select) {
   const trigger = container.querySelector('.custom-select-trigger');
   const popover = container.querySelector('.custom-select-options');
   const options = Array.from(select.options);
-  
+
   const selectedOption = options.find(o => o.selected) || options[0];
   trigger.innerHTML = `<span>${selectedOption ? selectedOption.innerText : 'Select...'}</span><span class="custom-select-arrow">▼</span>`;
 
@@ -67,17 +67,17 @@ export function syncCustomSelect(select) {
     if (opt.selected) item.classList.add('selected');
     if (opt.disabled) item.classList.add('disabled');
     item.innerText = opt.innerText;
-    
+
     item.addEventListener('click', (e) => {
       e.stopPropagation();
       if (opt.disabled) return;
-      
+
       select.value = opt.value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
       container.classList.remove('open');
       syncCustomSelect(select); // Refresh UI
     });
-    
+
     popover.appendChild(item);
   });
 }

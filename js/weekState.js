@@ -1,3 +1,4 @@
+// @ts-check
 // ── weekState.js ──────────────────────────────────────────────────────────────
 // Owns the current week identity and notifies the app when the week rolls over.
 //
@@ -39,6 +40,8 @@ export function getCurrentWeek() {
  * Returns true if weekNumber strictly equals the stored current week string.
  * Callers should pass a value produced by getMon(0).toDateString() or
  * getCurrentWeek() to guarantee the types align.
+ * @param {string} weekNumber
+ * @returns {boolean}
  */
 export function isCurrentWeek(weekNumber) {
   return weekNumber === _currentWeek;
