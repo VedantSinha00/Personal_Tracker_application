@@ -140,7 +140,10 @@ export function loadCats() {
 export function saveCats(cats) {
   localStorage.setItem('wt_categories', JSON.stringify(cats));
   if (_syncQueue['cats']) clearTimeout(_syncQueue['cats']);
-  _syncQueue['cats'] = setTimeout(() => _syncCategories(cats), 1500);
+  _syncQueue['cats'] = setTimeout(() => {
+    _syncQueue['cats'] = null; // Mark as no longer pending before async push
+    _syncCategories(cats);
+  }, 500);
 }
 
 // ── Custom habits ─────────────────────────────────────────────────────────────
@@ -655,10 +658,12 @@ async function _syncCategories(localCats) {
     }
 
     if (toInsert.length > 0) {
-      await sb.from('categories').insert(toInsert);
+      const { error: insertErr } = await sb.from('categories').insert(toInsert);
+      if (insertErr) console.error('[sync] categories insert failed:', insertErr);
     }
     if (toUpdate.length > 0) {
-      await sb.from('categories').upsert(toUpdate);
+      const { error: upsertErr } = await sb.from('categories').upsert(toUpdate);
+      if (upsertErr) console.error('[sync] categories upsert failed:', upsertErr);
     }
     
     for (const d of toDelete) {
@@ -1038,6 +1043,9 @@ function handleRemoteWeekChange(row) {
 }
 
 async function handleRemoteCatsChange() {
+  // If there's a pending local write, don't let a stale remote fetch overwrite it.
+  // The pending timer will push the local state to Supabase shortly.
+  if (_syncQueue['cats']) return;
   const user = getCurrentUser();
   const { data: cats } = await sb.from('categories').select('*').eq('user_id', user.id).order('position');
   if (cats) {
