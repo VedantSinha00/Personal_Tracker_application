@@ -489,5 +489,50 @@
       }
     ],
     "priority": "Low"
+  },
+  {
+    "id": "TC016",
+    "title": "Surface cloud sync failures with a throttled toast",
+    "description": "This verifies that when a Supabase write fails while the user is online, a single error toast is shown (throttled to once per 5 seconds), that no toast appears while offline (local changes are kept and only logged), and that a successful sync shows no toast.",
+    "category": "Sync & Persistence",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Sign in and open the workspace so cloud sync is active"
+      },
+      {
+        "type": "action",
+        "description": "While online, force a Supabase write to fail (e.g. a policy/schema rejection) and trigger a sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify exactly one error toast appears reading 'database policy or schema error'"
+      },
+      {
+        "type": "action",
+        "description": "Trigger several more failing syncs within 5 seconds"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no additional toast appears until the 5-second throttle window elapses"
+      },
+      {
+        "type": "action",
+        "description": "Go offline (network disabled) and trigger a sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no toast appears and a '[sync-offline]' console warning is logged instead"
+      },
+      {
+        "type": "action",
+        "description": "Restore connectivity and perform a successful sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no toast appears on a successful sync"
+      }
+    ],
+    "priority": "Medium"
   }
 ]
