@@ -18,12 +18,52 @@
 import { DAYS, DEFAULT_CATS, DEFAULT_HABITS } from './constants.js';
 import { sb, getCurrentUser } from './sb.js';
 import { isCurrentWeek } from './weekState.js';
+import { showToast } from './toast.js';
 
 /** @typedef {import('./constants.js').Category}   Category   */
 /** @typedef {import('./constants.js').Habit}      Habit      */
 /** @typedef {import('./constants.js').WeekData}   WeekData   */
 /** @typedef {import('./constants.js').BacklogData} BacklogData */
 /** @typedef {import('./constants.js').TimerState} TimerState */
+
+/**
+ * Throttle window per distinct toast message. Keyed by message so identical
+ * failures (e.g. many tables failing the same way in one burst) collapse to a
+ * single toast, while distinct failure classes (network vs policy/schema) are
+ * each shown once and never mask one another.
+ * @type {Map<string, number>}
+ */
+const _lastSyncToastByMsg = new Map();
+const SYNC_TOAST_THROTTLE_MS = 5000;
+/**
+ * Decide whether a sync failure looks like a connectivity problem (can't reach
+ * the server) rather than a database policy/schema rejection. Connectivity
+ * errors are thrown fetch failures with no PostgREST/Postgres error code.
+ * @param {any} error
+ * @returns {boolean}
+ */
+function _isNetworkError(error) {
+  if (error && error.code) return false; // PostgREST/Postgres codes => server replied
+  const msg = String(error && (error.message || error) || '').toLowerCase();
+  return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout');
+}
+function handleSyncError(operation, error) {
+  if (!error) return;
+  if (navigator.onLine) {
+    console.error(`[sync-error] ${operation} failed:`, error);
+    const msg = _isNetworkError(error)
+      ? `Cloud sync failed: can't reach the server. Changes saved locally.`
+      : `Cloud sync failed: database policy or schema error.`;
+    const now = Date.now();
+    const last = _lastSyncToastByMsg.get(msg) || 0;
+    if (now - last > SYNC_TOAST_THROTTLE_MS) { // limit each distinct message to once every 5 seconds
+      _lastSyncToastByMsg.set(msg, now);
+      showToast(msg, 'error', 4000);
+    }
+  } else {
+    console.warn(`[sync-offline] ${operation} failed:`, error);
+  }
+}
 
 // ── Week state (Absolute Anchored) ───────────────────────────────────────────
 export let wk = 0;
@@ -408,13 +448,14 @@ async function _syncBacklog(b) {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
-    await sb.from('backlog').upsert({
+    const { error } = await sb.from('backlog').upsert({
       user_id:    user.id,
       items:      b.items || [],
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
+    if (error) handleSyncError('backlog', error);
   } catch(err) {
-    console.warn('[sync] backlog failed:', err.message);
+    handleSyncError('backlog', err);
   }
 }
 
@@ -460,11 +501,12 @@ async function _syncTimer(t) {
       active_timer: t,
       updated_at: new Date().toISOString()
     });
-    // If it fails (e.g. column missing), fallback will happen via _syncWeek naturally 
-    // because _syncWeek now includes the timer in its payload.
-    if (error) console.warn('[sync] timer to profiles failed:', error.message);
+    if (error) {
+      console.warn('[sync] timer to profiles failed:', error.message);
+      handleSyncError('profiles_timer', error);
+    }
   } catch(err) {
-    console.warn('[sync] timer failed:', err.message);
+    handleSyncError('profiles_timer', err);
   }
 }
 
@@ -571,12 +613,10 @@ async function _perfSyncWeek(offset, d) {
     const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id, week_offset' });
     if (error) {
       console.warn('[sync] weekly_data failed:', error.message);
-      // If the error is about a missing 'todos' column, we don't 'delete' 
-      // and re-try because that creates a cloud record with empty tasks, 
-      // which could later overwrite local data.
+      handleSyncError('weekly_data', error);
     }
   } catch(err) {
-    console.warn('[sync] weekly_data failed:', err.message);
+    handleSyncError('weekly_data', err);
   }
 }
 
@@ -602,9 +642,10 @@ async function _syncWeekFocusOrder(offset) {
     const { error } = await sb.from('weekly_data').upsert(payload, { onConflict: 'user_id,week_offset' });
     if (error) {
       console.warn('[sync] weekly_data (focus/order) failed:', error.message);
+      handleSyncError('weekly_data_focus_order', error);
     }
   } catch(err) {
-    console.warn('[sync] weekly_data (focus/order) failed:', err.message);
+    handleSyncError('weekly_data_focus_order', err);
   }
 }
 
@@ -616,9 +657,12 @@ export async function _softDeleteCategory(name) {
       .update({ deleted_at: new Date().toISOString() })
       .eq('user_id', user.id)
       .eq('name', name);
-    if(error) console.warn('[sync] soft delete failed:', error.message);
+    if (error) {
+      console.warn('[sync] soft delete failed:', error.message);
+      handleSyncError('categories_delete', error);
+    }
   } catch(err) {
-    console.warn('[sync] soft delete failed:', err.message);
+    handleSyncError('categories_delete', err);
   }
 }
 
@@ -632,6 +676,7 @@ async function _syncCategories(localCats) {
       
     if (error) {
       console.warn('[sync] categories fetch error', error);
+      handleSyncError('categories_fetch', error);
       return;
     }
 
@@ -659,20 +704,30 @@ async function _syncCategories(localCats) {
 
     if (toInsert.length > 0) {
       const { error: insertErr } = await sb.from('categories').insert(toInsert);
-      if (insertErr) console.error('[sync] categories insert failed:', insertErr);
+      if (insertErr) {
+        console.error('[sync] categories insert failed:', insertErr);
+        handleSyncError('categories_insert', insertErr);
+      }
     }
     if (toUpdate.length > 0) {
       const { error: upsertErr } = await sb.from('categories').upsert(toUpdate);
-      if (upsertErr) console.error('[sync] categories upsert failed:', upsertErr);
+      if (upsertErr) {
+        console.error('[sync] categories upsert failed:', upsertErr);
+        handleSyncError('categories_update', upsertErr);
+      }
     }
     
     for (const d of toDelete) {
-      await sb.from('categories')
+      const { error: delErr } = await sb.from('categories')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', d.id);
+      if (delErr) {
+        console.error('[sync] categories soft delete item failed:', delErr);
+        handleSyncError('categories_soft_delete_item', delErr);
+      }
     }
   } catch(err) {
-    console.warn('[sync] categories sync failed:', err.message);
+    handleSyncError('categories', err);
   }
 }
 
@@ -680,9 +735,13 @@ async function _syncHabits(habits) {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
-    await sb.from('habits').delete().eq('user_id', user.id);
+    const { error: delErr } = await sb.from('habits').delete().eq('user_id', user.id);
+    if (delErr) {
+      handleSyncError('habits_delete', delErr);
+      return;
+    }
     if (habits.length > 0) {
-      await sb.from('habits').insert(
+      const { error: insErr } = await sb.from('habits').insert(
         habits.map(h => ({
           user_id:  user.id,
           habit_id: h.id,
@@ -691,9 +750,10 @@ async function _syncHabits(habits) {
           target:   h.target || 5,
         }))
       );
+      if (insErr) handleSyncError('habits_insert', insErr);
     }
   } catch(err) {
-    console.warn('[sync] habits failed:', err.message);
+    handleSyncError('habits', err);
   }
 }
 
@@ -701,13 +761,14 @@ async function _syncCatArchive(arch) {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
   try {
-    await sb.from('cat_archive').upsert({
+    const { error } = await sb.from('cat_archive').upsert({
       user_id:    user.id,
       archive:    arch,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
+    if (error) handleSyncError('cat_archive', error);
   } catch(err) {
-    console.warn('[sync] cat_archive failed:', err.message);
+    handleSyncError('cat_archive', err);
   }
 }
 

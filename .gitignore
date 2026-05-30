@@ -7,3 +7,5 @@ build/
 bin/
 obj/
 .claude/
+.playwright-mcp/
+verify-*.png
