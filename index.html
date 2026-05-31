@@ -4,26 +4,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src https://fonts.gstatic.com;
+                 connect-src 'self' https://vdskvcjqzyfwhxyxsgag.supabase.co wss://vdskvcjqzyfwhxyxsgag.supabase.co;
+                 img-src 'self' data:;">
   <title>Personal Tracker</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
-        media="print" onload="this.media='all'">
+  <!-- onload handler removed (blocked by CSP script-src 'self'); media swap is done in js/error-overlay.js via #fontStylesheet -->
+  <link id="fontStylesheet" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+        media="print">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"></noscript>
   <link rel="stylesheet" href="css/styles.css?v=phase2_v1">
   <!-- Lucide icons — self-hosted to avoid unpkg.com round trip -->
   <script defer src="vendor/lucide.min.js"></script>
-  <!-- Global error catcher for diagnosing silent module failures -->
-  <script>
-    window.onerror = function(msg, url, line, col, error) {
-      document.body.innerHTML += '<div style="position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;">Global Error: ' + msg + '\n' + url + ':' + line + ':' + col + '\n' + (error && error.stack) + '</div>';
-      return false;
-    };
-    window.addEventListener('unhandledrejection', function(e) {
-       document.body.innerHTML += '<div style="position:fixed;top:80px;left:0;width:100%;background:orange;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;">Unhandled Rejection: ' + e.reason + '</div>';
-    });
-  </script>
+  <!-- Secure externalized error catcher + CSP-safe inline-handler replacements -->
+  <script src="js/error-overlay.js"></script>
   <!-- Supabase JS SDK — self-hosted to avoid cdn.jsdelivr.net round trip -->
   <script defer src="vendor/supabase.min.js"></script>
 
@@ -92,7 +92,8 @@
     <div id="initError">
       <h2>Connection Error</h2>
       <p id="initErrorMsg">We're having trouble connecting to the database. This might be due to a slow network or your connection being blocked.</p>
-      <button onclick="window.location.reload()">Retry Connection</button>
+      <!-- onclick removed (blocked by CSP); wired in js/error-overlay.js -->
+      <button id="retryConnBtn">Retry Connection</button>
     </div>
   </div>
   <!-- ── Auth screen ──────────────────────────────────────────────────────── -->
@@ -507,18 +508,7 @@
   <i data-lucide="upload" style="width:13px;height:13px;"></i> Import Data
 </button>
 <input type="file" accept=".json" style="display:none" data-action="import" id="importFile">
-<script>
-  document.getElementById('importBtn').addEventListener('click', () => {
-    const fileInput = document.getElementById('importFile');
-    fileInput.value = '';
-    fileInput.click();
-  });
-  // Close modal after successful import
-  document.addEventListener('wt:import-complete', () => {
-    const modal = document.getElementById('accountModal');
-    if (modal) modal.classList.remove('open');
-  });
-</script>
+<!-- import wiring moved to js/account.js to satisfy CSP script-src 'self' -->
         </div>
         <div class="export-meta" id="lastExportLbl" style="font-size:11px;color:var(--text3);text-align:center;"></div>
       </div>
