@@ -18,7 +18,7 @@
 | SEC-02 | Critical | Supabase RLS must be verified/enforced | Database | ✅ **Fixed** — RLS on for all 7 tables; every policy `auth.uid()`-scoped (no wide-open policy); `policies.sql` authored |
 | SEC-03 | High | Stored XSS via unescaped `innerHTML` | Renderer | ✅ **Fixed** — `esc()` applied across 11 files (+textContent for toast/select); all parse clean |
 | SEC-04 | Medium | No Content-Security-Policy | Renderer/Electron | ✅ **Fixed** — CSP added, inline scripts/handlers externalized; runtime-verified (fonts, no CSP violations, Supabase wss connects, XSS payload inert) |
-| SEC-05 | Medium | Deep-link session injection (login CSRF) | Auth | 🟡 **Code-complete** — `wt_login_pending` flag gates the deep-link callback; full runtime test best done in a packaged build (dev instance doesn't own the `weekly-tracker://` protocol) |
+| SEC-05 | Medium | Deep-link session injection (login CSRF) | Auth | 🟡 **Shipped in v1.3.8, login path NOT yet verified** — `wt_login_pending` flag gates the deep-link callback. Owner runs as existing user (session resumed, never exercised sign-in). **TODO (later):** verify by signing out + back in; also confirm unsolicited `weekly-tracker://` token is rejected. |
 | SEC-06 | Low | `setWindowOpenHandler` allows non-https windows | Electron main | ✅ **Fixed** — default-deny; only https handed to system browser |
 | SEC-07 | Low | Localhost login bypass must never be served publicly | Auth | ✅ **Fixed** — loud console warning when bypass active; loopback+non-Electron only |
 

@@ -131,6 +131,16 @@ async function initializeApp() {
     return;
   }
 
+  // 1b. Register as the handler for weekly-tracker:// so the OAuth deep-link
+  // callback can return to the app. Without this, Windows shows "this file does
+  // not have an app associated with it" and login can never complete.
+  if (process.defaultApp && process.argv.length >= 2) {
+    // Dev mode (electron .): point the registration at this script.
+    app.setAsDefaultProtocolClient(protocolScheme, process.execPath, [path.resolve(process.argv[1])]);
+  } else {
+    app.setAsDefaultProtocolClient(protocolScheme);
+  }
+
   // 2. Deep Linking (Cold Start)
   if (process.platform === 'win32' || process.platform === 'linux') {
     const urlArg = process.argv.find(arg => arg.startsWith(`${protocolScheme}://`));

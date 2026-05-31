@@ -146,6 +146,16 @@ function migrateData(d) {
 
 const _syncQueue = {};
 
+// ── Cloud hydration gate ───────────────────────────────────────────────────────
+// Habits sync is reconciliatory: it makes the cloud match the local list. Sign-out
+// wipes the local `wt_habits` cache (loadHabits() then returns DEFAULT_HABITS), so a
+// habits push that runs *before* the cloud has been loaded into local this session
+// would overwrite the user's real cloud habits with defaults. This flag is flipped
+// OFF at the start of every loadFromSupabase() and back ON only once that load has
+// completed successfully; _syncHabits refuses to write to the cloud until then.
+// (Root cause of the v1.3.8 habits-loss incident.)
+let _remoteHydrated = false;
+
 /** @param {WeekData} [d] */
 export function save(d) {
   // If no data passed (e.g. from a manual console sync), load the current week's local data
@@ -206,7 +216,9 @@ export function loadHabits() {
 export function saveHabits(h) {
   localStorage.setItem('wt_habits', JSON.stringify(h));
   if (_syncQueue['habits']) clearTimeout(_syncQueue['habits']);
-  _syncQueue['habits'] = setTimeout(() => _syncHabits(h), 1500);
+  // Don't capture `h` here — _syncHabits re-reads loadHabits() at fire time so a
+  // stale pre-hydration array can never be the thing that reaches the cloud.
+  _syncQueue['habits'] = setTimeout(() => _syncHabits(), 1500);
 }
 
 export function flushPendingSyncs() {
@@ -224,7 +236,7 @@ export function flushPendingSyncs() {
   const d = load(); 
   _perfSyncWeek(absWk, d);
   _syncCategories(loadCats());
-  _syncHabits(loadHabits());
+  _syncHabits();
   _syncBacklog(loadBacklog());
 }
 
@@ -731,26 +743,74 @@ async function _syncCategories(localCats) {
   }
 }
 
-async function _syncHabits(habits) {
+// Reconciles the cloud `habits` table to match local, NON-destructively.
+// Ignores any argument: always re-reads loadHabits() at fire time. Guarded so it
+// can never run before the cloud has been hydrated into local this session, and
+// uses a diff (insert/update/delete-changed) instead of delete-all-then-insert,
+// so there is no window in which a wiped/stale local list can erase real habits.
+async function _syncHabits() {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
+
+  // GUARD (hydration): never reconcile the cloud before this session has loaded
+  // the cloud's habits into local. Without this, a wiped local cache (post
+  // sign-out) would push DEFAULT_HABITS and delete the user's real habits.
+  if (!_remoteHydrated) {
+    console.warn('[sync] habits push skipped — cloud not yet hydrated this session');
+    return;
+  }
+
+  // Always read the freshest local state, never a stale captured array.
+  const habits = loadHabits();
+
   try {
-    const { error: delErr } = await sb.from('habits').delete().eq('user_id', user.id);
-    if (delErr) {
-      handleSyncError('habits_delete', delErr);
+    const { data: remote, error: fetchErr } = await sb.from('habits')
+      .select('habit_id')
+      .eq('user_id', user.id);
+    if (fetchErr) { handleSyncError('habits_fetch', fetchErr); return; }
+
+    // ANTI-WIPE GUARD: if local has no habits but the cloud does, treat it as a
+    // transient/empty state and refuse to delete the cloud copy.
+    if (habits.length === 0 && remote && remote.length > 0) {
+      console.warn('[sync] habits push skipped — local empty but cloud has habits');
       return;
     }
-    if (habits.length > 0) {
-      const { error: insErr } = await sb.from('habits').insert(
-        habits.map(h => ({
-          user_id:  user.id,
-          habit_id: h.id,
-          name:     h.name,
-          color:    h.color,
-          target:   h.target || 5,
-        }))
-      );
-      if (insErr) handleSyncError('habits_insert', insErr);
+
+    const remoteIds = new Set((remote || []).map(r => r.habit_id));
+    const localIds  = new Set(habits.map(h => h.id));
+
+    // Insert habits the cloud doesn't have yet.
+    const toInsert = habits
+      .filter(h => !remoteIds.has(h.id))
+      .map(h => ({
+        user_id:  user.id,
+        habit_id: h.id,
+        name:     h.name,
+        color:    h.color,
+        target:   h.target || 5,
+      }));
+    if (toInsert.length > 0) {
+      const { error } = await sb.from('habits').insert(toInsert);
+      if (error) { handleSyncError('habits_insert', error); return; }
+    }
+
+    // Update habits that already exist (name/color/target may have changed).
+    for (const h of habits.filter(h => remoteIds.has(h.id))) {
+      const { error } = await sb.from('habits')
+        .update({ name: h.name, color: h.color, target: h.target || 5 })
+        .eq('user_id', user.id)
+        .eq('habit_id', h.id);
+      if (error) handleSyncError('habits_update', error);
+    }
+
+    // Delete only habits the user actually removed locally.
+    const toDelete = [...remoteIds].filter(id => !localIds.has(id));
+    if (toDelete.length > 0) {
+      const { error } = await sb.from('habits')
+        .delete()
+        .eq('user_id', user.id)
+        .in('habit_id', toDelete);
+      if (error) handleSyncError('habits_delete', error);
     }
   } catch(err) {
     handleSyncError('habits', err);
@@ -860,6 +920,10 @@ export function runStartupMigration() {
 export async function loadFromSupabase() {
   const user = getCurrentUser();
   if (!user) return;
+
+  // Close the habits-sync gate for this session until the cloud load below
+  // completes — see _remoteHydrated. Re-armed on every login / user switch.
+  _remoteHydrated = false;
 
   // ── User-switch guard ────────────────────────────────────────────────────────
   // If a different user's data is cached in localStorage, clear it first so
@@ -1025,6 +1089,9 @@ export async function loadFromSupabase() {
       }));
       localStorage.setItem('wt_habits', JSON.stringify(mapped));
     }
+    // Cancel any habits push queued by the optimistic pre-load render — it
+    // captured the (default) local state from before this cloud load.
+    if (_syncQueue['habits']) { clearTimeout(_syncQueue['habits']); _syncQueue['habits'] = null; }
 
     // Backlog
     try {
@@ -1037,6 +1104,9 @@ export async function loadFromSupabase() {
         localStorage.setItem('wt_backlog', JSON.stringify({ items: bData.items }));
       }
     } catch(e) { console.warn('[load] backlog skip:', e.message); }
+
+    // Cloud load for this session is complete — habits pushes are now safe.
+    _remoteHydrated = true;
 
   } catch(err) {
     console.warn('[loadFromSupabase] failed:', err.message);
