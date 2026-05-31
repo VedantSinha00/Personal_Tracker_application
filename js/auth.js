@@ -103,9 +103,15 @@ function hideBanner(id = 'authBanner') {
 
 // ── Google Login ──────────────────────────────────────────────────────────────
 async function handleGoogleLogin() {
-  const redirectTo = isElectron 
-    ? 'weekly-tracker://auth-callback' 
+  const redirectTo = isElectron
+    ? 'weekly-tracker://auth-callback'
     : window.location.origin + window.location.pathname;
+
+  // SEC-05: mark that a login was genuinely initiated from this app, with a
+  // timestamp. The deep-link callback below only accepts a session if this
+  // flag is present and fresh — rejecting unsolicited weekly-tracker:// tokens.
+  localStorage.setItem('wt_login_pending', 'true');
+  localStorage.setItem('wt_login_pending_time', Date.now().toString());
 
   const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
@@ -180,12 +186,34 @@ async function handleSignOut() {
     if (!sb) return; // Error already handled above
 
     const isLocal = !isElectron && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    // SEC-07: the localhost bypass mock-authenticates a dev user. It is loopback +
+    // non-Electron only (the packaged desktop app never reaches it), but warn loudly
+    // so the web build is never served publicly with login disabled.
+    if (isLocal) {
+      console.warn('[auth] ⚠ DEV LOGIN BYPASS ACTIVE — localhost only. Never deploy the web build publicly.');
+    }
 
     // Handle Electron Auth Callback
     if (isElectron) {
       window.electronAPI.onAuthCallback(async (urlStr) => {
         console.log('[auth] Received deep link:', urlStr);
         try {
+          // SEC-05: only honour a deep-link session if THIS app initiated a
+          // login recently. Any other app/page can fire weekly-tracker:// with
+          // attacker tokens (login CSRF); without a fresh pending flag we reject.
+          const pending = localStorage.getItem('wt_login_pending');
+          const pendingTimeStr = localStorage.getItem('wt_login_pending_time');
+          // Clear immediately so a callback can't be replayed.
+          localStorage.removeItem('wt_login_pending');
+          localStorage.removeItem('wt_login_pending_time');
+          const pendingTime = pendingTimeStr ? parseInt(pendingTimeStr, 10) : 0;
+          const isExpired = Date.now() - pendingTime > 10 * 60 * 1000; // 10 min
+          if (pending !== 'true' || isExpired) {
+            console.warn('[auth] Rejecting unsolicited or expired auth callback (CSRF prevention)');
+            showBanner('Login rejected: session expired or was not initiated from this application.');
+            return;
+          }
+
           const url = new URL(urlStr.replace(/^weekly-tracker:\/\/\/?/, 'http://localhost/'));
           
           // Fallback checking both hash fragment and query string
