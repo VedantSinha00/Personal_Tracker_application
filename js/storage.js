@@ -1208,6 +1208,7 @@ async function handleRemoteCatsChange() {
   // The pending timer will push the local state to Supabase shortly.
   if (_syncQueue['cats']) return;
   const user = getCurrentUser();
+  if (!user) return;
   const { data: cats } = await sb.from('categories').select('*').eq('user_id', user.id).order('position');
   if (cats) {
     const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
@@ -1228,7 +1229,7 @@ async function handleRemoteCatsChange() {
       }));
     const mappedStr = JSON.stringify(mapped);
     if (localStorage.getItem('wt_categories') !== mappedStr) {
-      saveCats(mapped);
+      localStorage.setItem('wt_categories', mappedStr);
       repairCategories();
       document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'categories' } }));
     }
@@ -1237,6 +1238,7 @@ async function handleRemoteCatsChange() {
 
 async function handleRemoteHabitsChange() {
   const user = getCurrentUser();
+  if (!user) return;
   const { data: habits } = await sb.from('habits').select('*').eq('user_id', user.id);
   if (habits) {
     const mapped = habits.map(h => ({

@@ -9,7 +9,7 @@ import {
   loadOrder, saveOrder, orderKey,
   loadCatArchive, saveCatArchive,
   addDeletedCat, clearDeletedCat, getDeletedCats,
-  _softDeleteCategory
+  _softDeleteCategory, load, save, wk, getAbsWk
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
@@ -157,7 +157,43 @@ function renameCat(idx, newName) {
     if (oi !== -1) { ord[oi] = newName; saveOrder(ord); }
   }
 
-  // Stack rename is handled via wt:cats-changed event in app.js
+  // Rename keys in d.stack and d.todos for all cached weeks to preserve user focus and tasks
+  const currentAbsWk = getAbsWk(wk);
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('wt_wk_')) {
+      try {
+        const val = localStorage.getItem(k);
+        if (!val) continue;
+        const d = JSON.parse(val);
+        let changed = false;
+        if (d.stack && d.stack[oldName] !== undefined) {
+          d.stack[newName] = d.stack[oldName];
+          delete d.stack[oldName];
+          changed = true;
+        }
+        if (d.todos && d.todos[oldName] !== undefined) {
+          d.todos[newName] = d.todos[oldName];
+          delete d.todos[oldName];
+          changed = true;
+        }
+        if (changed) {
+          const offset = parseInt(k.replace('wt_wk_', ''), 10);
+          if (offset === currentAbsWk) {
+            save(d); // Saves and triggers Supabase sync for current week
+          } else {
+            d.__updated_at = new Date().toISOString();
+            localStorage.setItem(k, JSON.stringify(d));
+            // Trigger background sync for historical week to reconcile Supabase
+            // We can call storage's internal perf sync if needed, but saving current week is critical.
+          }
+        }
+      } catch (e) {
+        console.warn(`[renameCat] Failed to update week file ${k}:`, e.message);
+      }
+    }
+  }
+
   renderCatList();
 }
 
