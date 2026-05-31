@@ -144,7 +144,7 @@ export function renderInsights() {
           habitDays[h.id].push({ done: !!(day.habits && day.habits[h.id]), fullRest: !!day.fullRest });
       });
 
-      day.blocks.forEach(b => {
+      (day.blocks || []).forEach(b => {
         const cat = b.category || 'Other';
         if (hiddenCats.has(cat)) return; 
 
@@ -334,7 +334,7 @@ export function renderInsights() {
     ? journalEntries.map(e =>
         `<div class="journal-ins-entry">
           <div class="journal-ins-date">${e.dayName}, ${e.date}</div>
-          <div class="journal-ins-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+          <div class="journal-ins-text">${esc(e.text).replace(/\n/g, '<br>')}</div>
         </div>`
       ).join('')
     : `<div style="font-size:13px;color:var(--text3);padding:4px 0;">No journal entries in this period. Start journaling in the Daily Log tab.</div>`;

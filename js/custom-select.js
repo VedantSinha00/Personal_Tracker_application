@@ -3,7 +3,7 @@
  * Replaces native <select> elements with a premium, styled alternative.
  */
 
-const _customSelectsMap = new Map();
+const _customSelectsMap = new WeakMap();
 
 /**
  * Transforms a native <select> into a custom dropdown or refreshes it.

@@ -15,6 +15,7 @@ import {
 import { resolveHex, badgeTextColor } from './colours.js';
 import { esc } from './escape.js';
 import { pushToBacklog } from './backlog.js';
+import { showToast } from './toast.js';
 
 // Re-render when items are pulled from backlog
 document.addEventListener('wt:backlog-changed', () => {
@@ -65,10 +66,10 @@ export function renderSt(d, animate) {
             data-action="stack-input"
             data-catname="${esc(c.name)}">
           <div class="focus-toggle">
-            <button data-action="focus-toggle" data-catname="${esc(c.name)}"
+            <button data-action="focus-toggle" data-catname="${esc(c.name)}" data-target-level="high"
               class="${level === 'high' ? 'focus-high-on' : ''}"
               title="High focus">▲ High</button>
-            <button data-action="focus-toggle" data-catname="${esc(c.name)}"
+            <button data-action="focus-toggle" data-catname="${esc(c.name)}" data-target-level="low"
               class="${level === 'low' ? 'focus-low-on' : ''}"
               title="Low focus">▼ Low</button>
           </div>
@@ -134,7 +135,10 @@ export function renderSt(d, animate) {
       highS.insertAdjacentHTML('beforeend', buildItem(c, 'high'));
     });
   }
-  document.getElementById('lowS').innerHTML = lowCats.map(c => buildItem(c, 'low')).join('');
+  const lowS = document.getElementById('lowS');
+  if (lowS) {
+    lowS.innerHTML = lowCats.map(c => buildItem(c, 'low')).join('');
+  }
 
   // Show/hide section labels and the "no low focus" empty hint
   document.getElementById('highLbl').style.display = highCats.length ? '' : 'none';
@@ -222,9 +226,9 @@ export function saveStackInputs() {
 }
 
 // ── Focus toggle ──────────────────────────────────────────────────────────────
-function toggleFocus(catName) {
+function toggleFocus(catName, targetLevel) {
   const f = loadFocus();
-  f[catName] = ((f[catName] || 'high') === 'high') ? 'low' : 'high';
+  f[catName] = targetLevel;
   saveFocus(f);
   renderSt(load());
 }
@@ -246,8 +250,10 @@ export function carryForward() {
     catch (e) { prev = null; }
 
     if (!prev || (!prev.stack && !prev.todos)) {
-      btn.textContent = '✕ Nothing to carry';
-      setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      if (btn) {
+        btn.textContent = '✕ Nothing to carry';
+        setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      }
       return;
     }
 
@@ -267,8 +273,10 @@ export function carryForward() {
       return tasks.some(t => !t.done && !t.deleted);
     });
     if (!sourceHasContent) {
-      btn.textContent = '✕ Nothing to carry';
-      setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      if (btn) {
+        btn.textContent = '✕ Nothing to carry';
+        setTimeout(() => { btn.innerHTML = '↩ Carry from last week'; }, 2000);
+      }
       return;
     }
 
@@ -332,12 +340,14 @@ export function carryForward() {
     save(d);
     renderSt(d);
 
-    btn.classList.add('carried');
-    btn.innerHTML = `✓ Carried ${carried} item${carried !== 1 ? 's' : ''}`;
-    setTimeout(() => {
-      btn.classList.remove('carried');
-      btn.innerHTML = '↩ Carry from last week';
-    }, 3000);
+    if (btn) {
+      btn.classList.add('carried');
+      btn.innerHTML = `✓ Carried ${carried} item${carried !== 1 ? 's' : ''}`;
+      setTimeout(() => {
+        btn.classList.remove('carried');
+        btn.innerHTML = '↩ Carry from last week';
+      }, 3000);
+    }
   } finally {
     // Always release the guard and re-enable the button, even if an error was thrown.
     _carryInProgress = false;
@@ -382,7 +392,7 @@ function attachStackListeners() {
     // Focus toggle
     fresh.addEventListener('click', e => {
       const btn = e.target.closest('[data-action="focus-toggle"]');
-      if (btn) toggleFocus(btn.dataset.catname);
+      if (btn) toggleFocus(btn.dataset.catname, btn.dataset.targetLevel);
     });
 
     // Task management

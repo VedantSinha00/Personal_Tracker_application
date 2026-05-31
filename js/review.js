@@ -52,7 +52,7 @@ export function updM(d) {
     return `
       <div class="rv-habit-row">
         <div class="rv-habit-info">
-          <span class="rv-habit-lbl">${esc(h.name).toUpperCase()}</span>
+          <span class="rv-habit-lbl">${esc(h.name.toUpperCase())}</span>
           <span class="rv-habit-val">${h.count}${target ? ' / ' + target : ''}</span>
         </div>
         <div class="rv-habit-bar-bg">

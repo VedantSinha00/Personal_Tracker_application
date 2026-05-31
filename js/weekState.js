@@ -65,11 +65,14 @@ export function checkForWeekChange() {
 
   const previousWeek = _lastKnownMonday;
 
-  // 1. Dispatch first — listeners that read _lastKnownMonday during the event
-  //    still see the old value (it has not been updated yet).
-  window.dispatchEvent(new CustomEvent('wt:week-changed', {
-    detail: { previousWeek, currentWeek },
-  }));
+  // Skip firing wt:week-changed if this is the initial setup (_lastKnownMonday was null)
+  if (previousWeek !== null) {
+    // 1. Dispatch first — listeners that read _lastKnownMonday during the event
+    //    still see the old value (it has not been updated yet).
+    window.dispatchEvent(new CustomEvent('wt:week-changed', {
+      detail: { previousWeek, currentWeek },
+    }));
+  }
 
   // 2. Persist immediately after dispatch, in the same synchronous block.
   try {
