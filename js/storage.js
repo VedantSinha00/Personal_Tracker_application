@@ -221,23 +221,27 @@ export function saveHabits(h) {
   _syncQueue['habits'] = setTimeout(() => _syncHabits(), 1500);
 }
 
-export function flushPendingSyncs() {
+export async function flushPendingSyncs() {
+  const promises = [];
+
   Object.keys(_syncQueue).forEach(key => {
     if (_syncQueue[key]) {
       clearTimeout(_syncQueue[key]);
-      // We can't easily await these as they are fired internally,
-      // but clearing the timeout and calling the sync functions immediately
-      // is better than losing the data entirely on exit.
+      _syncQueue[key] = null;
     }
   });
   
-  // Re-run the critical syncs immediately
-  const absWk = getAbsWk(wk);
-  const d = load(); 
-  _perfSyncWeek(absWk, d);
-  _syncCategories(loadCats());
-  _syncHabits();
-  _syncBacklog(loadBacklog());
+  const user = getCurrentUser();
+  if (user && user.id !== '00000000-0000-0000-0000-000000000000') {
+    const absWk = getAbsWk(wk);
+    const d = load(); 
+    promises.push(_perfSyncWeek(absWk, d));
+    promises.push(_syncCategories(loadCats()));
+    promises.push(_syncHabits());
+    promises.push(_syncBacklog(loadBacklog()));
+  }
+
+  await Promise.allSettled(promises);
 }
 
 /** @returns {Habit[]} */

@@ -8,6 +8,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onAuthCallback: (callback) => {
     ipcRenderer.on('auth-callback', (_event, value) => callback(value));
   },
+  rendererReady: () => ipcRenderer.invoke('renderer-ready'),
+  onAppClosing: (callback) => {
+    ipcRenderer.on('app-closing', () => callback());
+  },
+  forceClose: () => ipcRenderer.invoke('force-close'),
   
   /**
    * Open a URL in the default system browser.

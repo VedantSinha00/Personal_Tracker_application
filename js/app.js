@@ -327,9 +327,25 @@ function initListeners() {
   });
 
   // Durable sync on exit (especially for Electron)
-  window.addEventListener('beforeunload', () => {
-    flushPendingSyncs();
-  });
+  if (window.electronAPI) {
+    let closingScheduled = false;
+    window.electronAPI.onAppClosing(async () => {
+      if (closingScheduled) return;
+      closingScheduled = true;
+      console.log('[exit] App closing. Flushing syncs...');
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+      try {
+        await Promise.race([flushPendingSyncs(), timeoutPromise]);
+      } catch (err) {
+        console.warn('[exit] Flush failed:', err);
+      }
+      window.electronAPI.forceClose();
+    });
+  } else {
+    window.addEventListener('beforeunload', () => {
+      flushPendingSyncs();
+    });
+  }
 
   console.log('[initListeners] complete');
 }

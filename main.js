@@ -13,6 +13,30 @@ let mainWindow;
 let autoUpdater;
 const protocolScheme = 'weekly-tracker';
 let authUrlOnColdStart = null;
+let isRendererReady = false;
+let forceClose = false;
+
+const fs = require('fs');
+const settingsPath = path.join(app.getPath('userData'), 'window-settings.json');
+
+function restoreWindowBounds() {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    }
+  } catch (e) {
+    console.warn('[settings] Failed to load window bounds:', e.message);
+  }
+  return { width: 1200, height: 800 };
+}
+
+function saveWindowBounds(bounds) {
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(bounds), 'utf8');
+  } catch (e) {
+    console.warn('[settings] Failed to save window bounds:', e.message);
+  }
+}
 
 // ── IPC Handlers ───────────────────────────────────────────────────────────
 function registerIpcHandlers() {
@@ -23,6 +47,19 @@ function registerIpcHandlers() {
         return true;
       }
       return false;
+    });
+
+    ipcMain.handle('renderer-ready', () => {
+      isRendererReady = true;
+      if (authUrlOnColdStart) {
+        mainWindow.webContents.send('auth-callback', authUrlOnColdStart.replace(/\/$/, ""));
+        authUrlOnColdStart = null;
+      }
+    });
+
+    ipcMain.handle('force-close', () => {
+      forceClose = true;
+      if (mainWindow) mainWindow.close();
     });
 
     // Auto-update IPC
@@ -64,9 +101,13 @@ function setupAutoUpdater() {
 
 // ── Window Creation ────────────────────────────────────────────────────────
 function createWindow() {
+  const bounds = restoreWindowBounds();
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
     minWidth: 1000,
     minHeight: 700,
     backgroundColor: '#111111',
@@ -85,8 +126,39 @@ function createWindow() {
     }
   });
 
+  if (bounds.isMaximized) {
+    mainWindow.maximize();
+  }
+
   mainWindow.loadFile('index.html');
   mainWindow.setIcon(path.join(__dirname, 'assets/logo.ico'));
+
+  function saveCurrentBounds() {
+    if (!mainWindow) return;
+    try {
+      const isMaximized = mainWindow.isMaximized();
+      let savedBounds;
+      if (isMaximized) {
+        savedBounds = restoreWindowBounds();
+        savedBounds.isMaximized = true;
+      } else {
+        savedBounds = mainWindow.getBounds();
+        savedBounds.isMaximized = false;
+      }
+      saveWindowBounds(savedBounds);
+    } catch (e) {}
+  }
+
+  mainWindow.on('resize', saveCurrentBounds);
+  mainWindow.on('move', saveCurrentBounds);
+
+  mainWindow.on('close', (e) => {
+    saveCurrentBounds();
+    if (!forceClose) {
+      e.preventDefault();
+      mainWindow.webContents.send('app-closing');
+    }
+  });
 
   // Spell-check context menu — shows correction suggestions on right-click
   mainWindow.webContents.on('context-menu', (event, params) => {
@@ -154,7 +226,12 @@ async function initializeApp() {
       mainWindow.focus();
       const urlArg = commandLine.find(arg => arg.startsWith(`${protocolScheme}://`));
       if (urlArg) {
-        mainWindow.webContents.send('auth-callback', urlArg.replace(/\/$/, ""));
+        const cleanUrl = urlArg.replace(/\/$/, "");
+        if (isRendererReady) {
+          mainWindow.webContents.send('auth-callback', cleanUrl);
+        } else {
+          authUrlOnColdStart = cleanUrl;
+        }
       }
     }
   });
@@ -182,10 +259,7 @@ async function initializeApp() {
 
   // 5. Post-Load Logic
   mainWindow.webContents.on('did-finish-load', () => {
-    if (authUrlOnColdStart) {
-      mainWindow.webContents.send('auth-callback', authUrlOnColdStart.replace(/\/$/, ""));
-      authUrlOnColdStart = null;
-    }
+    isRendererReady = false;
   });
 
   // 6. Lifecycle Events
@@ -197,11 +271,12 @@ async function initializeApp() {
 // macOS Specific URL handler
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  if (mainWindow && mainWindow.webContents) {
-    mainWindow.webContents.send('auth-callback', url);
+  const cleanUrl = url.replace(/\/$/, "");
+  if (mainWindow && mainWindow.webContents && isRendererReady) {
+    mainWindow.webContents.send('auth-callback', cleanUrl);
     mainWindow.focus();
   } else {
-    authUrlOnColdStart = url;
+    authUrlOnColdStart = cleanUrl;
   }
 });
 

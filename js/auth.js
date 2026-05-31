@@ -250,6 +250,7 @@ async function handleSignOut() {
           showBanner('External login failed to sync. Please try again.');
         }
       });
+      window.electronAPI.rendererReady().catch(err => console.warn('[auth] rendererReady failed:', err));
     }
 
     // Wire up buttons
