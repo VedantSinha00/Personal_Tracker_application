@@ -66,7 +66,7 @@ export function renderOv(d) {
             ${items.map((it, idx) => `
               <label class="lp-todo-item${it.done ? ' done' : ''}">
                 <input type="checkbox" ${it.done ? 'checked' : ''}
-                  data-action="tog-todo" data-catname="${esc(c.name)}" data-idx="${idx}">
+                  data-action="tog-todo" data-catname="${esc(c.name)}" data-id="${it.id}">
                 <span class="lp-todo-text">${esc(it.text)}</span>
               </label>
             `).join('')}
@@ -210,14 +210,17 @@ export function initOverviewListeners() {
     if (e.target.closest('[data-action="tog-todo"]')) {
       const r = e.target.closest('[data-action="tog-todo"]');
       const cname = r.dataset.catname;
-      const tIdx = +r.dataset.idx;
+      const id = r.dataset.id;
 
       const d = load();
       if (!d.todos) d.todos = {};
-      if (d.todos[cname] && d.todos[cname][tIdx]) {
-        d.todos[cname][tIdx].done = r.checked;
-        save(d);
-        document.dispatchEvent(new CustomEvent('wt:day-changed'));
+      if (d.todos[cname]) {
+        const task = d.todos[cname].find(t => t.id === id);
+        if (task) {
+          task.done = r.checked;
+          save(d);
+          document.dispatchEvent(new CustomEvent('wt:day-changed'));
+        }
       }
     }
   });

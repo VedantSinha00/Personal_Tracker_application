@@ -909,6 +909,9 @@ export function runStartupMigration() {
     saveCats(cats);
     console.log('[migration] Removed category-level deleted flags.');
   }
+
+  // Assign unique IDs to tasks lacking them
+  migrateTasksWithIds();
 }
 
 // ── Remote load on login ──────────────────────────────────────────────────────
@@ -1294,3 +1297,75 @@ function handleRemoteProfileChange(row) {
     document.dispatchEvent(new CustomEvent('wt:remote-change', { detail: { type: 'timer' } }));
   }
 }
+
+// ── Unique Task ID Utilities & Migration ─────────────────────────────────────
+export function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'u_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+}
+
+function migrateTasksWithIds() {
+  let migratedWeeksCount = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('wt_wk_')) continue;
+    try {
+      const r = localStorage.getItem(k);
+      if (!r) continue;
+      const d = JSON.parse(r);
+      let changed = false;
+      if (d && d.todos) {
+        Object.keys(d.todos).forEach(cat => {
+          if (Array.isArray(d.todos[cat])) {
+            d.todos[cat].forEach(t => {
+              if (t && typeof t === 'object' && !t.id) {
+                t.id = generateUUID();
+                changed = true;
+              }
+            });
+          }
+        });
+      }
+      if (changed) {
+        localStorage.setItem(k, JSON.stringify(d));
+        migratedWeeksCount++;
+      }
+    } catch (e) {
+      console.warn('[migration] migrateTasksWithIds fail on key:', k, e.message);
+    }
+  }
+  
+  // Migrate backlog
+  try {
+    const r = localStorage.getItem('wt_backlog');
+    if (r) {
+      const b = JSON.parse(r);
+      let changed = false;
+      if (b && Array.isArray(b.items)) {
+        b.items.forEach(item => {
+          if (Array.isArray(item.tasks)) {
+            item.tasks.forEach(t => {
+              if (t && typeof t === 'object' && !t.id) {
+                t.id = generateUUID();
+                changed = true;
+              }
+            });
+          }
+        });
+      }
+      if (changed) {
+        localStorage.setItem('wt_backlog', JSON.stringify(b));
+        console.log('[migration] Migrated backlog tasks with IDs.');
+      }
+    }
+  } catch (e) {
+    console.warn('[migration] migrateTasksWithIds fail on backlog:', e.message);
+  }
+
+  if (migratedWeeksCount > 0) {
+    console.log(`[migration] Migrated ${migratedWeeksCount} weeks of tasks with unique IDs.`);
+  }
+}
+

@@ -2,7 +2,7 @@
 // Manages the persistent backlog view within the Stack tab.
 // Everything here persists across weeks via wt_backlog.
 
-import { loadBacklog, saveBacklog, loadCats, load, save } from './storage.js';
+import { loadBacklog, saveBacklog, loadCats, load, save, generateUUID } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { showToast } from './toast.js';
 import { populateCatSelect, ensureCatExists } from './categories.js';
@@ -155,7 +155,7 @@ export function renderBacklog() {
         const idx = +taskInp.dataset.idx;
         const bl = loadBacklog();
         if (!bl.items[idx].tasks) bl.items[idx].tasks = [];
-        bl.items[idx].tasks.push({ text: taskInp.value.trim(), done: false });
+        bl.items[idx].tasks.push({ id: generateUUID(), text: taskInp.value.trim(), done: false });
         saveBacklog(bl);
         renderBacklog();
         // Focus the input again after render
@@ -201,6 +201,7 @@ function pullTaskToWeek(idx, ti) {
 
   // Add task to week
   d.todos[targetCat].push({
+    id: generateUUID(),
     text: taskToMove.text,
     done: false
   });
@@ -225,14 +226,14 @@ function addBacklogItem(text, category) {
 
   if (existing) {
     if (!existing.tasks) existing.tasks = [];
-    existing.tasks.push({ text, done: false });
+    existing.tasks.push({ id: generateUUID(), text, done: false });
     showToast(`Added task to ${existing.category} agenda`, 'success');
   } else {
     bl.items.push({
       id: Date.now().toString(),
       category: targetCat,
       text: '', // Start with empty focus title
-      tasks: [{ text, done: false }],
+      tasks: [{ id: generateUUID(), text, done: false }],
       created_at: new Date().toISOString()
     });
     showToast(`Created ${targetCat} agenda box`, 'success');

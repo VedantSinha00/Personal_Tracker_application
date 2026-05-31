@@ -4,7 +4,7 @@
 
 import { FULL } from './constants.js';
 import {
-  load, save, loadCats, loadHabits, allHabits, wk, loadTimer,
+  load, save, loadCats, loadHabits, allHabits, wk, loadTimer, generateUUID,
 } from './storage.js';
 import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
@@ -355,12 +355,12 @@ function _renderLinkedTasks(cat, linked = [], targetId = 'fLinkedTasks', rowId =
 
   if (row) row.style.display = 'block';
   const html = tasks.map((t, i) => {
-    const isLinked = linked.some(lt => lt.cat === cat && lt.idx === i);
+    const isLinked = linked.some(lt => lt.cat === cat && lt.id === t.id);
     if (t.done && !isLinked) return '';
     
     const isChecked = t.done || isLinked;
     return `<label class="linked-task-item">
-      <input type="checkbox" data-cat="${esc(cat)}" data-idx="${i}" ${isChecked ? 'checked' : ''}>
+      <input type="checkbox" data-cat="${esc(cat)}" data-id="${t.id}" ${isChecked ? 'checked' : ''}>
       <span ${t.done ? 'style="text-decoration:line-through;color:var(--text3);"' : ''}>${esc(t.text)}</span>
     </label>`;
   }).filter(Boolean).join('');
@@ -377,7 +377,7 @@ export function saveBlock() {
   // Collect linked tasks
   const linkedTasks = [];
   document.querySelectorAll('#fLinkedTasks input[type="checkbox"]:checked').forEach(cb => {
-    linkedTasks.push({ cat: cb.dataset.cat, idx: +cb.dataset.idx });
+    linkedTasks.push({ cat: cb.dataset.cat, id: cb.dataset.id });
   });
 
   const block = {
@@ -411,8 +411,11 @@ export function saveBlock() {
   // Auto-check linked tasks (Assumed DONE if block was logged)
   if (!d.todos) d.todos = {};
   linkedTasks.forEach(lt => {
-    if (d.todos[lt.cat] && d.todos[lt.cat][lt.idx]) {
-      d.todos[lt.cat][lt.idx].done = true;
+    if (d.todos[lt.cat]) {
+      const task = d.todos[lt.cat].find(t => t.id === lt.id);
+      if (task) {
+        task.done = true;
+      }
     }
   });
 
@@ -705,7 +708,7 @@ export function initDailyLogListeners() {
       // Collect linked tasks from checked boxes
       const linkedTasks = [];
       document.querySelectorAll('#stLinkedTasks input[type="checkbox"]:checked').forEach(cb => {
-        linkedTasks.push({ cat: cb.dataset.cat, idx: +cb.dataset.idx });
+        linkedTasks.push({ cat: cb.dataset.cat, id: cb.dataset.id });
       });
 
       // Save new task if provided and auto-link it to this session
@@ -715,11 +718,11 @@ export function initDailyLogListeners() {
         const d = load();
         if (!d.todos) d.todos = {};
         if (!d.todos[cat]) d.todos[cat] = [];
-        const newIdx = d.todos[cat].length;
-        d.todos[cat].push({ text: newTaskText, done: false });
+        const newId = generateUUID();
+        d.todos[cat].push({ id: newId, text: newTaskText, done: false });
         save(d);
         newTaskInput.value = '';
-        linkedTasks.push({ cat, idx: newIdx });
+        linkedTasks.push({ cat, id: newId });
         document.dispatchEvent(new CustomEvent('wt:day-changed'));
       }
 
@@ -760,13 +763,14 @@ export function initDailyLogListeners() {
       // Snapshot checked state before re-rendering
       const currentLinked = [];
       document.querySelectorAll('#fLinkedTasks input[type="checkbox"]:checked').forEach(cb => {
-        currentLinked.push({ cat: cb.dataset.cat, idx: +cb.dataset.idx });
+        currentLinked.push({ cat: cb.dataset.cat, id: cb.dataset.id });
       });
 
       const d = load();
       if (!d.todos) d.todos = {};
       if (!d.todos[cat]) d.todos[cat] = [];
-      d.todos[cat].push({ text, done: false });
+      const newId = generateUUID();
+      d.todos[cat].push({ id: newId, text, done: false });
       save(d);
 
       e.target.value = '';
@@ -795,7 +799,7 @@ export function initDailyLogListeners() {
     const d = load();
     if (!d.todos) d.todos = {};
     if (!d.todos[cat]) d.todos[cat] = [];
-    d.todos[cat].push({ text, done: false });
+    d.todos[cat].push({ id: generateUUID(), text, done: false });
     save(d);
     e.target.value = '';
     _renderLinkedTasks(cat, [], 'stLinkedTasks', 'stTasksRow');

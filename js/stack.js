@@ -10,6 +10,7 @@ import {
   loadCats, loadFocus, saveFocus,
   loadOrder, saveOrder, orderKey,
   sortedCats, wk, getAbsWk,
+  generateUUID,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { esc } from './escape.js';
@@ -76,15 +77,15 @@ export function renderSt(d, animate) {
         <div class="si-tasks">
           <div class="task-list" id="tasks_${c.name}" data-catname="${esc(c.name)}">
             ${tasks.map((t, i) => `
-              <div class="task-item" data-idx="${i}">
+              <div class="task-item" data-id="${t.id}" data-idx="${i}">
                 <label class="task-checkbox-wrap" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;">
-                  <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${esc(c.name)}" data-idx="${i}">
+                  <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${esc(c.name)}" data-id="${t.id}">
                   <span class="task-text${t.done ? ' done' : ''}" style="${t.done ? 'text-decoration:line-through;color:var(--text3);' : ''}">${esc(t.text)}</span>
                 </label>
-                <button class="task-backlog" data-action="push-backlog" data-catname="${esc(c.name)}" data-idx="${i}" title="Send to global backlog">
+                <button class="task-backlog" data-action="push-backlog" data-catname="${esc(c.name)}" data-id="${t.id}" title="Send to global backlog">
                   <i data-lucide="inbox"></i>
                 </button>
-                <button class="task-del" data-action="del-task" data-catname="${esc(c.name)}" data-idx="${i}" title="Delete task">
+                <button class="task-del" data-action="del-task" data-catname="${esc(c.name)}" data-id="${t.id}" title="Delete task">
                   <i data-lucide="trash-2"></i>
                 </button>
               </div>
@@ -106,6 +107,14 @@ export function renderSt(d, animate) {
   const prevFocusCat = prevActive?.dataset?.catname;
   const prevFocusAct = prevActive?.dataset?.action;
   const focusInStack = !!prevActive?.closest('#stackDragContainer');
+
+  // The "Add a task" input is never persisted (it only commits on Enter), so a
+  // re-render triggered mid-typing — e.g. a Supabase realtime echo when the user
+  // switches apps and back — would otherwise discard the in-progress text. Snapshot
+  // it here and restore it below, mirroring the focus-preservation above. Captured
+  // only for the focused input; the Enter handler clears the value before its own
+  // renderSt(), so a just-submitted task is never resurrected.
+  const prevAddTaskVal = (prevFocusAct === 'add-task') ? (prevActive.value || '') : '';
 
   // ── F (First): record positions before any DOM change ──────────────────────
   // This is the F step of FLIP. We snapshot every item's current pixel
@@ -175,7 +184,18 @@ export function renderSt(d, animate) {
     } else if (prevFocusAct === 'stack-input') {
       target = document.getElementById(`si_${prevFocusCat}`);
     }
-    if (target) target.focus({ preventScroll: true });
+    if (target) {
+      // Restore the uncommitted "Add a task" text before focusing, then place the
+      // caret at the end so typing resumes seamlessly after the re-render.
+      if (prevFocusAct === 'add-task' && prevAddTaskVal) {
+        target.value = prevAddTaskVal;
+      }
+      target.focus({ preventScroll: true });
+      if (prevFocusAct === 'add-task' && prevAddTaskVal) {
+        const end = target.value.length;
+        target.setSelectionRange(end, end);
+      }
+    }
   }
 
   if (typeof lucide !== 'undefined') {
@@ -269,7 +289,7 @@ export function carryForward() {
               // Build carried task field-by-field; legacy fields (deleted, carried,
               // sourceWeek, _v) are intentionally omitted. No id field exists in
               // this codebase's task schema, so none is generated or copied.
-              d.todos[c.name].push({ text: ut.text, done: false, deleted: false });
+              d.todos[c.name].push({ id: generateUUID(), text: ut.text, done: false, deleted: false });
               carried++;
             }
           });
@@ -382,7 +402,8 @@ function attachStackListeners() {
           return;
         }
 
-        d.todos[cat].push({ text: val, done: false });
+        d.todos[cat].push({ id: generateUUID(), text: val, done: false });
+        e.target.value = ''; // clear before renderSt so the snapshot doesn't restore the submitted text
         save(d);
         renderSt(d);
         document.dispatchEvent(new CustomEvent('wt:stack-saved'));
@@ -394,17 +415,20 @@ function attachStackListeners() {
       }
     });
 
-    fresh.addEventListener('click', e => {
+     fresh.addEventListener('click', e => {
       const delBtn = e.target.closest('[data-action="del-task"]');
       if (delBtn) {
         const cat = delBtn.dataset.catname;
-        const idx = +delBtn.dataset.idx;
+        const id = delBtn.dataset.id;
         const d = load();
         if (d.todos && d.todos[cat]) {
-          d.todos[cat].splice(idx, 1);
-          save(d);
-          renderSt(d);
-          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+          const idx = d.todos[cat].findIndex(t => t.id === id);
+          if (idx !== -1) {
+            d.todos[cat].splice(idx, 1);
+            save(d);
+            renderSt(d);
+            document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+          }
         }
         return;
       }
@@ -412,17 +436,20 @@ function attachStackListeners() {
       const backlogBtn = e.target.closest('[data-action="push-backlog"]');
       if (backlogBtn) {
         const cat = backlogBtn.dataset.catname;
-        const idx = +backlogBtn.dataset.idx;
+        const id = backlogBtn.dataset.id;
         const d = load();
-        if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
-          const task = d.todos[cat][idx];
-          pushToBacklog(task.text, cat);
+        if (d.todos && d.todos[cat]) {
+          const idx = d.todos[cat].findIndex(t => t.id === id);
+          if (idx !== -1) {
+            const task = d.todos[cat][idx];
+            pushToBacklog(task.text, cat);
 
-          // Remove from current week
-          d.todos[cat].splice(idx, 1);
-          save(d);
-          renderSt(d);
-          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+            // Remove from current week
+            d.todos[cat].splice(idx, 1);
+            save(d);
+            renderSt(d);
+            document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+          }
         }
         return;
       }
@@ -432,13 +459,16 @@ function attachStackListeners() {
       const tog = e.target.closest('[data-action="tog-task"]');
       if (tog) {
         const cat = tog.dataset.catname;
-        const idx = +tog.dataset.idx;
+        const id = tog.dataset.id;
         const d = load();
-        if (d.todos && d.todos[cat] && d.todos[cat][idx]) {
-          d.todos[cat][idx].done = tog.checked;
-          save(d);
-          renderSt(d);
-          document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+        if (d.todos && d.todos[cat]) {
+          const task = d.todos[cat].find(t => t.id === id);
+          if (task) {
+            task.done = tog.checked;
+            save(d);
+            renderSt(d);
+            document.dispatchEvent(new CustomEvent('wt:stack-saved'));
+          }
         }
       }
     });
