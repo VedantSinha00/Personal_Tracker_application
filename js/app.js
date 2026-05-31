@@ -382,6 +382,15 @@ if (window.electronAPI) {
 }
 applyTheme();
 
+// Wire the auto-update UI immediately, independent of authentication. A user who
+// cannot sign in (e.g. a login-breaking regression) must STILL be able to receive
+// and apply updates — otherwise one bad release strands them with no way forward.
+// The main-process updater already downloads regardless of auth; this surfaces the
+// "Update Ready / Restart" prompt on the login screen too. toast.js creates the
+// toast container at module load, so it renders before login. Guarded internally
+// by _updaterInitialized, so the later call in handleAuthReady is a safe no-op.
+initUpdateListeners();
+
 // ── Auth-ready handler ────────────────────────────────────────────────────────
 // Extracted as a named function so it can be called both from the event listener
 // AND directly when app.js loads after the event already fired (CDN race condition).
