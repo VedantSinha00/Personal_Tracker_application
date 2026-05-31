@@ -159,11 +159,11 @@ function renameCat(idx, newName) {
 
   // Rename keys in d.stack and d.todos for all cached weeks to preserve user focus and tasks
   const currentAbsWk = getAbsWk(wk);
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const k = window.localStorage.key(i);
     if (k && k.startsWith('wt_wk_')) {
       try {
-        const val = localStorage.getItem(k);
+        const val = window.localStorage.getItem(k);
         if (!val) continue;
         const d = JSON.parse(val);
         let changed = false;
@@ -183,7 +183,7 @@ function renameCat(idx, newName) {
             save(d); // Saves and triggers Supabase sync for current week
           } else {
             d.__updated_at = new Date().toISOString();
-            localStorage.setItem(k, JSON.stringify(d));
+            window.localStorage.setItem(k, JSON.stringify(d));
             // Trigger background sync for historical week to reconcile Supabase
             // We can call storage's internal perf sync if needed, but saving current week is critical.
           }
