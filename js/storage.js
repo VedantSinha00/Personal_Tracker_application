@@ -949,19 +949,46 @@ export async function loadFromSupabase() {
     if (weeks && weeks.length > 0) {
       weeks.forEach(row => {
         const key = 'wt_wk_' + row.week_offset;
-        // Only overwrite if Supabase version is strictly newer than local cache
         const local = localStorage.getItem(key);
         const localD = local ? JSON.parse(local) : {};
         const localTs = localD.__updated_at || 0;
-        if (localTs && !(new Date(row.updated_at) > new Date(localTs))) return;
+
+        const rowMonday = getMonFromAbs(row.week_offset).toDateString();
+        const rowIsCurrentWeek = isCurrentWeek(rowMonday);
+
+        // "No local edits to protect": the local cache for this week is absent OR
+        // holds no stack/todos content. Fresh session, new device, post-sign-out
+        // cache clear — or a record previously written empty by this very guard.
+        const localHasNoStackTodos =
+          (!localD.stack || Object.keys(localD.stack).length === 0) &&
+          (!localD.todos || Object.keys(localD.todos).length === 0);
+
+        // Does the cloud actually hold stack/todos worth hydrating for this week?
+        const remoteHasStackTodos =
+          (row.stack && Object.keys(row.stack).length > 0) ||
+          (row.todos && Object.keys(row.todos).length > 0);
+
+        // Self-heal back-fill: a past/future week whose local cache has no
+        // stack/todos but whose cloud row does. This recovers the case where an
+        // earlier load dropped the remote stack/todos AND stamped the empty record
+        // with the remote timestamp — making the timestamp guard below skip it
+        // forever and leaving carryForward() with nothing to carry.
+        const needsBackfill = !rowIsCurrentWeek && localHasNoStackTodos && remoteHasStackTodos;
+
+        // Only overwrite if Supabase version is strictly newer than local cache —
+        // unless we must back-fill missing stack/todos (timestamps tie on a record
+        // that was previously written empty, so the strict-newer test never passes).
+        const staleByTimestamp = localTs && !(new Date(row.updated_at) > new Date(localTs));
+        if (staleByTimestamp && !needsBackfill) return;
 
         // Week-boundary guard: use isCurrentWeek so the check is never duplicated.
         // For past/future weeks, only allow todos/stack to be overwritten when the
         // remote row was explicitly flagged as a carry-forward. This prevents a stale
         // remote snapshot from clobbering local edits on non-current week offsets.
-        const rowMonday = getMonFromAbs(row.week_offset).toDateString();
-        const rowIsCurrentWeek = isCurrentWeek(rowMonday);
-        const allowTodosStack = rowIsCurrentWeek || !!row.__carried_forward;
+        // The localHasNoStackTodos exception keeps that protection (it is false the
+        // moment any local stack/todos exists) while still hydrating an empty cache.
+        const allowTodosStack =
+          rowIsCurrentWeek || !!row.__carried_forward || localHasNoStackTodos;
 
         const d = {
           intention:   row.intention  || '',
