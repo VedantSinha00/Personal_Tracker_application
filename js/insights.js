@@ -7,6 +7,7 @@ import {
 } from './storage.js';
 import { catPalette, resolveCatColor } from './colours.js';
 import { parseDuration } from './dailylog.js';
+import { esc } from './escape.js';
 
 // ── Time-frame options ────────────────────────────────────────────────────────
 const TF_OPTIONS = [
@@ -190,10 +191,10 @@ export function renderInsights() {
     // Use the resolved color for a vibrant gradient/solid fill
     const barStyle = `height:${h}px; background:${catCol}; border-color: ${catCol}; opacity:${w.hours >= 2 ? 1 : 0.6};`;
     
-    return `<div class="wk-bar-wrap" title="${w.label}: ${fmtHrs(w.hours)} (${w.domCat})">
+    return `<div class="wk-bar-wrap" title="${esc(w.label)}: ${fmtHrs(w.hours)} (${esc(w.domCat)})">
       <div class="wk-bar-val">${fmtHrs(w.hours)}</div>
       <div class="wk-bar-col" style="${barStyle}"></div>
-      <div class="wk-bar-lbl">${w.label.split(' ')[0]}</div>
+      <div class="wk-bar-lbl">${esc(w.label.split(' ')[0])}</div>
     </div>`;
   }).join('');
 
@@ -220,7 +221,7 @@ export function renderInsights() {
       const colour = resolveCatColor(name);
       const pctW   = Math.round(hrs / maxArea * 100);
       return `<div class="area-row">
-        <div class="area-name">${name}</div>
+        <div class="area-name">${esc(name)}</div>
         <div class="area-bar-bg"><div class="area-bar-fill" style="width:${pctW}%;background:${colour}"></div></div>
         <div class="area-count">${fmtHrs(hrs)}</div>
       </div>`;
@@ -267,7 +268,7 @@ export function renderInsights() {
         <div class="habit-cons-header">
           <div class="habit-cons-name">
             <div class="habit-cons-dot" style="background:${barColor}"></div>
-            ${h.name}${h.target
+            ${esc(h.name)}${h.target
               ? ` <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;">(target ${h.target}×/wk)</span>`
               : ''}
           </div>
@@ -301,13 +302,13 @@ export function renderInsights() {
   const arch          = loadCatArchive();
   const catLegendItems = cats.map(c => {
     const p = catPalette(c.color);
-    return `<div class="legend-item"><div class="legend-dot" style="background:${p.css}"></div> ${c.name}</div>`;
+    return `<div class="legend-item"><div class="legend-dot" style="background:${p.css}"></div> ${esc(c.name)}</div>`;
   }).join('');
   const archLegend = Object.entries(arch)
     .filter(([name]) => (areaHours[name] || 0) > 0 && !cats.find(c => c.name === name))
     .map(([name, color]) => {
       const p = catPalette(color);
-      return `<div class="legend-item"><div class="legend-dot" style="background:${p.css};opacity:0.5;"></div> ${name} <span style="font-size:10px;color:var(--text3);">(archived)</span></div>`;
+      return `<div class="legend-item"><div class="legend-dot" style="background:${p.css};opacity:0.5;"></div> ${esc(name)} <span style="font-size:10px;color:var(--text3);">(archived)</span></div>`;
     }).join('');
 
 

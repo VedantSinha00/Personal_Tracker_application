@@ -6,6 +6,7 @@ import { resolveHex, badgeTextColor } from './colours.js';
 import { sortedCats } from './storage.js';
 import { todayI, getDayDate, openM, renderDayCard } from './dailylog.js';
 import { catC } from './colours.js';
+import { esc } from './escape.js';
 
 export function renderOv(d) {
   const el = document.getElementById('ovMain');
@@ -18,7 +19,7 @@ export function renderOv(d) {
     <div class="lp-intention" style="background:var(--surface-elevated); padding:var(--space-4); border-radius:24px; box-shadow:var(--elevation-base); flex: 1;">
       <div class="lp-intention-lbl" style="font-family:var(--font-heading); color:var(--text3); font-size:12px; margin-bottom:var(--space-2); letter-spacing:0.02em; font-weight:500;">This week's intention</div>
       ${intention
-        ? `<div class="lp-intention-text" style="font-size:24px; font-weight:600; color:var(--text); line-height:1.3;">${intention}</div>`
+        ? `<div class="lp-intention-text" style="font-size:24px; font-weight:600; color:var(--text); line-height:1.3;">${esc(intention)}</div>`
         : `<div class="lp-intention-empty" style="color:var(--text3); font-style:italic;">No intention set — go to Stack to write one</div>`}
     </div>`;
 
@@ -53,11 +54,11 @@ export function renderOv(d) {
             <span class="lp-focus-badge"
               style="--badge-hex:${hex};--badge-text:${textCol};
                      background:color-mix(in srgb,${hex} 55%,var(--badge-base,#fff));
-                     color:${textCol};">${c.name}</span>
+                     color:${textCol};">${esc(c.name)}</span>
             ${items.length > 0 ? `<i data-lucide="chevron-down" class="todo-chevron" style="width:16px;height:16px;color:var(--text3);transition:transform 0.2s;"></i>` : ''}
           </div>
           <span class="lp-focus-text${stackText ? '' : ' empty'}" style="line-height:1.4;">
-            ${stackText || 'No focus set'}
+            ${esc(stackText) || 'No focus set'}
           </span>
         </div>
         ${items.length > 0 ? `
@@ -65,14 +66,14 @@ export function renderOv(d) {
             ${items.map((it, idx) => `
               <label class="lp-todo-item${it.done ? ' done' : ''}">
                 <input type="checkbox" ${it.done ? 'checked' : ''}
-                  data-action="tog-todo" data-catname="${c.name}" data-idx="${idx}">
-                <span class="lp-todo-text">${it.text}</span>
+                  data-action="tog-todo" data-catname="${esc(c.name)}" data-idx="${idx}">
+                <span class="lp-todo-text">${esc(it.text)}</span>
               </label>
             `).join('')}
           </div>
         ` : ''}
         <input type="text" class="lp-todo-input" placeholder="Add task..."
-          data-action="add-todo" data-catname="${c.name}"
+          data-action="add-todo" data-catname="${esc(c.name)}"
           style="margin-top:10px;width:100%;box-sizing:border-box;background:none;border:none;
                  border-bottom:1px solid var(--border);color:var(--text);font-size:12px;
                  padding:4px 0;outline:none;cursor:text;">
@@ -114,7 +115,7 @@ export function renderOv(d) {
           const onTrack = count >= Math.round(target * (ti + 1) / 7);
           return `
             <div class="lp-streak-item" style="${onTrack ? 'border-color:var(--accent);' : ''}">
-              ${h.name} · <span class="streak-count">${count}</span>
+              ${esc(h.name)} · <span class="streak-count">${count}</span>
               <span style="color:var(--text3)"> / ${target}</span>
             </div>`;
         }).join('')}

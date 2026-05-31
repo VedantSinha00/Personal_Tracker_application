@@ -6,6 +6,7 @@ import { loadBacklog, saveBacklog, loadCats, load, save } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { showToast } from './toast.js';
 import { populateCatSelect, ensureCatExists } from './categories.js';
+import { esc } from './escape.js';
 
 export function initBacklog() {
   // Global nav "Backlog" button — switch to Stack tab and scroll to the section
@@ -59,8 +60,8 @@ export function renderBacklog() {
     return `
       <div class="backlog-agenda-card" data-idx="${idx}">
         <div class="backlog-header">
-          <span class="stag" style="background:color-mix(in srgb, ${hex} 20%, transparent); color:var(--text); border:1px solid color-mix(in srgb, ${hex} 30%, transparent);">${item.category}</span>
-          <input class="backlog-title-input" value="${item.text || ''}" 
+          <span class="stag" style="background:color-mix(in srgb, ${hex} 20%, transparent); color:var(--text); border:1px solid color-mix(in srgb, ${hex} 30%, transparent);">${esc(item.category)}</span>
+          <input class="backlog-title-input" value="${esc(item.text || '')}"
                  data-action="edit-backlog-title" data-idx="${idx}"
                  placeholder="Agenda focus for this area..." 
                  style="flex:1;">
@@ -72,8 +73,8 @@ export function renderBacklog() {
         <div class="backlog-task-list">
           ${tasks.map((t, ti) => `
             <div class="backlog-task-item">
-              <span class="task-text" contenteditable="true" 
-                    data-action="edit-backlog-task" data-idx="${idx}" data-tidx="${ti}">${t.text}</span>
+              <span class="task-text" contenteditable="true"
+                    data-action="edit-backlog-task" data-idx="${idx}" data-tidx="${ti}">${esc(t.text)}</span>
               <button class="task-pull" data-action="pull-backlog-task" data-idx="${idx}" data-tidx="${ti}" title="Pull task to this week">
                 <i data-lucide="inbox"></i>
               </button>

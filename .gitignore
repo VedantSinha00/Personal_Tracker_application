@@ -9,3 +9,4 @@ obj/
 .claude/
 .playwright-mcp/
 verify-*.png
+testsprite_tests/tmp/

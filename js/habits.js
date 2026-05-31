@@ -7,6 +7,7 @@ import {
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { showToast } from './toast.js';
+import { esc } from './escape.js';
 
 // Tracks the currently selected colour in the habit colour picker.
 let selHabitColor = '#2d6a4f';
@@ -42,7 +43,7 @@ function renderHabitList() {
   const customHTML = custom.map((h, i) => `
     <div class="habit-item">
       <div class="habit-item-dot" style="background:${resolveHex(h.color)}"></div>
-      <span class="habit-item-name">${h.name}</span>
+      <span class="habit-item-name">${esc(h.name)}</span>
       <span class="habit-item-target">${h.target}×/wk</span>
       <button class="habit-item-edit" data-action="edit-habit" data-idx="${i}" title="Edit" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:0 5px;">✎</button>
       <button class="habit-item-del" data-action="delete-habit" data-idx="${i}" title="Remove">&times;</button>

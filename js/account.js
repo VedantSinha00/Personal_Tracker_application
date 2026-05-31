@@ -83,3 +83,22 @@ document.getElementById('saveUsernameBtn').addEventListener('click', handleUpdat
 document.getElementById('accountUsername').addEventListener('keydown', e => {
   if (e.key === 'Enter') handleUpdateUsername();
 });
+
+// ── Import wiring (moved out of index.html inline <script> to satisfy CSP 'self') ──
+const _importBtn = document.getElementById('importBtn');
+if (_importBtn) {
+  _importBtn.addEventListener('click', () => {
+    const fileInput = document.getElementById('importFile');
+    if (fileInput) {
+      fileInput.value = '';
+      fileInput.click();
+    }
+  });
+}
+
+// Close the account modal after a successful import
+document.addEventListener('wt:import-complete', () => {
+  const modal = document.getElementById('accountModal');
+  if (modal) modal.classList.remove('open');
+  document.body.classList.remove('modal-open');
+});

@@ -108,13 +108,14 @@ function createWindow() {
     menu.popup();
   });
 
-  // Handle external links
+  // Handle external links.
+  // SEC-06: default-deny. Only https URLs are handed to the system browser;
+  // every other scheme (and any in-app window open) is blocked outright.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('https://')) {
       shell.openExternal(url);
-      return { action: 'deny' };
     }
-    return { action: 'allow' };
+    return { action: 'deny' };
   });
 }
 
