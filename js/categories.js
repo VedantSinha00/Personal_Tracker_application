@@ -13,6 +13,7 @@ import {
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
+import { esc } from './escape.js';
 
 
 // Currently selected colour for new categories
@@ -57,7 +58,7 @@ export function renderCatList() {
         <span class="cat-drag-handle" title="Drag to reorder">⠿</span>
         <div class="cat-dot-btn" style="background:${hex}" title="Change colour"
           data-action="open-cat-color" data-catidx="${realIdx}"></div>
-        <input class="cat-name-input" value="${c.name}"
+        <input class="cat-name-input" value="${esc(c.name)}"
           data-action="rename-cat" data-catidx="${realIdx}"
           ${isOthers ? 'readonly title="Others is always kept"' : ''}>
         ${!isOthers ? `
@@ -169,7 +170,7 @@ export function populateCatSelect() {
   const high = all.filter(c => (focus[c.name] || 'high') === 'high');
   const low = all.filter(c => (focus[c.name] || 'high') === 'low');
   const options = [...high, ...low]
-    .map(c => `<option value="${c.name}">${c.name}</option>`)
+    .map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`)
     .join('');
 
   // Log Modal dropdown

@@ -58,7 +58,8 @@ export function syncCustomSelect(select) {
   const options = Array.from(select.options);
 
   const selectedOption = options.find(o => o.selected) || options[0];
-  trigger.innerHTML = `<span>${selectedOption ? selectedOption.innerText : 'Select...'}</span><span class="custom-select-arrow">▼</span>`;
+  trigger.innerHTML = `<span class="custom-select-label"></span><span class="custom-select-arrow">▼</span>`;
+  trigger.querySelector('.custom-select-label').textContent = selectedOption ? selectedOption.innerText : 'Select...';
 
   popover.innerHTML = '';
   options.forEach((opt, idx) => {

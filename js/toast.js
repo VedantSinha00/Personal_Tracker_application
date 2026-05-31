@@ -26,8 +26,9 @@ export function showToast(msg, type = 'info', duration = 3000) {
 
   toast.innerHTML = `
     <i data-lucide="${icon}" style="width:16px;height:16px;"></i>
-    <span>${msg}</span>
+    <span class="toast-msg-text"></span>
   `;
+  toast.querySelector('.toast-msg-text').textContent = msg;
 
   toastContainer.appendChild(toast);
 

@@ -12,6 +12,7 @@ import {
   sortedCats, wk, getAbsWk,
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
+import { esc } from './escape.js';
 import { pushToBacklog } from './backlog.js';
 
 // Re-render when items are pulled from backlog
@@ -51,39 +52,39 @@ export function renderSt(d, animate) {
 
     return `
       <div class="si focus-${level}" id="si_wrap_${c.name}"
-          data-catname="${c.name}" data-level="${level}">
+          data-catname="${esc(c.name)}" data-level="${level}">
         <div class="si-main">
           <div class="drag-zone" title="Drag to reorder">
             <span class="drag-handle">⠿</span>
-            <span class="stag" style="--badge-hex:${hex};--badge-text:${text};">${c.name}</span>
+            <span class="stag" style="--badge-hex:${hex};--badge-text:${text};">${esc(c.name)}</span>
           </div>
           <input class="sinput" id="si_${c.name}"
             placeholder="Main focus / objective..."
-            value="${stk[c.name] || ''}"
+            value="${esc(stk[c.name] || '')}"
             data-action="stack-input"
-            data-catname="${c.name}">
+            data-catname="${esc(c.name)}">
           <div class="focus-toggle">
-            <button data-action="focus-toggle" data-catname="${c.name}"
+            <button data-action="focus-toggle" data-catname="${esc(c.name)}"
               class="${level === 'high' ? 'focus-high-on' : ''}"
               title="High focus">▲ High</button>
-            <button data-action="focus-toggle" data-catname="${c.name}"
+            <button data-action="focus-toggle" data-catname="${esc(c.name)}"
               class="${level === 'low' ? 'focus-low-on' : ''}"
               title="Low focus">▼ Low</button>
           </div>
         </div>
 
         <div class="si-tasks">
-          <div class="task-list" id="tasks_${c.name}" data-catname="${c.name}">
+          <div class="task-list" id="tasks_${c.name}" data-catname="${esc(c.name)}">
             ${tasks.map((t, i) => `
               <div class="task-item" data-idx="${i}">
                 <label class="task-checkbox-wrap" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;">
-                  <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${c.name}" data-idx="${i}">
-                  <span class="task-text${t.done ? ' done' : ''}" style="${t.done ? 'text-decoration:line-through;color:var(--text3);' : ''}">${t.text}</span>
+                  <input type="checkbox" ${t.done ? 'checked' : ''} data-action="tog-task" data-catname="${esc(c.name)}" data-idx="${i}">
+                  <span class="task-text${t.done ? ' done' : ''}" style="${t.done ? 'text-decoration:line-through;color:var(--text3);' : ''}">${esc(t.text)}</span>
                 </label>
-                <button class="task-backlog" data-action="push-backlog" data-catname="${c.name}" data-idx="${i}" title="Send to global backlog">
+                <button class="task-backlog" data-action="push-backlog" data-catname="${esc(c.name)}" data-idx="${i}" title="Send to global backlog">
                   <i data-lucide="inbox"></i>
                 </button>
-                <button class="task-del" data-action="del-task" data-catname="${c.name}" data-idx="${i}" title="Delete task">
+                <button class="task-del" data-action="del-task" data-catname="${esc(c.name)}" data-idx="${i}" title="Delete task">
                   <i data-lucide="trash-2"></i>
                 </button>
               </div>
@@ -91,7 +92,7 @@ export function renderSt(d, animate) {
           </div>
           <div class="task-add">
             <input class="task-input" placeholder="Add a task..."
-              data-action="add-task" data-catname="${c.name}">
+              data-action="add-task" data-catname="${esc(c.name)}">
           </div>
         </div>
       </div>`;

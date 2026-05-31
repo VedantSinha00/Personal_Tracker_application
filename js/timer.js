@@ -2,6 +2,7 @@
 // ── timer.js ───────────────────────────────────────────────────────────────
 // Low-level timer logic to avoid circular dependencies between app.js and dailylog.js
 import { loadTimer, saveTimer, wk } from './storage.js';
+import { esc } from './escape.js';
 
 /** @typedef {import('./constants.js').TimerState} TimerState */
 
@@ -193,7 +194,7 @@ function renderActiveTimerCard(t, timeStr, compact = false) {
         data-action="timer-action" data-type="stop">
         <div>
           <span style="font-size:10px; opacity:0.8;">WORKING ROUND</span>
-          <div style="font-weight:600;">${t.cat}${t.intent ? ' · ' + t.intent : ''}</div>
+          <div style="font-weight:600;">${esc(t.cat)}${t.intent ? ' · ' + esc(t.intent) : ''}</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <strong class="active-timer-clock" style="font-family:monospace; font-size:14px;">${timeStr}</strong>
@@ -209,7 +210,7 @@ function renderActiveTimerCard(t, timeStr, compact = false) {
     <div class="active-timer-card" style="${pulseAnim}">
       <div class="active-timer-info">
         <div class="active-timer-cat">Currently Working ${isPaused ? '(Paused)' : ''}</div>
-        <div class="active-timer-intent">${t.cat}${t.intent ? ' — ' + t.intent : ''}</div>
+        <div class="active-timer-intent">${esc(t.cat)}${t.intent ? ' — ' + esc(t.intent) : ''}</div>
       </div>
       <div style="display:flex; align-items:center; gap:12px;">
         <div class="active-timer-clock">${timeStr}</div>

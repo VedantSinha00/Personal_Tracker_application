@@ -11,6 +11,7 @@ import { populateCatSelect } from './categories.js';
 import { syncCustomSelect } from './custom-select.js';
 import { startTimer, stopTimer, togglePauseTimer } from './timer.js';
 import { showToast } from './toast.js';
+import { esc } from './escape.js';
 
 // ── Modal state ───────────────────────────────────────────────────────────────
 let editDay       = null;
@@ -63,7 +64,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
         data-action="tog-custom-habit"
         data-day="${dayOffset}" data-habit="${h.id}"
         style="accent-color:${p.css}">
-      <span>${h.name}</span>
+      <span>${esc(h.name)}</span>
     </label>`;
   }).join('');
 
@@ -72,14 +73,19 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
   const noBlocks = blocks.length === 0;
 
   const blockPills = blocks.map((b, bi) => {
+    const safeCategory = esc(b.category);
+    // Slice the RAW string first, then escape — slicing escaped text could cut an
+    // HTML entity (e.g. "&amp;") mid-sequence and render garbled output.
+    const rawIntent = b.intent || '';
+    const truncIntent = rawIntent.length > 40 ? rawIntent.slice(0, 40) + '…' : rawIntent;
     const intentLine = b.intent
-      ? `<div class="block-intent">${b.intent.length > 40 ? b.intent.slice(0, 40) + '…' : b.intent}</div>`
+      ? `<div class="block-intent">${esc(truncIntent)}</div>`
       : '';
 
     return `<div class="block-pill" style="${catC(b.category)}" draggable="true"
       data-action="open-block" data-day="${dayOffset}" data-block="${bi}">
       <div class="block-pill-top">
-        <span>${b.category}${b.duration ? ' · ' + b.duration : ''}${b.slot ? ' · ' + b.slot.replace('-', ' ') : ''}</span>
+        <span>${safeCategory}${b.duration ? ' · ' + esc(b.duration) : ''}${b.slot ? ' · ' + esc(b.slot.replace('-', ' ')) : ''}</span>
       </div>
       ${intentLine}
     </div>`;
@@ -119,7 +125,7 @@ export function renderDayCard(dayOffset, day, ti, customHabits) {
           <textarea class="journal-ta"
             data-action="save-journal" data-day="${dayOffset}"
             placeholder="How did the day go? What worked, what didn&#39;t?" rows="3"
-          >${day.journal || ''}</textarea>
+          >${esc(day.journal || '')}</textarea>
         </div>
       </div>
       <div class="day-badges">
@@ -240,8 +246,8 @@ export function openStartTimerM(di) {
   // Populate categories
   const catSel = document.getElementById('stCat');
   const cats = loadCats();
-  catSel.innerHTML = '<option value="">Select...</option>' + 
-    cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  catSel.innerHTML = '<option value="">Select...</option>' +
+    cats.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
   
   document.getElementById('stIntent').value = '';
   document.getElementById('stIntentCount').textContent = '0 / 300';
@@ -354,8 +360,8 @@ function _renderLinkedTasks(cat, linked = [], targetId = 'fLinkedTasks', rowId =
     
     const isChecked = t.done || isLinked;
     return `<label class="linked-task-item">
-      <input type="checkbox" data-cat="${cat}" data-idx="${i}" ${isChecked ? 'checked' : ''}>
-      <span ${t.done ? 'style="text-decoration:line-through;color:var(--text3);"' : ''}>${t.text}</span>
+      <input type="checkbox" data-cat="${esc(cat)}" data-idx="${i}" ${isChecked ? 'checked' : ''}>
+      <span ${t.done ? 'style="text-decoration:line-through;color:var(--text3);"' : ''}>${esc(t.text)}</span>
     </label>`;
   }).filter(Boolean).join('');
 

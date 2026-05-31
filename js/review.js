@@ -4,6 +4,7 @@
 
 import { load, save, loadCats, allHabits } from './storage.js';
 import { parseDuration } from './dailylog.js';
+import { esc } from './escape.js';
 
 // ── Metrics update ────────────────────────────────────────────────────────────
 // Called after any data change so the bar chart at the top of Review stays
@@ -51,7 +52,7 @@ export function updM(d) {
     return `
       <div class="rv-habit-row">
         <div class="rv-habit-info">
-          <span class="rv-habit-lbl">${h.name.toUpperCase()}</span>
+          <span class="rv-habit-lbl">${esc(h.name).toUpperCase()}</span>
           <span class="rv-habit-val">${h.count}${target ? ' / ' + target : ''}</span>
         </div>
         <div class="rv-habit-bar-bg">
