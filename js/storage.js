@@ -451,6 +451,7 @@ export function loadBacklog() {
 
 /** @param {BacklogData} b */
 export function saveBacklog(b) {
+  b.updated_at = new Date().toISOString();
   localStorage.setItem('wt_backlog', JSON.stringify(b));
   if (_syncQueue['backlog']) clearTimeout(_syncQueue['backlog']);
   _syncQueue['backlog'] = setTimeout(() => _syncBacklog(b), 1500);
@@ -459,11 +460,12 @@ export function saveBacklog(b) {
 async function _syncBacklog(b) {
   const user = getCurrentUser();
   if (!user || user.id === '00000000-0000-0000-0000-000000000000') return;
+  const now = b.updated_at || new Date().toISOString();
   try {
     const { error } = await sb.from('backlog').upsert({
       user_id:    user.id,
       items:      b.items || [],
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }, { onConflict: 'user_id' });
     if (error) handleSyncError('backlog', error);
   } catch(err) {
@@ -982,7 +984,14 @@ export async function loadFromSupabase() {
         // unless we must back-fill missing stack/todos (timestamps tie on a record
         // that was previously written empty, so the strict-newer test never passes).
         const staleByTimestamp = localTs && !(new Date(row.updated_at) > new Date(localTs));
-        if (staleByTimestamp && !needsBackfill) return;
+        if (staleByTimestamp && !needsBackfill) {
+          // If local is strictly newer, trigger sync back to Supabase to reconcile
+          if (localTs && new Date(localTs) > new Date(row.updated_at)) {
+            console.log(`[sync] Local week ${row.week_offset} is newer than Supabase. Triggering sync to cloud.`);
+            _perfSyncWeek(row.week_offset, localD);
+          }
+          return;
+        }
 
         // Week-boundary guard: use isCurrentWeek so the check is never duplicated.
         // For past/future weeks, only allow todos/stack to be overwritten when the
@@ -1129,9 +1138,21 @@ export async function loadFromSupabase() {
         .from('backlog')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       if (bData && bData.items) {
-        localStorage.setItem('wt_backlog', JSON.stringify({ items: bData.items }));
+        const localB = loadBacklog();
+        const localTs = localB.updated_at || 0;
+        const remoteTs = bData.updated_at || 0;
+
+        const staleByTimestamp = localTs && !(new Date(remoteTs) > new Date(localTs));
+        if (staleByTimestamp) {
+          if (localTs && new Date(localTs) > new Date(remoteTs)) {
+            console.log('[sync] Local backlog is newer than Supabase. Triggering sync to cloud.');
+            _syncBacklog(localB);
+          }
+        } else {
+          localStorage.setItem('wt_backlog', JSON.stringify({ items: bData.items, updated_at: bData.updated_at }));
+        }
       }
     } catch(e) { console.warn('[load] backlog skip:', e.message); }
 
