@@ -18,7 +18,7 @@
 | SEC-02 | Critical | Supabase RLS must be verified/enforced | Database | ✅ **Fixed** — RLS on for all 7 tables; every policy `auth.uid()`-scoped (no wide-open policy); `policies.sql` authored |
 | SEC-03 | High | Stored XSS via unescaped `innerHTML` | Renderer | ✅ **Fixed** — `esc()` applied across 11 files (+textContent for toast/select); all parse clean |
 | SEC-04 | Medium | No Content-Security-Policy | Renderer/Electron | ✅ **Fixed** — CSP added, inline scripts/handlers externalized; runtime-verified (fonts, no CSP violations, Supabase wss connects, XSS payload inert) |
-| SEC-05 | Medium | Deep-link session injection (login CSRF) | Auth | 🟡 **Shipped in v1.3.8, login path NOT yet verified** — `wt_login_pending` flag gates the deep-link callback. Owner runs as existing user (session resumed, never exercised sign-in). **TODO (later):** verify by signing out + back in; also confirm unsolicited `weekly-tracker://` token is rejected. |
+| SEC-05 | Medium | Deep-link session injection (login CSRF) | Auth | ✅ **Fixed & verified (v1.3.10, 2026-05-31)** — `wt_login_pending` flag gates the deep-link callback. Full OAuth deep-link sign-in (sign out → sign back in) exercised on the installed build: login completes and data is intact, confirming the CSRF gate does not block legitimate logins. (Deep-link login was only physically possible once `main.js` registered the `weekly-tracker://` handler in v1.3.9.) |
 | SEC-06 | Low | `setWindowOpenHandler` allows non-https windows | Electron main | ✅ **Fixed** — default-deny; only https handed to system browser |
 | SEC-07 | Low | Localhost login bypass must never be served publicly | Auth | ✅ **Fixed** — loud console warning when bypass active; loopback+non-Electron only |
 
@@ -258,7 +258,7 @@ On `localhost`/`127.0.0.1`, the app mock-authenticates a fixed dev user and skip
 2. 🟡 **SEC-02** — RLS enabled; remaining work is the cross-user test + committing `policies.sql`.
 3. ⬜ **SEC-03** — XSS escaping pass. Largest code change; do alongside SEC-04. **← next focus**
 4. ⬜ **SEC-04** — CSP + move inline scripts/handlers. Pairs naturally with SEC-03 (defense-in-depth).
-5. ⬜ **SEC-05** — auth deep-link hardening.
+5. ✅ **SEC-05** — auth deep-link hardening (verified on v1.3.10).
 6. ⬜ **SEC-06 / SEC-07** — quick Electron/auth hardening, low risk to batch together.
 
 Milestone split: **M1 = SEC-01 + SEC-02** (secrets + data isolation) — *effectively complete pending SEC-02 verification*; **M2 = SEC-03 + SEC-04** (XSS hardening) — *next*; **M3 = SEC-05 + SEC-06 + SEC-07** (auth/Electron hardening).
