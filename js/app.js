@@ -420,6 +420,13 @@ async function handleAuthReady() {
   if (_appInited) return;   // guard against double-init on fast networks
   _appInited = true;
 
+  // Run startup migration on the local cache first
+  try {
+    runStartupMigration();
+  } catch (err) {
+    console.error('[handleAuthReady] runStartupMigration local failed:', err);
+  }
+
   updateWkLabel();
   updateExportLbl();
   initListeners();
@@ -436,6 +443,14 @@ async function handleAuthReady() {
   if (getCurrentUser()) {
     try {
       await loadFromSupabase();
+      
+      // Run startup migration on the downloaded remote data to ensure everything gets IDs
+      try {
+        runStartupMigration();
+      } catch (err) {
+        console.error('[handleAuthReady] runStartupMigration remote failed:', err);
+      }
+
       initRealtimeSync();
       const cloudRecovered = repairCategories();
       if (cloudRecovered > 0) showToast(`Recovered ${cloudRecovered} areas from cloud.`, 'success');

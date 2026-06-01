@@ -67,6 +67,17 @@ We will add a floating (picture-in-picture) stopwatch window to the Electron app
 - Update `migrateData(d)` to ensure `d.ghosts = d.ghosts || []`.
 - Add week-specific export helper `exportSingleWeek(absOffset)` to generate a self-contained JSON backup of the target week.
 
+```javascript
+export function exportSingleWeek(absOffset) {
+  const wkKey = 'wt_wk_' + absOffset;
+  const data = localStorage.getItem(wkKey);
+  if (!data) return null;
+  const weekData = JSON.parse(data);
+  const { intention, stack, todos, days, review, ghosts } = weekData;
+  return JSON.stringify({ intention, stack, todos, days, review, ghosts }, null, 2);
+}
+```
+
 ---
 
 ### 2. Electron Process & Floating Stopwatch

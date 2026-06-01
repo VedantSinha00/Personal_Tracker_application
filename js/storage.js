@@ -1335,12 +1335,18 @@ export function generateUUID() {
 
 function migrateTasksWithIds() {
   let migratedWeeksCount = 0;
+  const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (!k || !k.startsWith('wt_wk_')) continue;
+    if (k && k.startsWith('wt_wk_')) {
+      keys.push(k);
+    }
+  }
+  
+  keys.forEach(k => {
     try {
       const r = localStorage.getItem(k);
-      if (!r) continue;
+      if (!r) return;
       const d = JSON.parse(r);
       let changed = false;
       if (d && d.todos) {
@@ -1362,7 +1368,7 @@ function migrateTasksWithIds() {
     } catch (e) {
       console.warn('[migration] migrateTasksWithIds fail on key:', k, e.message);
     }
-  }
+  });
   
   // Migrate backlog
   try {

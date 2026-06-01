@@ -1,6 +1,6 @@
 import { DAYS, FULL } from './constants.js';
 import {
-  load, save, loadFocus, allHabits, wk, loadHabits
+  load, save, loadFocus, allHabits, wk, loadHabits, generateUUID
 } from './storage.js';
 import { resolveHex, badgeTextColor } from './colours.js';
 import { sortedCats } from './storage.js';
@@ -199,7 +199,7 @@ export function initOverviewListeners() {
     const d = load();
     if (!d.todos) d.todos = {};
     if (!d.todos[catname]) d.todos[catname] = [];
-    d.todos[catname].push({ text: val, done: false });
+    d.todos[catname].push({ id: generateUUID(), text: val, done: false });
     save(d);
     e.target.value = '';
     document.dispatchEvent(new CustomEvent('wt:day-changed'));
