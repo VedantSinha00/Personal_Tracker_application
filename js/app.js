@@ -444,7 +444,14 @@ async function handleAuthReady() {
     try {
       await loadFromSupabase();
       
-      // Run startup migration on the downloaded remote data to ensure everything gets IDs
+      // Run startup migration on the downloaded remote data to ensure everything gets IDs.
+      // KNOWN LIMITATION (intentional, not fixed): migration writes IDs to localStorage
+      // only — it does NOT push them back to the cloud (no save() call). The cloud row
+      // stays ID-less until the next edit of that week. Edge case: opening an OLD,
+      // never-re-edited week on a second device makes each device mint a *different*
+      // UUID for the same task, so a work-block link from one device may not match on
+      // the other for that untouched week. Self-heals on the next edit of the week.
+      // See migrateTasksWithIds() in storage.js. Deferred — too rare for current usage.
       try {
         runStartupMigration();
       } catch (err) {

@@ -1333,6 +1333,13 @@ export function generateUUID() {
   return 'u_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 }
 
+// KNOWN LIMITATION (deferred — see app.js handleAuthReady post-load call site):
+// This writes UUIDs into the local cache only (raw setItem, no save()), so IDs are
+// NOT synced to the cloud here. The cloud row gets them on the next save() of that
+// week. Cross-device symptom on an OLD, never-re-edited week: two devices each mint
+// a different UUID for the same task, which can break a work-block link across
+// devices for that week. Resolves on the next edit. Intentionally not fixed — too
+// rare for the current single-user usage. If task-link bugs surface, start here.
 function migrateTasksWithIds() {
   let migratedWeeksCount = 0;
   const keys = [];

@@ -1,20 +1,21 @@
 # Personal Tracker — Retrospective Guide
-*For solo builders doing a post-build reflection with a PM learning goal*
+*For a portfolio-ready post-build reflection on a solo project*
 
 ---
 
 ## How to use this
 
-Do this in one sitting, 45–60 minutes max. Write rough answers first — bullet points, incomplete sentences, whatever comes out. Don't edit while you answer. The thinking matters more than the prose. Once you have raw answers, you can give them to Claude along with your codebase to shape into a readable retrospective document.
+Do this in one sitting, 45–60 minutes max. Write rough answers first — bullet points, incomplete sentences, whatever comes out. Don't edit while you answer. The thinking matters more than the prose. Once you have raw answers, you can give them to Claude along with your codebase to shape into a portfolio case study using the **Problem / Build / Learn / Result** structure at the bottom of this doc.
 
 ---
 
-## Section 1: The Origin
+## Section 1: The Problem
 
 *Why this existed at all.*
 
 - What problem were you actually trying to solve when you started this? Be specific — what was failing in your life or workflow?
 - Was there a moment or frustration that triggered it, or was it more of a "let me try building something" impulse?
+- How were you managing your week before this existed? What did that look like?
 - Did the problem change as you built? Did you end up solving a different problem than the one you started with?
 
 ---
@@ -28,6 +29,12 @@ Do this in one sitting, 45–60 minutes max. Write rough answers first — bulle
 - Is there anything you built that you never actually use?
 - What's missing that you wish existed?
 
+**Get specific with numbers — these matter for a portfolio:**
+- How many weeks have you actively used this? How many categories do you track?
+- How many meaningful features shipped between v0 and the version you're reflecting on?
+- How many bugs were significant enough to cause data loss or a crash?
+- Roughly how many hours have you logged into the tracker itself, across all weeks?
+
 ---
 
 ## Section 3: The Build Process
@@ -39,6 +46,11 @@ Do this in one sitting, 45–60 minutes max. Write rough answers first — bulle
 - What did you vibe-code without fully understanding, and does that still worry you?
 - Were there decisions you made early that you had to undo or work around later?
 - What would you have done in week 1 if you knew what you know now?
+
+**On technical tradeoffs (this is the stuff portfolios are built on):**
+- Why did you choose the stack you chose? What alternatives did you consider? (e.g., Electron vs. web app, localStorage + Supabase vs. pure cloud)
+- What's the biggest architectural decision you made, and would you make the same call again?
+- What's one place where your early design created later pain?
 
 ---
 
@@ -69,7 +81,7 @@ Do this in one sitting, 45–60 minutes max. Write rough answers first — bulle
 *What this unlocks, not what it closes.*
 
 - What would need to be true for you to want to turn this into something more serious?
-- What pattern or habit from building this do you want to carry into LastOne?
+- What pattern or habit from building this do you want to carry into your next project?
 - What pattern do you want to explicitly leave behind?
 - If you wrote a LinkedIn post about this tomorrow, what's the one insight you'd want someone to walk away with?
 
@@ -88,10 +100,28 @@ These are worth reading before or after you write your answers — they'll sharp
 
 ## After You Answer
 
-Once you have rough answers:
+Once you have rough answers, give Claude your raw notes + a summary of what the tracker does, and ask it to write a **Problem / Build / Learn / Result** case study.
 
-1. Give Claude your raw notes + a summary of what the tracker does
-2. Ask it to write a retrospective in a format suitable for a portfolio or LinkedIn post
-3. Read the draft out loud — anything that doesn't sound like you, rewrite it yourself
+**The format to request:**
 
+```
+Problem (2–3 sentences)
+  What specific gap or pain this solved, and for whom (even if "for me").
+
+Build (3–5 bullets)
+  What exists in the final version. Lead with the most technically interesting decision,
+  not the longest feature list. Include one real number (weeks used, bugs fixed, etc.)
+
+Learn (2–3 bullets)
+  One thing about the product space, one thing about yourself as a builder,
+  one thing about building with AI. Be honest — vague positivity reads as filler.
+
+Result (2–3 sentences)
+  Concrete outcome: does it work? Do you use it? What did it change?
+  What would it take to make it something more?
+```
+
+**What good looks like:**
 The goal is a document where someone reading it thinks *"this person actually understands what they built and why it matters"* — not *"this person used an AI to make their project sound impressive."*
+
+Read the draft out loud. Anything that doesn't sound like you, rewrite it yourself.
