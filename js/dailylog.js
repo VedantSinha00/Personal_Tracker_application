@@ -9,7 +9,7 @@ import {
 import { catC, catPalette } from './colours.js';
 import { populateCatSelect } from './categories.js';
 import { syncCustomSelect } from './custom-select.js';
-import { startTimer, stopTimer, togglePauseTimer } from './timer.js';
+import { startTimer, stopTimer, togglePauseTimer, refreshTimerDisplays } from './timer.js';
 import { showToast } from './toast.js';
 import { esc } from './escape.js';
 
@@ -147,6 +147,13 @@ export function renderDG(d) {
   document.getElementById('dayGrid').innerHTML = d.days.map((day, i) =>
     renderDayCard(i, day, ti, customHabits)
   ).join('');
+
+  // Rebuilding #dayGrid destroys the #dayTimer-N slot that holds the active
+  // "Currently Working" card. Re-inject it synchronously in the same frame so the
+  // card never vanishes between this teardown and the next 1s timer tick —
+  // otherwise partial re-renders (habit toggle, category/habits change, etc.) make
+  // the running stopwatch card blink. No-op when no timer is active.
+  refreshTimerDisplays();
 }
 
 // ── Habit + MVD toggles ───────────────────────────────────────────────────────
@@ -189,7 +196,6 @@ export function openM(di, bi) {
     (editIdx !== null ? 'Edit entry — ' : 'New entry — ') + FULL[editDay];
   
   isLogFromTimer = false; // Reset by default
-  hideModalError('fError');
 
   const fCatEl = document.getElementById('fCat');
   fCatEl.selectedIndex = 0;
@@ -242,7 +248,17 @@ export function openM(di, bi) {
 export function openStartTimerM(di) {
   editDay = di;
   selSTOffset = 0;
-  
+
+  // Re-evaluate the "already running" state on every open instead of trusting whatever
+  // the error was last set to. If a stopwatch genuinely is still active, warn up-front
+  // (same gate as the Start button); otherwise clear any stale error so it never sticks
+  // across opens once that stopwatch has been stopped.
+  if (loadTimer()) {
+    showModalError('stError', 'A stopwatch is already running. Stop it before starting a new one.');
+  } else {
+    hideModalError('stError');
+  }
+
   // Populate categories
   const catSel = document.getElementById('stCat');
   const cats = loadCats();
@@ -733,6 +749,7 @@ export function initDailyLogListeners() {
   });
 
   document.getElementById('stCat').addEventListener('change', e => {
+    hideModalError('stError');
     _renderLinkedTasks(e.target.value, [], 'stLinkedTasks', 'stTasksRow');
     document.getElementById('stNewTask').value = '';
   });
