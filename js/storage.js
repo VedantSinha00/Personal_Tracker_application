@@ -998,13 +998,21 @@ export async function loadFromSupabase() {
         }
 
         // Week-boundary guard: use isCurrentWeek so the check is never duplicated.
-        // For past/future weeks, only allow todos/stack to be overwritten when the
-        // remote row was explicitly flagged as a carry-forward. This prevents a stale
-        // remote snapshot from clobbering local edits on non-current week offsets.
-        // The localHasNoStackTodos exception keeps that protection (it is false the
-        // moment any local stack/todos exists) while still hydrating an empty cache.
+        // For past/future weeks, allow todos/stack to be overwritten when the cloud
+        // row is strictly newer than the local cache. Reaching this line already
+        // proves the cloud should win: the staleByTimestamp guard above returns early
+        // (and pushes local up) whenever local is newer or ties, so a strictly-newer
+        // cloud updated_at means the cloud holds the more recent genuine edits.
+        // localHasNoStackTodos still hydrates an empty cache on the timestamp tie that
+        // a previously-poisoned (empty, remote-stamped) record produces.
+        //
+        // NOTE: the former `!!row.__carried_forward` clause was dead — that marker is
+        // local-only (stripped from caches, never written to weekly_data), so the
+        // column does not exist and row.__carried_forward was always undefined.
+        const cloudStrictlyNewer =
+          !!localTs && new Date(row.updated_at) > new Date(localTs);
         const allowTodosStack =
-          rowIsCurrentWeek || !!row.__carried_forward || localHasNoStackTodos;
+          rowIsCurrentWeek || cloudStrictlyNewer || localHasNoStackTodos;
 
         const d = {
           intention:   row.intention  || '',

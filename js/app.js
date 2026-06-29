@@ -468,6 +468,45 @@ async function handleAuthReady() {
   renderAll();
   _dataLoaded = true; // data load + first render are both complete — gate is now open
   checkForWeekChange(); // safe to dispatch wt:week-changed now that listener and data are ready
+  ensureCarryForward(); // idempotent backstop in case the one-shot rollover event was missed/consumed
+}
+
+// ── Idempotent carry-forward backstop ─────────────────────────────────────────
+// The wt:week-changed event is single-shot: checkForWeekChange() stamps
+// wt_last_monday the moment it fires, so a rollover that is consumed before
+// carryForward() actually completes (early reload, second instance, or a throw
+// in the renderAll()/runStartupMigration() chain ahead of the carry call) leaves
+// the week marked "handled" forever — the event never fires again and the carry
+// silently never happens. This backstop runs on EVERY startup, independent of
+// that event, and triggers carryForward() at most once per week.
+//
+// Safe to call every launch: carryForward() only fills EMPTY stack/todo fields
+// and dedups by text, so a no-op re-run cannot overwrite or duplicate anything.
+// The wt_last_carry flag records the offset we last carried INTO, so we attempt
+// the carry exactly once per week — never fighting a user who deliberately
+// cleared the carried items.
+function ensureCarryForward() {
+  try {
+    const curAbs = getAbsWk(wk);
+    if (localStorage.getItem('wt_last_carry') === String(curAbs)) return; // already done this week
+
+    // Only carry when the current week is genuinely empty of todos/stack — i.e.
+    // a freshly-rolled-over week the user has not started filling. If they have
+    // already begun this week, the normal "fill empty only" guard inside
+    // carryForward() still protects them, but we also skip to avoid surprise.
+    const cur = load();
+    const curEmpty =
+      (!cur.todos || Object.keys(cur.todos).length === 0) &&
+      (!cur.stack || Object.keys(cur.stack).length === 0);
+    if (!curEmpty) { localStorage.setItem('wt_last_carry', String(curAbs)); return; }
+
+    carryForward();
+    // Stamp regardless of how many items carried: "nothing to carry" is still a
+    // completed attempt for this week and must not be retried on every launch.
+    localStorage.setItem('wt_last_carry', String(curAbs));
+  } catch (err) {
+    console.error('[ensureCarryForward] backstop failed:', err);
+  }
 }
 
 // Listen for the event — covers the login / re-login path.
@@ -503,6 +542,9 @@ window.addEventListener('wt:week-changed', () => {
   }
 
   carryForward();
+  // Record that this week's carry has been performed so the startup backstop
+  // (ensureCarryForward) treats it as done and does not re-attempt next launch.
+  try { localStorage.setItem('wt_last_carry', String(getAbsWk(wk))); } catch(e) {}
 });
 
 // Race-condition fix for page refresh over a CDN:
