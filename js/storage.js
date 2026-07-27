@@ -186,13 +186,29 @@ export function loadCats() {
   } catch(e) { return DEFAULT_CATS.slice(); }
 }
 
+// Counts category pushes that are actually in flight (network round-trip started,
+// not yet settled). The debounce timer alone is not enough: _syncQueue['cats'] used
+// to be cleared the instant the timer fired — BEFORE _syncCategories() had issued a
+// single request — so any cloud read during the round-trip saw "nothing pending" and
+// could clobber the local write it was racing. Both readers (loadFromSupabase and
+// handleRemoteCatsChange) consult _catsSyncPending() instead of the raw timer now.
+let _catsInFlight = 0;
+
+/** @returns {boolean} true while a categories write is queued or in flight */
+export function _catsSyncPending() {
+  return !!_syncQueue['cats'] || _catsInFlight > 0;
+}
+
 /** @param {Category[]} cats */
 export function saveCats(cats) {
   localStorage.setItem('wt_categories', JSON.stringify(cats));
   if (_syncQueue['cats']) clearTimeout(_syncQueue['cats']);
   _syncQueue['cats'] = setTimeout(() => {
-    _syncQueue['cats'] = null; // Mark as no longer pending before async push
-    _syncCategories(cats);
+    _syncQueue['cats'] = null;
+    // Raise the in-flight guard BEFORE awaiting, so the pending window is
+    // continuous from saveCats() until the push settles — no blind gap.
+    _catsInFlight++;
+    Promise.resolve(_syncCategories(cats)).finally(() => { _catsInFlight--; });
   }, 500);
 }
 
@@ -335,6 +351,67 @@ export function clearDeletedCat(name) {
   const lower = name.toLowerCase();
   const arr = getDeletedCats().filter(n => n.toLowerCase() !== lower);
   localStorage.setItem(_DELETED_KEY, JSON.stringify(arr));
+}
+
+// ── Tombstone clearing ────────────────────────────────────────────────────────
+// Deleting a category leaves TWO tombstones: a "<Name>_deleted" flag in
+// wt_cat_archive and an entry in the wt_deleted_cats blacklist. Every path that
+// writes local categories filters both out (loadFromSupabase, handleRemoteCatsChange,
+// handleRemoteArchiveChange, repairCategories) — so if a tombstone outlives a re-add,
+// the re-added category is written to localStorage and then silently erased on the
+// next hydration, with no error anywhere.
+//
+// deleteCat() writes the archive key in the category's ORIGINAL case, but the
+// read-side filters lowercase both sides before comparing. Clearing must therefore
+// be case-insensitive too, or re-adding "fitness" leaves "Fitness_deleted" alive and
+// still matching. Strips every case variant, and leaves the archived colour intact so
+// historical blocks keep rendering.
+/** @param {string} name */
+export function clearCategoryTombstone(name) {
+  if (!name) return false;
+  const target = (name + '_deleted').toLowerCase();
+  const arch = loadCatArchive();
+  const doomed = Object.keys(arch).filter(k => k.toLowerCase() === target);
+  if (doomed.length > 0) {
+    doomed.forEach(k => { delete arch[k]; });
+    saveCatArchive(arch);
+  }
+  clearDeletedCat(name);
+  return doomed.length > 0;
+}
+
+// Merges a cloud cat_archive snapshot over the local one.
+//
+// Union-only merging (the original behaviour) could ADD a "_deleted" flag but never
+// drop one, so a locally cleared tombstone was silently re-imported from the cloud on
+// the next load — re-killing a category the user had just re-added. That fired even
+// when the local archive push succeeded, because on a second device (or after a
+// sign-out cleared the local cache) the cloud copy is the only one there is.
+//
+// A category the user currently holds in wt_categories is, by definition, not deleted,
+// so its tombstone is stale and must not come back. Tombstones for categories NOT held
+// locally are still imported, preserving genuine cross-device deletions.
+/** @param {Record<string, any>} cloudArchive @returns {Record<string, any>} */
+export function mergeCatArchive(cloudArchive) {
+  const localArch = loadCatArchive();
+  const merged = { ...cloudArchive };
+
+  const liveLower = new Set(loadCats().map(c => c && c.name).filter(Boolean).map(n => n.toLowerCase()));
+  Object.keys(merged).forEach(k => {
+    if (!k.endsWith('_deleted')) return;
+    const catName = k.slice(0, -'_deleted'.length).toLowerCase();
+    if (liveLower.has(catName)) delete merged[k];
+  });
+
+  // Preserve local-only tombstones (a delete not yet pushed to the cloud).
+  Object.keys(localArch).forEach(k => {
+    if (!k.endsWith('_deleted') || merged[k]) return;
+    const catName = k.slice(0, -'_deleted'.length).toLowerCase();
+    if (liveLower.has(catName)) return;
+    merged[k] = localArch[k];
+  });
+
+  return merged;
 }
 
 // ── Repair Categories ─────────────────────────────────────────────────────────
@@ -1067,16 +1144,17 @@ export async function loadFromSupabase() {
         .eq('user_id', user.id)
         .maybeSingle();
       if (arch && arch.archive) {
-        const localArch = loadCatArchive();
-        const merged = { ...arch.archive };
-        Object.keys(localArch).forEach(k => {
-          if (k.endsWith('_deleted') && !merged[k]) {
-            merged[k] = localArch[k];
-          }
-        });
+        // mergeCatArchive() drops cloud tombstones for categories the user currently
+        // holds locally, so a re-added category is never re-killed by a stale flag.
+        const merged = mergeCatArchive(arch.archive);
         localStorage.setItem('wt_cat_archive', JSON.stringify(merged));
-        const localOnlyDeleted = Object.keys(localArch).filter(k => k.endsWith('_deleted') && !arch.archive[k]);
-        if (localOnlyDeleted.length > 0) {
+        // Push back whenever the merge diverges from the cloud copy — that covers both
+        // a local-only delete and a local un-delete that stripped a stale cloud flag.
+        const cloudKeys = Object.keys(arch.archive);
+        const diverged =
+          cloudKeys.some(k => k.endsWith('_deleted') && !merged[k]) ||
+          Object.keys(merged).some(k => k.endsWith('_deleted') && !arch.archive[k]);
+        if (diverged) {
           _syncCatArchive(merged);
         }
       }
@@ -1098,7 +1176,7 @@ export async function loadFromSupabase() {
     // don't let this fetch's stale snapshot overwrite it — the debounced push in
     // saveCats() will reconcile the cloud shortly. Mirrors the same guard in
     // handleRemoteCatsChange().
-    if (cats && cats.length > 0 && !_syncQueue['cats']) {
+    if (cats && cats.length > 0 && !_catsSyncPending()) {
       // Preserve local hidden state since the Supabase table lacks a 'hidden' column
       const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
       const hiddenMap = {};
@@ -1243,7 +1321,10 @@ function handleRemoteWeekChange(row) {
 async function handleRemoteCatsChange() {
   // If there's a pending local write, don't let a stale remote fetch overwrite it.
   // The pending timer will push the local state to Supabase shortly.
-  if (_syncQueue['cats']) return;
+  // NOTE: this subscription has no self-write filter, so it also fires as an echo of
+  // THIS client's own writes — _catsSyncPending() (not the bare timer) is what keeps
+  // that echo from racing the push that caused it.
+  if (_catsSyncPending()) return;
   const user = getCurrentUser();
   if (!user) return;
   const { data: cats } = await sb.from('categories').select('*').eq('user_id', user.id).order('position');
@@ -1295,9 +1376,14 @@ function handleRemoteBacklogChange(row) {
 
 function handleRemoteArchiveChange(row) {
   if (row && row.archive) {
-    localStorage.setItem('wt_cat_archive', JSON.stringify(row.archive));
+    // Route through mergeCatArchive() rather than trusting the payload verbatim:
+    // the cat_archive push is debounced 1500ms, so this echo can carry a snapshot
+    // from BEFORE a re-add cleared a tombstone. Writing it raw would re-kill the
+    // category the user just re-added (same defect as the loadFromSupabase merge).
+    const archive = mergeCatArchive(row.archive);
+    localStorage.setItem('wt_cat_archive', JSON.stringify(archive));
     const archDeletedLower = new Set(
-      Object.keys(row.archive)
+      Object.keys(archive)
         .filter(k => k.endsWith('_deleted'))
         .map(k => k.toLowerCase())
     );

@@ -8,12 +8,13 @@ import {
   loadFocus, saveFocus,
   loadOrder, saveOrder, orderKey,
   loadCatArchive, saveCatArchive,
-  addDeletedCat, clearDeletedCat, getDeletedCats,
+  addDeletedCat, clearDeletedCat, getDeletedCats, clearCategoryTombstone,
   _softDeleteCategory, load, save, wk, getAbsWk
 } from './storage.js';
 import { resolveHex, renderColorPicker } from './colours.js';
 import { syncCustomSelect } from './custom-select.js';
 import { esc } from './escape.js';
+import { showToast } from './toast.js';
 
 
 // Currently selected colour for new categories
@@ -83,23 +84,26 @@ export function addCat() {
   if (!name) return;
   const cats = loadCats();
   if (cats.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+    // Previously a bare select() — a rejected add looked identical to a silent drop.
+    showToast(`"${name}" already exists.`, 'info');
     nameEl.select();
     return;
   }
+
+  // Clear any deletion tombstone BEFORE writing the category. Deleting a category
+  // leaves a "<Name>_deleted" flag in wt_cat_archive plus a wt_deleted_cats entry, and
+  // every category-write path filters those names out — so if the tombstone is still
+  // live when the next hydration runs, the category we just added is silently erased.
+  // Order matters: saveCats() starts a 500ms debounced push, and the hydration paths
+  // read the archive, so the archive must already be clean by then.
+  clearCategoryTombstone(name);
+
   // Insert before "Others" if it exists, otherwise push
   const othersIdx = cats.findIndex(c => c.name === 'Others');
   const entry = { name, color: selCatColor };
   if (othersIdx !== -1) cats.splice(othersIdx, 0, entry);
   else cats.push(entry);
-  clearDeletedCat(name);
   saveCats(cats);
-
-  // If the category was previously deleted, unmark it so it isn't treated as a ghost.
-  const arch = loadCatArchive();
-  if (arch[name + '_deleted']) {
-    delete arch[name + '_deleted'];
-    saveCatArchive(arch);
-  }
 
   nameEl.value = '';
   renderCatList();

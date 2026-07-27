@@ -1,0 +1,4 @@
+{
+  "_comment": "Scopes js/ to ES modules for Node-based tooling (node --test). The renderer already loads these via <script type=\"module\">; this only teaches Node's resolver the same thing. Deliberately NOT set at the repo root, because main.js and preload.js are CommonJS.",
+  "type": "module"
+}

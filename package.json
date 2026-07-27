@@ -1,6 +1,6 @@
 {
   "name": "weekly-tracker",
-  "version": "1.3.17",
+  "version": "1.3.18",
   "description": "Weekly Tracker Application",
   "author": "Vedant Sinha",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "main": "main.js",
   "scripts": {
+    "test": "node --test tests/",
     "start": "npx electron .",
     "dist": "electron-builder --win",
     "publish": "electron-builder --win --publish always"
