@@ -1094,7 +1094,11 @@ export async function loadFromSupabase() {
       return;
     }
 
-    if (cats && cats.length > 0) {
+    // If there's a pending local categories write (e.g. the user just added one),
+    // don't let this fetch's stale snapshot overwrite it — the debounced push in
+    // saveCats() will reconcile the cloud shortly. Mirrors the same guard in
+    // handleRemoteCatsChange().
+    if (cats && cats.length > 0 && !_syncQueue['cats']) {
       // Preserve local hidden state since the Supabase table lacks a 'hidden' column
       const localCats = JSON.parse(localStorage.getItem('wt_categories') || '[]');
       const hiddenMap = {};

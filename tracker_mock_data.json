@@ -1,0 +1,1786 @@
+{
+  "wt_categories": [
+    {
+      "name": "Project",
+      "color": "#2563a8"
+    },
+    {
+      "name": "Intern prep",
+      "color": "#2d6a4f"
+    },
+    {
+      "name": "Upskilling",
+      "color": "#5b4fa8"
+    },
+    {
+      "name": "Reading",
+      "color": "#92610a"
+    },
+    {
+      "name": "Acads",
+      "color": "#6b6760"
+    },
+    {
+      "name": "Other",
+      "color": "#495057"
+    }
+  ],
+  "wt_habits": [
+    {
+      "id": "run",
+      "name": "Run",
+      "target": 3,
+      "color": "#2d6a4f"
+    },
+    {
+      "id": "rest",
+      "name": "Rest",
+      "target": 5,
+      "color": "#5b5ea7"
+    },
+    {
+      "id": "code",
+      "name": "Code 1h",
+      "target": 5,
+      "color": "#2563a8"
+    }
+  ],
+  "wt_backlog": {
+    "items": [
+      {
+        "id": "b1",
+        "text": "Read Deep Work chapters 4-6",
+        "category": "Reading"
+      },
+      {
+        "id": "b2",
+        "text": "Solve 20 DP problems on Leetcode",
+        "category": "Intern prep"
+      },
+      {
+        "id": "b3",
+        "text": "Refactor Tailwind styles in home page",
+        "category": "Project"
+      }
+    ],
+    "updated_at": "2026-07-19T15:40:22.285Z"
+  },
+  "wt_last_monday": "Mon Jul 13 2026",
+  "wt_exported": "2026-07-19",
+  "wt_focus_12": {
+    "Project": "high",
+    "Intern prep": "high",
+    "Upskilling": "high",
+    "Reading": "low",
+    "Acads": "low",
+    "Other": "low"
+  },
+  "wt_order_12": [
+    "Project",
+    "Intern prep",
+    "Upskilling",
+    "Reading",
+    "Acads",
+    "Other"
+  ],
+  "wt_wk_12": {
+    "intention": "Prepare for mid-semester exams and draft project proposal",
+    "stack": {
+      "Project": "Focusing on Project tasks for Acads Focus",
+      "Intern prep": "Focusing on Intern prep tasks for Acads Focus",
+      "Upskilling": "Focusing on Upskilling tasks for Acads Focus",
+      "Reading": "Focusing on Reading tasks for Acads Focus",
+      "Acads": "Focusing on Acads tasks for Acads Focus",
+      "Other": "Focusing on Other tasks for Acads Focus"
+    },
+    "todos": {
+      "Project": [
+        {
+          "id": "task_12_Pro_0",
+          "text": "Initialize Git repo and config files",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Pro_1",
+          "text": "Set up development server & proxy",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Pro_2",
+          "text": "Implement authentication state management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Pro_3",
+          "text": "Design responsive layout for main dashboard",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Intern prep": [
+        {
+          "id": "task_12_Int_0",
+          "text": "Solve 5 array questions",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Int_1",
+          "text": "Revise Operating Systems memory management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Int_2",
+          "text": "Mock interview session with peer",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Upskilling": [
+        {
+          "id": "task_12_Ups_0",
+          "text": "Watch CSS Grid advanced tutorial",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Ups_1",
+          "text": "Read articles on WebAuthn integration",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Reading": [
+        {
+          "id": "task_12_Rea_0",
+          "text": "Read chapter 2 of Atomic Habits",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Acads": [
+        {
+          "id": "task_12_Aca_0",
+          "text": "Complete Math assignment 3",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_12_Aca_1",
+          "text": "Prepare presentation slides for CS seminar",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Other": []
+    },
+    "days": [
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "90m",
+            "slot": "evening",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review Database indexing and transaction isolation; Learn basics of WebSockets in Node.js; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review DNS and TCP handshake flows",
+            "duration": "60m",
+            "slot": "evening",
+            "notes": "Created quick diagrams for quick memory revision.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review Database indexing and transaction isolation; Review Database indexing and transaction isolation; Review DNS and TCP handshake flows."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "60m",
+            "slot": "afternoon",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review Database indexing and transaction isolation; Go through React 19 concurrent features."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Implement Supabase auth hooks",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Created sign-in / sign-out handlers in auth.js.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "120m",
+            "slot": "afternoon",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review DNS and TCP handshake flows",
+            "duration": "45m",
+            "slot": "evening",
+            "notes": "Created quick diagrams for quick memory revision.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Implement Supabase auth hooks; Go through React 19 concurrent features; Review DNS and TCP handshake flows."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "45m",
+            "slot": "evening",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Read part 1 of The Pragmatic Programmer; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": false,
+        "fullRest": true,
+        "blocks": [],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Took a complete screen-free day today. Read physical book, went to park."
+      }
+    ],
+    "review": {
+      "worked": "Completed core modules for Acads Focus. Good morning focus.",
+      "didnt": "Slightly distracted in the afternoons. Wasted some time scrolling.",
+      "adjust": "Work from library in the afternoons to maintain momentum."
+    },
+    "__updated_at": "2026-07-19T15:40:22.287Z"
+  },
+  "wt_focus_13": {
+    "Project": "high",
+    "Intern prep": "high",
+    "Upskilling": "high",
+    "Reading": "low",
+    "Acads": "low",
+    "Other": "low"
+  },
+  "wt_order_13": [
+    "Project",
+    "Intern prep",
+    "Upskilling",
+    "Reading",
+    "Acads",
+    "Other"
+  ],
+  "wt_wk_13": {
+    "intention": "Bootstrap the React application and design database schema",
+    "stack": {
+      "Project": "Focusing on Project tasks for Project Kickoff",
+      "Intern prep": "Focusing on Intern prep tasks for Project Kickoff",
+      "Upskilling": "Focusing on Upskilling tasks for Project Kickoff",
+      "Reading": "Focusing on Reading tasks for Project Kickoff",
+      "Acads": "Focusing on Acads tasks for Project Kickoff",
+      "Other": "Focusing on Other tasks for Project Kickoff"
+    },
+    "todos": {
+      "Project": [
+        {
+          "id": "task_13_Pro_0",
+          "text": "Initialize Git repo and config files",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Pro_1",
+          "text": "Set up development server & proxy",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Pro_2",
+          "text": "Implement authentication state management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Pro_3",
+          "text": "Design responsive layout for main dashboard",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Intern prep": [
+        {
+          "id": "task_13_Int_0",
+          "text": "Solve 5 array questions",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Int_1",
+          "text": "Revise Operating Systems memory management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Int_2",
+          "text": "Mock interview session with peer",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Upskilling": [
+        {
+          "id": "task_13_Ups_0",
+          "text": "Watch CSS Grid advanced tutorial",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Ups_1",
+          "text": "Read articles on WebAuthn integration",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Reading": [
+        {
+          "id": "task_13_Rea_0",
+          "text": "Read chapter 2 of Atomic Habits",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Acads": [
+        {
+          "id": "task_13_Aca_0",
+          "text": "Complete Math assignment 3",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_13_Aca_1",
+          "text": "Prepare presentation slides for CS seminar",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Other": []
+    },
+    "days": [
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Debug local carry-forward task duplications",
+            "duration": "120m",
+            "slot": "evening",
+            "notes": "Identified that the start-timer event handler was missing UUID checks.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Practice Dijkstra & Bellman-Ford algorithms; Debug local carry-forward task duplications."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "30m",
+            "slot": "evening",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review Database indexing and transaction isolation; Review Database indexing and transaction isolation; Go through React 19 concurrent features."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Practice Dijkstra & Bellman-Ford algorithms."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Setup Webpack / Vite config & linting rules",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Configured ES modules correctly.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Setup Webpack / Vite config & linting rules; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Practice Dijkstra & Bellman-Ford algorithms; Go through React 19 concurrent features."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "120m",
+            "slot": "afternoon",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "45m",
+            "slot": "evening",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Learn basics of WebSockets in Node.js; Learn basics of WebSockets in Node.js; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": false,
+        "fullRest": true,
+        "blocks": [],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Took a complete screen-free day today. Read physical book, went to park."
+      }
+    ],
+    "review": {
+      "worked": "Completed core modules for Project Kickoff. Good morning focus.",
+      "didnt": "Slightly distracted in the afternoons. Wasted some time scrolling.",
+      "adjust": "Work from library in the afternoons to maintain momentum."
+    },
+    "__updated_at": "2026-07-19T15:40:22.288Z"
+  },
+  "wt_focus_14": {
+    "Project": "high",
+    "Intern prep": "high",
+    "Upskilling": "high",
+    "Reading": "low",
+    "Acads": "low",
+    "Other": "low"
+  },
+  "wt_order_14": [
+    "Project",
+    "Intern prep",
+    "Upskilling",
+    "Reading",
+    "Acads",
+    "Other"
+  ],
+  "wt_wk_14": {
+    "intention": "Revise trees/graphs and implement authentication flow",
+    "stack": {
+      "Project": "Focusing on Project tasks for Algorithm Sprint",
+      "Intern prep": "Focusing on Intern prep tasks for Algorithm Sprint",
+      "Upskilling": "Focusing on Upskilling tasks for Algorithm Sprint",
+      "Reading": "Focusing on Reading tasks for Algorithm Sprint",
+      "Acads": "Focusing on Acads tasks for Algorithm Sprint",
+      "Other": "Focusing on Other tasks for Algorithm Sprint"
+    },
+    "todos": {
+      "Project": [
+        {
+          "id": "task_14_Pro_0",
+          "text": "Initialize Git repo and config files",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Pro_1",
+          "text": "Set up development server & proxy",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Pro_2",
+          "text": "Implement authentication state management",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Pro_3",
+          "text": "Design responsive layout for main dashboard",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Intern prep": [
+        {
+          "id": "task_14_Int_0",
+          "text": "Solve 5 array questions",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Int_1",
+          "text": "Revise Operating Systems memory management",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Int_2",
+          "text": "Mock interview session with peer",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Upskilling": [
+        {
+          "id": "task_14_Ups_0",
+          "text": "Watch CSS Grid advanced tutorial",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Ups_1",
+          "text": "Read articles on WebAuthn integration",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Reading": [
+        {
+          "id": "task_14_Rea_0",
+          "text": "Read chapter 2 of Atomic Habits",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Acads": [
+        {
+          "id": "task_14_Aca_0",
+          "text": "Complete Math assignment 3",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_14_Aca_1",
+          "text": "Prepare presentation slides for CS seminar",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Other": []
+    },
+    "days": [
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review DNS and TCP handshake flows",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Created quick diagrams for quick memory revision.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "60m",
+            "slot": "evening",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Review DNS and TCP handshake flows; Go through React 19 concurrent features."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Setup Webpack / Vite config & linting rules",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Configured ES modules correctly.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Setup Webpack / Vite config & linting rules; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Add theme toggle functionality",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Used CSS custom variables and persisted state.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review Database indexing and transaction isolation; Add theme toggle functionality."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Debug local carry-forward task duplications",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Identified that the start-timer event handler was missing UUID checks.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Setup Webpack / Vite config & linting rules",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Configured ES modules correctly.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Debug local carry-forward task duplications; Setup Webpack / Vite config & linting rules."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review DNS and TCP handshake flows",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Created quick diagrams for quick memory revision.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "60m",
+            "slot": "afternoon",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "30m",
+            "slot": "evening",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Review DNS and TCP handshake flows; Review Database indexing and transaction isolation; Review Database indexing and transaction isolation."
+      },
+      {
+        "mvd": false,
+        "fullRest": true,
+        "blocks": [],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Took a complete screen-free day today. Read physical book, went to park."
+      }
+    ],
+    "review": {
+      "worked": "Completed core modules for Algorithm Sprint. Good morning focus.",
+      "didnt": "Slightly distracted in the afternoons. Wasted some time scrolling.",
+      "adjust": "Work from library in the afternoons to maintain momentum."
+    },
+    "__updated_at": "2026-07-19T15:40:22.289Z"
+  },
+  "wt_focus_15": {
+    "Project": "high",
+    "Intern prep": "high",
+    "Upskilling": "high",
+    "Reading": "low",
+    "Acads": "low",
+    "Other": "low"
+  },
+  "wt_order_15": [
+    "Project",
+    "Intern prep",
+    "Upskilling",
+    "Reading",
+    "Acads",
+    "Other"
+  ],
+  "wt_wk_15": {
+    "intention": "Connect backend APIs, handle errors, and write unit tests",
+    "stack": {
+      "Project": "Focusing on Project tasks for System Integration",
+      "Intern prep": "Focusing on Intern prep tasks for System Integration",
+      "Upskilling": "Focusing on Upskilling tasks for System Integration",
+      "Reading": "Focusing on Reading tasks for System Integration",
+      "Acads": "Focusing on Acads tasks for System Integration",
+      "Other": "Focusing on Other tasks for System Integration"
+    },
+    "todos": {
+      "Project": [
+        {
+          "id": "task_15_Pro_0",
+          "text": "Initialize Git repo and config files",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Pro_1",
+          "text": "Set up development server & proxy",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Pro_2",
+          "text": "Implement authentication state management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Pro_3",
+          "text": "Design responsive layout for main dashboard",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Intern prep": [
+        {
+          "id": "task_15_Int_0",
+          "text": "Solve 5 array questions",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Int_1",
+          "text": "Revise Operating Systems memory management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Int_2",
+          "text": "Mock interview session with peer",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Upskilling": [
+        {
+          "id": "task_15_Ups_0",
+          "text": "Watch CSS Grid advanced tutorial",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Ups_1",
+          "text": "Read articles on WebAuthn integration",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Reading": [
+        {
+          "id": "task_15_Rea_0",
+          "text": "Read chapter 2 of Atomic Habits",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Acads": [
+        {
+          "id": "task_15_Aca_0",
+          "text": "Complete Math assignment 3",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_15_Aca_1",
+          "text": "Prepare presentation slides for CS seminar",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Other": []
+    },
+    "days": [
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Debug local carry-forward task duplications",
+            "duration": "60m",
+            "slot": "afternoon",
+            "notes": "Identified that the start-timer event handler was missing UUID checks.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "45m",
+            "slot": "evening",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Debug local carry-forward task duplications; Review Database indexing and transaction isolation."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Add theme toggle functionality",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Used CSS custom variables and persisted state.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Review Database indexing and transaction isolation",
+            "duration": "60m",
+            "slot": "evening",
+            "notes": "Took notes on B-Trees vs Hash indexes.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Learn basics of WebSockets in Node.js; Add theme toggle functionality; Review Database indexing and transaction isolation."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Setup Webpack / Vite config & linting rules",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Configured ES modules correctly.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Setup Webpack / Vite config & linting rules."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Review DNS and TCP handshake flows",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Created quick diagrams for quick memory revision.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "45m",
+            "slot": "afternoon",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Review DNS and TCP handshake flows; Learn basics of WebSockets in Node.js."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": false,
+        "fullRest": true,
+        "blocks": [],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Took a complete screen-free day today. Read physical book, went to park."
+      }
+    ],
+    "review": {
+      "worked": "Completed core modules for System Integration. Good morning focus.",
+      "didnt": "Slightly distracted in the afternoons. Wasted some time scrolling.",
+      "adjust": "Work from library in the afternoons to maintain momentum."
+    },
+    "__updated_at": "2026-07-19T15:40:22.289Z"
+  },
+  "wt_focus_16": {
+    "Project": "high",
+    "Intern prep": "high",
+    "Upskilling": "high",
+    "Reading": "low",
+    "Acads": "low",
+    "Other": "low"
+  },
+  "wt_order_16": [
+    "Project",
+    "Intern prep",
+    "Upskilling",
+    "Reading",
+    "Acads",
+    "Other"
+  ],
+  "wt_wk_16": {
+    "intention": "Profile application performance and polish overall UI/UX",
+    "stack": {
+      "Project": "Focusing on Project tasks for Optimization & Review",
+      "Intern prep": "Focusing on Intern prep tasks for Optimization & Review",
+      "Upskilling": "Focusing on Upskilling tasks for Optimization & Review",
+      "Reading": "Focusing on Reading tasks for Optimization & Review",
+      "Acads": "Focusing on Acads tasks for Optimization & Review",
+      "Other": "Focusing on Other tasks for Optimization & Review"
+    },
+    "todos": {
+      "Project": [
+        {
+          "id": "task_16_Pro_0",
+          "text": "Initialize Git repo and config files",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Pro_1",
+          "text": "Set up development server & proxy",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Pro_2",
+          "text": "Implement authentication state management",
+          "done": false,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Pro_3",
+          "text": "Design responsive layout for main dashboard",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Intern prep": [
+        {
+          "id": "task_16_Int_0",
+          "text": "Solve 5 array questions",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Int_1",
+          "text": "Revise Operating Systems memory management",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Int_2",
+          "text": "Mock interview session with peer",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Upskilling": [
+        {
+          "id": "task_16_Ups_0",
+          "text": "Watch CSS Grid advanced tutorial",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Ups_1",
+          "text": "Read articles on WebAuthn integration",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Reading": [
+        {
+          "id": "task_16_Rea_0",
+          "text": "Read chapter 2 of Atomic Habits",
+          "done": false,
+          "deleted": false
+        }
+      ],
+      "Acads": [
+        {
+          "id": "task_16_Aca_0",
+          "text": "Complete Math assignment 3",
+          "done": true,
+          "deleted": false
+        },
+        {
+          "id": "task_16_Aca_1",
+          "text": "Prepare presentation slides for CS seminar",
+          "done": true,
+          "deleted": false
+        }
+      ],
+      "Other": []
+    },
+    "days": [
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Add theme toggle functionality",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Used CSS custom variables and persisted state.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Add theme toggle functionality; Learn basics of WebSockets in Node.js."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Project",
+            "intent": "Implement Supabase auth hooks",
+            "duration": "120m",
+            "slot": "morning",
+            "notes": "Created sign-in / sign-out handlers in auth.js.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Implement Supabase auth hooks",
+            "duration": "60m",
+            "slot": "evening",
+            "notes": "Created sign-in / sign-out handlers in auth.js.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Implement Supabase auth hooks; Read part 1 of The Pragmatic Programmer; Implement Supabase auth hooks."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "60m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "120m",
+            "slot": "evening",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Read part 1 of The Pragmatic Programmer; Practice Dijkstra & Bellman-Ford algorithms."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Add theme toggle functionality",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Used CSS custom variables and persisted state.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "evening",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": false,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Read part 1 of The Pragmatic Programmer; Add theme toggle functionality; Read part 1 of The Pragmatic Programmer."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "30m",
+            "slot": "morning",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Project",
+            "intent": "Debug local carry-forward task duplications",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Identified that the start-timer event handler was missing UUID checks.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": true,
+          "rest": true,
+          "code": true
+        },
+        "journal": "Progressed well on my weekly targets today. Practice Dijkstra & Bellman-Ford algorithms; Debug local carry-forward task duplications."
+      },
+      {
+        "mvd": true,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Intern prep",
+            "intent": "Practice Dijkstra & Bellman-Ford algorithms",
+            "duration": "90m",
+            "slot": "morning",
+            "notes": "Implemented both on LeetCode.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Reading",
+            "intent": "Read part 1 of The Pragmatic Programmer",
+            "duration": "30m",
+            "slot": "afternoon",
+            "notes": "Highly relevant ideas on keeping code dry.",
+            "focusQuality": "medium",
+            "source": "manual",
+            "linkedTasks": []
+          },
+          {
+            "category": "Upskilling",
+            "intent": "Go through React 19 concurrent features",
+            "duration": "120m",
+            "slot": "evening",
+            "notes": "Tested useActionState hook.",
+            "focusQuality": "high",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Practice Dijkstra & Bellman-Ford algorithms; Read part 1 of The Pragmatic Programmer; Go through React 19 concurrent features."
+      },
+      {
+        "mvd": false,
+        "fullRest": false,
+        "blocks": [
+          {
+            "category": "Upskilling",
+            "intent": "Learn basics of WebSockets in Node.js",
+            "duration": "45m",
+            "slot": "morning",
+            "notes": "Built a simple chat application in local environment.",
+            "focusQuality": "low",
+            "source": "manual",
+            "linkedTasks": []
+          }
+        ],
+        "habits": {
+          "run": false,
+          "rest": true,
+          "code": false
+        },
+        "journal": "Progressed well on my weekly targets today. Learn basics of WebSockets in Node.js."
+      }
+    ],
+    "review": {
+      "worked": "Completed core modules for Optimization & Review. Good morning focus.",
+      "didnt": "Slightly distracted in the afternoons. Wasted some time scrolling.",
+      "adjust": "Work from library in the afternoons to maintain momentum."
+    },
+    "__updated_at": "2026-07-19T15:40:22.289Z"
+  }
+}
