@@ -664,9 +664,13 @@ function hideLine() {
 // Called once from app.js during initialisation.
 export function initStackListeners() {
   // Intention input — save on every keystroke
-  document.getElementById('intention').addEventListener('input', saveStackInputs);
-  document.getElementById('intention').addEventListener('keydown', e => {
+  document.getElementById('intention')?.addEventListener('input', saveStackInputs);
+  document.getElementById('intention')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
   });
 
+  const btn = document.getElementById('carryBtn');
+  if (btn) {
+    btn.addEventListener('click', () => carryForward());
+  }
 }

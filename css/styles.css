@@ -3129,3 +3129,58 @@ html[data-theme="light"] .backlog-agenda-card {
 
 body.modal-open { overflow: hidden; }
 
+/* ── Carry Over Box ────────────────────────────────────────── */
+.carry-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--elevation-base);
+  transition: all 0.2s ease;
+}
+.carry-box-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.carry-box-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.carry-box-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.carry-box-sub {
+  font-size: 11px;
+  color: var(--text3);
+}
+.carry-btn {
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.carry-btn:hover:not(:disabled) {
+  background: var(--blue);
+  color: #ffffff;
+  border-color: var(--blue);
+}
+.carry-btn.carried {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+
