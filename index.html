@@ -212,19 +212,11 @@
       <div id="stackWeeklyView">
         <!-- 🎯 Hero Intention -->
         <div class="intention-box predominant">
-          <div class="ilbl">This week's intention</div>
-          <input class="iinput" id="intention" placeholder="What matters most this week?">
-        </div>
-
-        <!-- ↩ Carry Over Action Box -->
-        <div class="carry-box" id="carryBox">
-          <div class="carry-box-content">
-            <div class="carry-box-info">
-              <span class="carry-box-title">↩ Carry Over from Last Week</span>
-              <span class="carry-box-sub">Copy uncompleted tasks, focus levels, and stack items from last week into empty fields.</span>
-            </div>
-            <button id="carryBtn" class="btn btn-s carry-btn">↩ Carry from last week</button>
+          <div class="intention-header">
+            <div class="ilbl">This week's intention</div>
+            <button id="carryBtn" class="btn btn-s carry-btn-compact" title="Copy last week's stack items & uncompleted tasks into empty fields">↩ Carry from last week</button>
           </div>
+          <input class="iinput" id="intention" placeholder="What matters most this week?">
         </div>
 
         <div id="stackDragContainer">

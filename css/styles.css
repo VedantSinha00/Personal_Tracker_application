@@ -2764,12 +2764,19 @@ h1, h2, h3, .modal-title, .app-title, .lp-section-hdr, .hc-title, .sg-title { fo
   text-align: center;
   filter: none;
 }
+.intention-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 16px;
+}
 .intention-box.predominant .ilbl {
   font-size: 11px;
   font-weight: 700;
   color: var(--text3);
   letter-spacing: 0.02em;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .intention-box.predominant .iinput {
   font-size: 1.5rem;
@@ -3129,55 +3136,25 @@ html[data-theme="light"] .backlog-agenda-card {
 
 body.modal-open { overflow: hidden; }
 
-/* ── Carry Over Box ────────────────────────────────────────── */
-.carry-box {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--elevation-base);
-  transition: all 0.2s ease;
-}
-.carry-box-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.carry-box-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.carry-box-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-.carry-box-sub {
+/* ── Carry Over Side Button ────────────────────────────────── */
+.carry-btn-compact {
   font-size: 11px;
-  color: var(--text3);
-}
-.carry-btn {
-  white-space: nowrap;
-  padding: 8px 16px;
+  font-weight: 500;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 500;
+  color: var(--text2);
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
-.carry-btn:hover:not(:disabled) {
+.carry-btn-compact:hover:not(:disabled) {
   background: var(--blue);
   color: #ffffff;
   border-color: var(--blue);
 }
-.carry-btn.carried {
+.carry-btn-compact.carried {
   background: #10b981;
   color: #ffffff;
   border-color: #10b981;
