@@ -35,7 +35,7 @@ import {
   load, save, wk, setWk, getAbsWk,
   loadCats, exportD, importD, updateExportLbl,
   initRealtimeSync, flushPendingSyncs, repairCategories,
-  runStartupMigration,
+  runStartupMigration, isWeekContentEmpty,
 } from './storage.js';
 
 import { renderDG as _renderDG, openM, closeM, saveBlock, delBlock,
@@ -495,10 +495,7 @@ function ensureCarryForward() {
     // already begun this week, the normal "fill empty only" guard inside
     // carryForward() still protects them, but we also skip to avoid surprise.
     const cur = load();
-    const curEmpty =
-      (!cur.todos || Object.keys(cur.todos).length === 0) &&
-      (!cur.stack || Object.keys(cur.stack).length === 0);
-    if (!curEmpty) { localStorage.setItem('wt_last_carry', String(curAbs)); return; }
+    if (!isWeekContentEmpty(cur)) { localStorage.setItem('wt_last_carry', String(curAbs)); return; }
 
     carryForward();
     // Stamp regardless of how many items carried: "nothing to carry" is still a

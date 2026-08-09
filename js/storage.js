@@ -111,6 +111,19 @@ export function def() {
   };
 }
 
+/**
+ * Checks if a week object is genuinely empty of stack text and active/non-deleted todos.
+ * Prevents empty category key shells ({ Work: "" }) from being misclassified as non-empty.
+ * @param {Object|null} d
+ * @returns {boolean}
+ */
+export function isWeekContentEmpty(d) {
+  if (!d) return true;
+  const hasStack = d.stack && Object.values(d.stack).some(v => typeof v === 'string' && v.trim().length > 0);
+  const hasTodos = d.todos && Object.values(d.todos).some(arr => Array.isArray(arr) && arr.some(t => !t.deleted));
+  return !hasStack && !hasTodos;
+}
+
 // ── Synchronous read/write (localStorage cache) ───────────────────────────────
 // These are called throughout the app and must remain synchronous.
 
@@ -1045,14 +1058,10 @@ export async function loadFromSupabase() {
         // "No local edits to protect": the local cache for this week is absent OR
         // holds no stack/todos content. Fresh session, new device, post-sign-out
         // cache clear — or a record previously written empty by this very guard.
-        const localHasNoStackTodos =
-          (!localD.stack || Object.keys(localD.stack).length === 0) &&
-          (!localD.todos || Object.keys(localD.todos).length === 0);
+        const localHasNoStackTodos = isWeekContentEmpty(localD);
 
         // Does the cloud actually hold stack/todos worth hydrating for this week?
-        const remoteHasStackTodos =
-          (row.stack && Object.keys(row.stack).length > 0) ||
-          (row.todos && Object.keys(row.todos).length > 0);
+        const remoteHasStackTodos = !isWeekContentEmpty(row);
 
         // Self-heal back-fill: a past/future week whose local cache has no
         // stack/todos but whose cloud row does. This recovers the case where an
